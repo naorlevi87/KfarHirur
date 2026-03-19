@@ -1,0 +1,16 @@
+/* src/styles/globals.css */
+/* Global stylesheet for the Kfar Hirur project.
+   We load Tailwind and define a few project-wide base rules here. */
+
+@import "tailwindcss";
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
