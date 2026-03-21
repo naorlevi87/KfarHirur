@@ -39,7 +39,10 @@ export function SiteHeader({ locale, mode, setMode }) {
         {isConsciousnessOpen ? (
           <div className="keepItGoing-consciousnessPanel">
             <p className="keepItGoing-consciousnessTitle">{getText(consciousness, 'label')}</p>
-            <div className="keepItGoing-consciousnessOptions">
+            <div
+              className="keepItGoing-consciousnessOptions keepItGoing-consciousnessSegmented"
+              role="group"
+            >
               <button
                 type="button"
                 className={
