@@ -2,6 +2,7 @@
 /* Global stylesheet for the Kfar Hirur project.
    We load Tailwind and define a few project-wide base rules here. */
 
+@import url("https://fonts.googleapis.com/css2?family=Alef:wght@400;700&display=swap");
 @import "tailwindcss";
 
 html,
@@ -12,5 +13,438 @@ body,
 
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
+  font-family: "Alef", "Segoe UI", system-ui, sans-serif;
+}
+
+/* English pages: Latin-first stack (Alef still available for mixed text) */
+.keepItGoing-page[lang="en"] {
+  font-family:
+    "Segoe UI",
+    system-ui,
+    -apple-system,
+    sans-serif;
+}
+
+/* --- Fundraising color tokens: default naor on .keepItGoing-page; shay overrides --- */
+.keepItGoing-page {
+  /* naor: calm, saturated purple / blue / indigo / night */
+  --page-bg: #05060f;
+  --page-bg-secondary: #0a0d18;
+  --page-radial-a: rgba(100, 70, 160, 0.38);
+  --page-radial-b: rgba(45, 55, 120, 0.42);
+  --page-radial-c: rgba(35, 75, 110, 0.28);
+  --page-linear-a: #0c0e1a;
+  --page-linear-b: #070910;
+  --page-linear-c: #040508;
+
+  --surface: rgba(130, 150, 255, 0.07);
+  --surface-border: rgba(120, 180, 255, 0.28);
+  --surface-inset: rgba(0, 0, 0, 0.28);
+
+  --text-primary: #e8eaf4;
+  --text-secondary: rgba(180, 195, 220, 0.58);
+  --text-heading: #f2f0fb;
+  --text-heading-soft: #ebe6f2;
+  --text-section: rgba(235, 230, 248, 0.94);
+  --text-muted: rgba(165, 185, 215, 0.55);
+  --text-meta: rgba(150, 170, 200, 0.52);
+  --text-meta-label: rgba(185, 200, 225, 0.72);
+  --text-body: rgba(210, 218, 235, 0.9);
+
+  --accent-soft: #b8daf4;
+  --accent: #7eb8e8;
+  --accent-strong: #4a8cc8;
+  --accent-text: #081018;
+  --accent-shadow: rgba(80, 140, 210, 0.42);
+  --accent-highlight: rgba(255, 255, 255, 0.35);
+  --focus-ring: rgba(150, 200, 255, 0.92);
+
+  --glow: rgba(100, 120, 220, 0.22);
+
+  --brand-title: rgba(255, 255, 255, 0.96);
+  --brand-subtitle: rgba(220, 230, 250, 0.72);
+}
+
+.keepItGoing-page[data-fundraising-mode="shay"] {
+  /* shay: warm fire — red / orange / yellow, sharper contrast */
+  --page-bg: #080402;
+  --page-bg-secondary: #120805;
+  --page-radial-a: rgba(180, 45, 35, 0.45);
+  --page-radial-b: rgba(200, 90, 25, 0.32);
+  --page-radial-c: rgba(160, 60, 20, 0.2);
+  --page-linear-a: #140a08;
+  --page-linear-b: #0a0504;
+  --page-linear-c: #050302;
+
+  --surface: rgba(255, 120, 60, 0.08);
+  --surface-border: rgba(255, 160, 90, 0.35);
+  --surface-inset: rgba(0, 0, 0, 0.35);
+
+  --text-primary: #f2e8e0;
+  --text-secondary: rgba(210, 185, 165, 0.58);
+  --text-heading: #fff6f0;
+  --text-heading-soft: #f5ebe3;
+  --text-section: rgba(255, 240, 230, 0.95);
+  --text-muted: rgba(210, 175, 150, 0.58);
+  --text-meta: rgba(195, 165, 140, 0.55);
+  --text-meta-label: rgba(230, 200, 175, 0.75);
+  --text-body: rgba(240, 220, 205, 0.9);
+
+  --accent-soft: #ffd8a8;
+  --accent: #f0a060;
+  --accent-strong: #d85828;
+  --accent-text: #1a0a06;
+  --accent-shadow: rgba(220, 100, 50, 0.45);
+  --accent-highlight: rgba(255, 255, 255, 0.35);
+  --focus-ring: rgba(255, 200, 140, 0.95);
+
+  --glow: rgba(220, 80, 40, 0.25);
+
+  --brand-title: rgba(255, 255, 255, 0.97);
+  --brand-subtitle: rgba(255, 220, 195, 0.75);
+}
+
+.keepItGoing-siteHeader {
+  position: relative;
+  width: 100%;
+  max-width: 980px;
+  margin: 0 auto 1.75rem;
+  padding: 0 1rem;
+  display: flex;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.keepItGoing-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.65rem;
+}
+
+.keepItGoing-brandLogo {
+  width: 64px;
+  height: auto;
+  display: block;
+  border-radius: 14px;
+}
+
+.keepItGoing-brandText {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.15rem;
+}
+
+.keepItGoing-brandTitle {
+  margin: 0;
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.keepItGoing-brandSubtitle {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  color: var(--text-secondary);
+}
+
+.keepItGoing-consciousness {
+  position: absolute;
+  top: 0;
+  left: 1rem;
+  z-index: 5;
+}
+
+.keepItGoing-consciousnessTrigger {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  border: 1px solid var(--surface-border);
+  background: var(--surface);
+  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(10px);
+}
+
+.keepItGoing-consciousnessBadge {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.keepItGoing-consciousnessPanel {
+  position: absolute;
+  top: calc(100% + 0.6rem);
+  left: 0;
+  min-width: 160px;
+  padding: 0.85rem;
+  border-radius: 16px;
+  border: 1px solid var(--surface-border);
+  background: var(--surface);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(14px);
+}
+
+.keepItGoing-consciousnessTitle {
+  margin: 0 0 0.55rem;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  text-align: right;
+}
+
+.keepItGoing-consciousnessOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.keepItGoing-consciousnessOption {
+  width: 100%;
+  border: 1px solid var(--surface-border);
+  background: transparent;
+  color: var(--text-primary);
+  border-radius: 12px;
+  padding: 0.65rem 0.8rem;
+  font: inherit;
+  text-align: right;
+  cursor: pointer;
+}
+
+.keepItGoing-consciousnessOptionActive {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+@media (min-width: 640px) {
+  .keepItGoing-brand {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    text-align: right;
+  }
+
+  .keepItGoing-brandText {
+    align-items: flex-start;
+    text-align: right;
+  }
+}
+
+@media (max-width: 640px) {
+  .keepItGoing-brandLogo {
+    width: 54px;
+  }
+
+  .keepItGoing-brandSubtitle {
+    font-size: 0.75rem;
+  }
+}
+
+/* --- KeepItGoing page sections — flow layout, no Tailwind in markup --- */
+
+.keepItGoing-page {
+  box-sizing: border-box;
+  min-height: 100%;
+  min-height: 100dvh;
+  padding: 0 0 clamp(2rem, 8vw, 3.5rem);
+  color: var(--text-primary);
+  background-color: var(--page-bg);
+  background-image:
+    radial-gradient(ellipse 140% 70% at 50% -15%, var(--page-radial-a) 0%, transparent 50%),
+    radial-gradient(ellipse 90% 55% at 100% 30%, var(--page-radial-b) 0%, transparent 50%),
+    radial-gradient(ellipse 80% 50% at 0% 100%, var(--page-radial-c) 0%, transparent 48%),
+    linear-gradient(170deg, var(--page-linear-a) 0%, var(--page-linear-b) 45%, var(--page-linear-c) 100%);
+}
+
+.keepItGoing-inner {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 0 clamp(1rem, 4.5vw, 1.5rem);
+}
+
+.keepItGoing-hero {
+  padding: 1.35rem 0 1.75rem;
+  text-align: center;
+}
+
+.keepItGoing-pageTitle {
+  margin: 0 0 1.35rem;
+  font-size: clamp(1.45rem, 5vw, 2.15rem);
+  font-weight: 600;
+  line-height: 1.22;
+  letter-spacing: -0.02em;
+  color: var(--text-heading);
+}
+
+.keepItGoing-heroActions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.65rem;
+  max-width: 22rem;
+  margin: 0 auto;
+}
+
+.keepItGoing-supportBanner {
+  appearance: none;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding: 0.85rem 1.25rem;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--accent-text);
+  text-align: center;
+  cursor: pointer;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(
+    168deg,
+    var(--accent-soft) 0%,
+    var(--accent) 50%,
+    var(--accent-strong) 100%
+  );
+  box-shadow:
+    0 4px 24px var(--accent-shadow),
+    0 1px 0 var(--accent-highlight) inset;
+}
+
+.keepItGoing-supportBanner:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+.keepItGoing-supportNote {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.keepItGoing-section {
+  padding: 1.5rem 0;
+}
+
+.keepItGoing-sectionTitle {
+  margin: 0 0 0.85rem;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--text-section);
+}
+
+.keepItGoing-videoCard {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 11.5rem;
+  padding: 1.25rem;
+  border-radius: 1rem;
+  background: var(--surface);
+  border: 1px dashed var(--surface-border);
+  box-shadow: 0 0 0 1px var(--surface-inset) inset;
+}
+
+.keepItGoing-videoPlaceholder {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.keepItGoing-story {
+  padding: 1.65rem 0;
+}
+
+.keepItGoing-storyTitle {
+  margin: 0 0 0.9rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text-heading-soft);
+}
+
+.keepItGoing-storyBody {
+  margin: 0;
+  font-size: 1.02rem;
+  line-height: 1.72;
+  color: var(--text-body);
+  white-space: pre-wrap;
+}
+
+.keepItGoing-bottomSupport {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.85rem;
+  padding-top: 0.5rem;
+  max-width: 22rem;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.keepItGoing-metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.35rem 0.65rem;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--text-meta);
+}
+
+.keepItGoing-metaItem {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem;
+}
+
+.keepItGoing-metaLabel {
+  font-weight: 600;
+  color: var(--text-meta-label);
+}
+
+.keepItGoing-metaValue {
+  font-weight: 500;
+}
+
+.keepItGoing-metaSep {
+  opacity: 0.45;
+  user-select: none;
+}
+
+@media (min-width: 48rem) {
+  .keepItGoing-inner {
+    max-width: 42rem;
+  }
+
+  .keepItGoing-hero {
+    padding-top: 1.75rem;
+  }
+
+  .keepItGoing-videoCard {
+    min-height: 13rem;
+  }
+
+  .keepItGoing-storyBody {
+    font-size: 1.05rem;
+  }
 }
