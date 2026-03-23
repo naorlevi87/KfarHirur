@@ -14,4 +14,13 @@ export const siteShellContent = {
     shortShay: 'ש',
     shortNaor: 'נ',
   },
+  navigation: {
+    menuLabel: 'תפריט',
+    closeLabel: 'סגירה',
+    home: 'בית',
+    keepItGoing: 'להמשיך',
+    timeline: 'ציר זמן',
+    joinTeam: 'להצטרף לצוות',
+    mainNavAriaLabel: 'ניווט ראשי',
+  },
 };

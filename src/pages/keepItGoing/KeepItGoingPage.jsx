@@ -1,44 +1,15 @@
 // src/pages/keepItGoing/KeepItGoingPage.jsx
-// Fundraising MVP page: shared copy + story variant by mode (shay | naor), locale (he | en).
+// Fundraising MVP page: sections + copy from useKeepItGoingPageData (locale/mode resolved locally).
 
-import { SiteHeader } from '../../components/layout/SiteHeader/SiteHeader.jsx';
-import { keepItGoingContent as keepItGoingHe } from '../../content/site/he/keepItGoing.content.js';
-import { keepItGoingContent as keepItGoingEn } from '../../content/site/en/keepItGoing.content.js';
 import { getText } from '../../utils/content/getText.js';
+import { useKeepItGoingPageData } from './resolveKeepItGoingPageData.js';
 
-const byLocale = {
-  he: keepItGoingHe,
-  en: keepItGoingEn,
-};
-
-function resolveRoot(locale) {
-  return byLocale[locale] ?? byLocale.he;
-}
-
-function resolveStory(root, mode) {
-  const key = mode === 'shay' || mode === 'naor' ? mode : 'naor';
-  return root[key] ?? root.naor ?? {};
-}
-
-export function KeepItGoingPage({ locale, mode, setMode }) {
-  const root = resolveRoot(locale);
-  const shared = root.shared ?? {};
-  const story = resolveStory(root, mode);
-  const meta = shared.supportMeta ?? {};
-  const dir = locale === 'he' ? 'rtl' : 'ltr';
-  const lang = locale === 'he' ? 'he' : 'en';
-  const fundraisingMode = mode === 'shay' ? 'shay' : 'naor';
+export function KeepItGoingPage() {
+  const { shared, story, meta } = useKeepItGoingPageData();
 
   return (
-    <main
-      className="keepItGoing-page"
-      dir={dir}
-      lang={lang}
-      data-fundraising-mode={fundraisingMode}
-    >
+    <div className="keepItGoing-page">
       <div className="keepItGoing-inner">
-        <SiteHeader locale={locale} mode={mode} setMode={setMode} />
-
         <section className="keepItGoing-hero" aria-labelledby="keepItGoing-pageTitle">
           <h1 id="keepItGoing-pageTitle" className="keepItGoing-pageTitle">
             {getText(shared, 'pageTitle')}
@@ -102,6 +73,6 @@ export function KeepItGoingPage({ locale, mode, setMode }) {
           </div>
         </section>
       </div>
-    </main>
+    </div>
   );
 }

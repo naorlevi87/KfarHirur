@@ -14,4 +14,13 @@ export const siteShellContent = {
     shortShay: 'S',
     shortNaor: 'N',
   },
+  navigation: {
+    menuLabel: 'Menu',
+    closeLabel: 'Close',
+    home: 'Home',
+    keepItGoing: 'Keep it going',
+    timeline: 'Timeline',
+    joinTeam: 'Join team',
+    mainNavAriaLabel: 'Main navigation',
+  },
 };
