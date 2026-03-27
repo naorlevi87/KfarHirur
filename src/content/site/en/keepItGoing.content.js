@@ -4,7 +4,7 @@
 export const keepItGoingContent = {
   shared: {
     donateUrl: 'https://pay.grow.link/668e556e129d64d2d124e380300a1133-MzIyODgxNw',
-    visitUrl: '#', // placeholder — TBD: reservation / address link
+    visitUrl: 'https://ontopo.com/he/il/page/jozveloz?source=kfarhirur',
     progress: {
       raisedAmount: 0,
       goalA: 180000,
