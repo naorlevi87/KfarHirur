@@ -1,31 +1,75 @@
 // src/content/site/en/keepItGoing.content.js
-// English fundraising MVP copy — shared shell + per-mode story (shay / naor).
+// English fundraising page copy. Mirrors Hebrew structure exactly.
 
 export const keepItGoingContent = {
   shared: {
-    pageTitle: 'Keeping the juice & flow open tomorrow too',
-    topSupportButtonLabel: 'Support',
-    bottomSupportButtonLabel: 'Support',
-    supportNote: 'The full support page will open soon.',
-    shortVideoTitle: "Alon's short video",
-    shortVideoPlaceholder: 'Short video will appear here',
-    longVideoTitle: 'Full interview with Shay and Naor',
-    longVideoPlaceholder: 'Full interview will appear here',
-    supportMeta: {
-      targetLabel: 'Near-term goal',
+    donateUrl: 'https://pay.grow.link/668e556e129d64d2d124e380300a1133-MzIyODgxNw',
+    visitUrl: '#', // placeholder — TBD: reservation / address link
+    progress: {
+      raisedAmount: 0,
+      goalA: 180000,
+      goalB: 340000,
+      goalALabel: 'Continue operating and pay taxes',
+      goalBLabel: 'Start reducing supplier debt',
       raisedLabel: 'Raised so far',
-      targetValue: 'Coming soon',
-      raisedValue: 'Coming soon',
+      outOfLabel: 'out of',
+      currencySymbol: '₪',
+    },
+    video: {
+      placeholder: 'Interview with Shay and Naor — coming soon',
+    },
+    transparency: {
+      heading: 'Financial transparency',
+      placeholder: 'Data coming soon.',
+    },
+    share: {
+      heading: 'Pass it on',
+      whatsappLabel: 'Share on WhatsApp',
+      copyLabel: 'Copy link',
+      whatsappMessage: "Kfar Hirur and Joz ve Loz need you. Donate or just come by: ",
+    },
+    footer: {
+      backLabel: 'Back to site',
     },
   },
-  shay: {
-    storyTitle: 'About us',
-    storyBody:
-      'PLACEHOLDER: temporary Shay copy in an “us / we” voice. Replace with final text.',
-  },
+
   naor: {
-    storyTitle: '[Not] mass fundraising',
-    storyBody:
-      'PLACEHOLDER: temporary Naor copy in a “[not] mass fundraising” framing. Replace with final text.',
+    hero: {
+      heading: '[Not] a crowdfunding campaign',
+      body: 'We started in 2015 with a bucket and gloves on a beach in Atlit. Six years of COVID, wars, and more wars. Every time we fell, we got back up. But it accumulates.\n\nJoz ve Loz stayed open because people believed in it. Paid what felt right. We\'re asking the same thing now — give what you can.',
+    },
+    cta: {
+      donateLabel: 'Donate now',
+      donateAriaLabel: 'Donate to Joz ve Loz',
+      visitLabel: 'Come visit us',
+      visitAriaLabel: 'Visit Joz ve Loz',
+    },
+    longText: {
+      paragraphs: [
+        "Joz ve Loz isn't a regular restaurant. From day one it said: you decide what it's worth to you. Six years later, it still works. Because people came, ate, felt something, and paid accordingly.",
+        "We've reached a point where suppliers are at the edge, pensions unpaid, taxes delayed. Every time we were about to get back up — another war.",
+        "We're not asking for charity. We're extending the same agreement that existed from the beginning: give what you can. Donate, come eat, or pass this along.",
+      ],
+    },
+  },
+
+  shay: {
+    hero: {
+      heading: 'About us',
+      body: 'We started in 2015 with a bucket and gloves on a beach in Atlit. Six years of COVID, wars, and more wars. Every time we fell, we got back up. But it accumulates.\n\nJoz ve Loz stayed open because people believed in it. Paid what felt right. We\'re asking the same thing now — give what you can.',
+    },
+    cta: {
+      donateLabel: 'Donate now',
+      donateAriaLabel: 'Donate to Joz ve Loz',
+      visitLabel: 'Come visit us',
+      visitAriaLabel: 'Visit Joz ve Loz',
+    },
+    longText: {
+      paragraphs: [
+        "Joz ve Loz isn't a regular restaurant. From day one it said: you decide what it's worth to you. Six years later, it still works. Because people came, ate, felt something, and paid accordingly.",
+        "We've reached a point where suppliers are at the edge, pensions unpaid, taxes delayed. Every time we were about to get back up — another war.",
+        "We're not asking for charity. We're extending the same agreement that existed from the beginning: give what you can. Donate, come eat, or pass this along.",
+      ],
+    },
   },
 };
