@@ -1,7 +1,8 @@
 // src/app/SiteHeader.jsx
-// Site shell: consciousness switcher, nav menu trigger, brand (copy from siteShell.content).
+// Single-row sticky header: consciousness toggle | [spacer] | site identity | logo | hamburger.
 
-import logo from '../assets/images/kfar-hirur-logo.png';
+import '../styles/app/SiteHeader.css';
+import logoCircle from '../assets/images/kfar-hirur-logo-circleOnly.png';
 import { resolveSiteShellContent } from '../content/site/resolveSiteShellContent.js';
 import { getText } from '../utils/content/getText.js';
 import { useAppContext } from './appState/useAppContext.js';
@@ -15,28 +16,37 @@ export function SiteHeader({ isMenuOpen, onToggleMenu }) {
 
   return (
     <header className="site-header">
-      <div className="site-header-controls" dir="ltr">
+      {/* dir=ltr: physical left→right regardless of page RTL — switcher left, logo+hamburger right */}
+      <div className="site-header-inner" dir="ltr">
         <ConsciousnessSwitcher />
+
+        <div className="site-header-spacer" />
+
+        {/* dir=rtl: Hebrew text flows correctly within this block */}
+        <div className="site-identity" dir="rtl">
+          <p className="site-identity-title">{getText(brand, 'title')}</p>
+          <p className="site-identity-subtitle">{getText(brand, 'subtitle')}</p>
+        </div>
+
+        <img
+          src={logoCircle}
+          alt={getText(brand, 'logoAlt')}
+          className="site-headerLogo"
+        />
+
         <button
           type="button"
-          className="site-navMenuTrigger"
+          className="site-hamburger"
           onClick={onToggleMenu}
           aria-expanded={isMenuOpen}
           aria-controls="site-navigation-menu"
           aria-haspopup="true"
+          aria-label={getText(navigation, 'menuLabel')}
         >
-          <span className="site-navMenuTriggerIcon" aria-hidden="true">
-            ☰
-          </span>
-          <span className="site-navMenuTriggerLabel">{getText(navigation, 'menuLabel')}</span>
+          <span className="site-hamburger-line" aria-hidden="true" />
+          <span className="site-hamburger-line" aria-hidden="true" />
+          <span className="site-hamburger-line" aria-hidden="true" />
         </button>
-      </div>
-      <div className="site-brand">
-        <img src={logo} alt={getText(brand, 'logoAlt')} className="site-brandLogo" />
-        <div className="site-brandText">
-          <p className="site-brandTitle">{getText(brand, 'title')}</p>
-          <p className="site-brandSubtitle">{getText(brand, 'subtitle')}</p>
-        </div>
       </div>
     </header>
   );

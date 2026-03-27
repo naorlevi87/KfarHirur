@@ -1,0 +1,108 @@
+/* src/styles/app/HamburgerMenu.css */
+/* Full-screen nav overlay — fixed layer, panel slides in from inline-start. */
+
+.site-menuRoot {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  /* Closed by default: must not steal pointer events from header (z-index 10) */
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.site-menuRoot.site-menuRoot--open {
+  pointer-events: auto;
+  visibility: visible;
+}
+
+/* Closed: hidden + non-interactive */
+.site-menuRoot:not(.site-menuRoot--open) .site-menuBackdrop,
+.site-menuRoot:not(.site-menuRoot--open) .site-menuPanel {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.site-menuRoot--open .site-menuBackdrop,
+.site-menuRoot--open .site-menuPanel {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* Neutral dark scrim — intentionally mode-independent */
+.site-menuBackdrop {
+  --menu-backdrop: rgba(0, 0, 0, 0.35);
+  position: absolute;
+  inset: 0;
+  background: var(--menu-backdrop);
+}
+
+.site-menuPanel {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  inset-inline-start: 0;
+  width: min(280px, 86vw);
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 1rem 1.1rem;
+  background: var(--page-bg);
+  border-inline-end: 1px solid var(--surface-border);
+  --menu-panel-shadow: rgba(0, 0, 0, 0.08);
+  box-shadow: 4px 0 24px var(--menu-panel-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.site-menuList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.site-menuItem {
+  margin: 0;
+}
+
+.site-menuLink {
+  display: block;
+  padding: 0.5rem 0.35rem;
+  color: var(--text-primary);
+  text-decoration: none;
+  border-radius: 8px;
+}
+
+.site-menuLink:hover,
+.site-menuLink:focus-visible {
+  background: var(--surface-inset);
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.site-menuLink.active {
+  background: var(--surface-inset);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.site-menuClose {
+  align-self: flex-start;
+  margin-top: auto;
+  padding: 0.45rem 0.75rem;
+  font: inherit;
+  cursor: pointer;
+  border-radius: 8px;
+  border: 1px solid var(--surface-border);
+  background: var(--page-bg);
+  color: var(--text-primary);
+}
+
+.site-menuClose:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}

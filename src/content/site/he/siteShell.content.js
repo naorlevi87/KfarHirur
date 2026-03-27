@@ -11,8 +11,6 @@ export const siteShellContent = {
     label: 'מצב תודעתי',
     optionShay: 'שי',
     optionNaor: 'נאור',
-    shortShay: 'ש',
-    shortNaor: 'נ',
   },
   navigation: {
     menuLabel: 'תפריט',

@@ -11,8 +11,6 @@ export const siteShellContent = {
     label: 'State of consciousness',
     optionShay: 'Shay',
     optionNaor: 'Naor',
-    shortShay: 'S',
-    shortNaor: 'N',
   },
   navigation: {
     menuLabel: 'Menu',

@@ -1,0 +1,113 @@
+/* src/styles/app/ConsciousnessSwitcher.css */
+/* Mental-state toggle block — flex row at block level.
+   .cs-block: [שי]  [.cs-toggle-wrap]  [נאור]
+   .cs-toggle-wrap: flex column — toggle on top, sublabel below, both centered.
+   All sizing derives from --header-h (set per breakpoint in SiteHeader.css) — no media queries needed here. */
+
+.cs-block {
+  /* Base: dark enough to pass 4.5:1 on both light surfaces */
+  --cs-shay: #c23318;
+  --cs-shay-light: #e8582a;
+  --cs-shay-lightest: #ffd4b8;
+  --cs-naor: #2926c4;
+  --cs-naor-light: #5654e0;
+  --cs-naor-lightest: #c4c0ff;
+
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  flex-shrink: 0;
+  margin-top: calc(var(--header-h, 68px) * 0.09);
+}
+
+/* toggle-wrap: track + sublabel stacked, width = track width so sublabel centers under track */
+.cs-toggle-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: calc(var(--header-h, 68px) * 0.72);
+}
+
+/* שי / נאור labels — height matches track so flexbox centers text against track midpoint */
+.cs-label {
+  display: flex;
+  align-items: center;
+  height: calc(var(--header-h, 68px) * 0.30);
+  font-size: clamp(0.72rem, 1.8vw, 0.88rem);
+  font-weight: 700;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.cs-label--shay { color: var(--cs-shay); }
+.cs-label--naor { color: var(--cs-naor); }
+
+/* Toggle track */
+.cs-toggle {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  width: 100%;
+  height: calc(var(--header-h, 68px) * 0.30);
+  padding: calc(var(--header-h, 68px) * 0.028) calc(var(--header-h, 68px) * 0.048);
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: background 0.22s ease, box-shadow 0.22s ease;
+}
+
+.cs-block--shay .cs-toggle {
+  background: rgba(232, 90, 60, 0.25);
+  box-shadow: 0 0 0 1px rgba(232, 90, 60, 0.35) inset;
+}
+
+.cs-block--naor .cs-toggle {
+  background: rgba(88, 86, 232, 0.18);
+  box-shadow: 0 0 0 1px rgba(88, 86, 232, 0.3) inset;
+}
+
+.cs-toggle:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Knob — positioned at track-start (shay). translateX slides it to track-end (naor).
+   Travel = track-width - 2×h-padding - knob-size = header-h × (0.72 - 0.096 - 0.244) = × 0.38 */
+.cs-knob {
+  display: block;
+  height: calc(100% - calc(var(--header-h, 68px) * 0.056));
+  aspect-ratio: 1;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transform: translateX(0);
+  transition:
+    transform 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+    background 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+/* שי active: knob at start */
+.cs-block--shay .cs-knob {
+  transform: translateX(0);
+  background: linear-gradient(135deg, var(--cs-shay-lightest) 0%, var(--cs-shay-light) 55%, var(--cs-shay) 100%);
+  box-shadow: 0 1px 5px rgba(232, 90, 60, 0.4);
+}
+
+/* נאור active: knob slides to end */
+.cs-block--naor .cs-knob {
+  transform: translateX(calc(var(--header-h, 68px) * 0.38));
+  background: linear-gradient(135deg, var(--cs-naor-lightest) 0%, var(--cs-naor-light) 55%, var(--cs-naor) 100%);
+  box-shadow: 0 1px 5px rgba(88, 86, 232, 0.4);
+}
+
+/* מצב תודעתי sublabel */
+.cs-sublabel {
+  font-size: calc(var(--header-secondary-fs) * 0.8);
+  font-weight: 500;
+  line-height: 1;
+  color: var(--text-secondary);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}

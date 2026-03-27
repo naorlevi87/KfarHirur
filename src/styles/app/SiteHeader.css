@@ -1,0 +1,134 @@
+/* src/styles/app/SiteHeader.css */
+/* Sticky site header: layout tokens, inner row, hamburger, site identity, logo. */
+
+.site-header {
+  /* Height system: logo ≈ 82% anchor, controls = upper 70% zone */
+  --header-h: 68px;
+  --header-controls-h: 48px;
+  --header-logo-h: 56px;
+  --header-secondary-fs: clamp(0.78rem, 1.6vw, 1.0rem);
+
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  width: 100%;
+  height: var(--header-h);
+  box-sizing: border-box;
+
+  /* Frosted separation from page content — adapts to both consciousness modes via --surface tokens */
+  background: var(--surface);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--surface-border);
+  --header-shadow: rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 10px var(--header-shadow);
+}
+
+/* Inner row: dir=ltr keeps physical left=hamburger, physical right=logo regardless of page RTL */
+.site-header-inner {
+  height: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  /* top padding: left controls attach to upper zone; bottom padding: identity breathing room */
+  padding: calc(var(--header-h) * 0.09) 1.1rem 3px;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  box-sizing: border-box;
+}
+
+/* Pushes identity + logo to the right */
+.site-header-spacer {
+  flex: 1;
+}
+
+/* Hamburger: sized to match logo, vertically centered, right of logo */
+.site-hamburger {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: var(--header-logo-h);
+  height: var(--header-logo-h);
+  padding: calc(var(--header-logo-h) * 0.22) calc(var(--header-logo-h) * 0.20);
+  border: 1.5px solid var(--surface-border);
+  background: transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  border-radius: 10px;
+  align-self: center;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+.site-hamburger:hover {
+  background: var(--surface-inset);
+}
+
+.site-hamburger:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.site-hamburger-line {
+  display: block;
+  width: 100%;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--text-primary);
+  flex-shrink: 0;
+}
+
+/* Site identity — bottom-anchored, explicit two-thirds of header height, 60%/40% internal split */
+.site-identity {
+  display: grid;
+  grid-template-rows: 60fr 40fr;
+  height: calc(var(--header-h) * 0.67);
+  text-align: right;
+  flex-shrink: 0;
+  align-self: flex-end; /* grounded against lower edge of header */
+}
+
+.site-identity-title {
+  align-self: end; /* text sits at bottom of 60% slot — tight grouping with subtitle */
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--brand-title);
+}
+
+.site-identity-subtitle {
+  align-self: start; /* text sits at top of 40% slot — tight grouping with title */
+  margin: 0;
+  font-size: var(--header-secondary-fs);
+  line-height: 1;
+  color: var(--brand-subtitle);
+}
+
+/* Logo: full-height anchor, vertically centered regardless of flex-start row alignment */
+.site-headerLogo {
+  display: block;
+  height: var(--header-logo-h);
+  width: auto;
+  align-self: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+
+@media (max-width: 640px) {
+  .site-header {
+    --header-h: 52px;
+    /* Logo scales with header height — keeps anchors proportional, no independent oversize */
+    --header-logo-h: calc(var(--header-h) * 0.80);
+  }
+
+  .site-header-inner {
+    padding: calc(var(--header-h) * 0.055) 0.85rem 3px;
+    gap: 0.45rem;
+  }
+
+  .site-identity-title {
+    font-size: 1.05rem;
+  }
+
+}

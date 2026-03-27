@@ -1,4 +1,8 @@
-# Kfar Hirur — Architecture Spec (Updated)
+# Kfar Hirur — Architecture Spec
+> Source of truth for architecture decisions. Updated: 2026-03-27.
+> For current-state gaps and known drift, see `architecture-audit.md`.
+
+---
 
 ## 1. Root Structure
 
@@ -10,7 +14,7 @@ App -> AppProviders -> MainLayout -> CurrentPage
 - `App` is the only root
 - `AppProviders` is the only root provider wrapper
 - `MainLayout` is the only root layout
-- `CurrentPage` is rendered inside `MainLayout`
+- `CurrentPage` is rendered inside `MainLayout` via React Router `<Outlet>`
 - No additional root layouts
 - No hidden parallel shells
 
@@ -22,24 +26,22 @@ App -> AppProviders -> MainLayout -> CurrentPage
 Owns:
 - root bootstrap
 - route / current page selection
-- global app state source:
-  - `locale`
-  - `mode`
+- global app state source: `locale`, `mode`
 
 ### `AppProviders`
 Owns:
 - global context injection only
-- app-level providers only
 - exposes app state through React Context
 
 ### `MainLayout`
 Owns:
 - `SiteHeader`
-- `SiteFooter`
+- `SiteFooter` (not yet built)
 - `HamburgerMenu`
+- `isMenuOpen` state
 - site shell / outer frame
-- root theme wrapper
-- `children`
+- root theme wrapper (`data-consciousness-mode`, `dir`, `lang`)
+- `children` via `<Outlet>`
 
 ### `CurrentPage`
 Owns:
@@ -50,8 +52,7 @@ Owns:
 ### Fixed rules
 - `Page` does **not** own `locale`
 - `Page` does **not** own `mode`
-- `Page` does **not** manually pass `locale`
-- `Page` does **not** manually pass `mode`
+- `Page` does **not** manually pass `locale` or `mode`
 - `Page` does **not** know data source details
 
 ---
@@ -65,42 +66,51 @@ src/
     AppProviders.jsx
     MainLayout.jsx
     SiteHeader.jsx
-    SiteFooter.jsx
+    SiteFooter.jsx          ← not yet built
     HamburgerMenu.jsx
     appState/
       AppContext.jsx
       useAppContext.js
-    providers/
 
   pages/
     home/
-    about/
-    team/
-    donations/
+    keepItGoing/
+    timeline/               ← placeholder only; real timeline goes in features/
+    joinTeam/
 
-  features/
+  features/                 ← not yet created; timeline subsystem will live here
     timeline/
 
-  shared/
-    components/
-    ui/
-    utils/
+  utils/                    ← shared utilities (getText, etc.)
+    content/
+      getText.js
 
   content/
     site/
       he/
       en/
 
-  data/
+  data/                     ← not yet created; dynamic data access layer
+
+  styles/
+    globals.css             ← tokens, layout primitives, small shared elements only
+    app/
+      SiteHeader.css
+      SiteFooter.css        ← not yet built
+      HamburgerMenu.css
+      ConsciousnessSwitcher.css
+      KeepItGoingPage.css
 ```
 
 ### Fixed rules
 - `app/` = global shell + global app state + root providers only
 - `pages/` = route pages + page-local wrappers/helpers only
-- `features/` = self-contained subsystems only
-- `shared/` = only truly reusable generic UI / utils
+- `features/` = self-contained subsystems only (timeline, etc.)
+- `utils/` = truly reusable generic utilities
 - `content/` = static locale-based authored content
 - `data/` = DB / API / dynamic access layer
+- `styles/globals.css` = tokens, layout primitives, `.page-placeholder` and equivalent tiny shared primitives only — **no page or component blocks**
+- Each component with large self-contained CSS gets its own file in `styles/app/`, imported directly by the component
 
 ---
 
@@ -112,256 +122,138 @@ Before writing custom architecture code, always check:
 2. Is there already a common web-app convention for this?
 3. Is there already an existing library / pattern that solves this cleanly?
 
-### Prefer existing standard mechanisms when they fit
-Use, in this order when appropriate:
+Use, in this order:
 - React composition
 - props
 - React Context
 - custom hooks
 - established app-level providers
-- established data libraries when needed (for example query / cache libraries)
+- established data libraries when needed
 
-### Fixed rule
-- Do **not** invent internal infrastructure if React or standard web-app architecture already covers the need
-- Write custom wrappers only when there is no good existing fit, or when a local wrapper clearly improves separation of responsibility
+Do **not** invent internal infrastructure if React or standard web-app architecture already covers the need.
 
 ---
 
 ## 5. Layer Ownership
 
 ### App layer
-Owns:
-- global context injection
-- `locale`
-- `mode`
+Owns: global context injection, `locale`, `mode`
 
 ### Page layer
-Owns:
-- page structure
-- page-level composition
-- page-family wrappers if needed
+Owns: page structure, page-level composition, page-family wrappers if needed
 
 ### Feature layer
-Owns:
-- subsystem logic
-- feature-local wrappers
-- feature-local layout wrappers
-- feature-local validation
+Owns: subsystem logic, feature-local wrappers, feature-local layout wrappers, feature-local validation
 
 ### Item-type layer
-Owns:
-- item specialization
-- item-type wrappers
-- item-type validation
+Owns: item specialization, item-type wrappers, item-type validation
 
 ### Leaf component layer
-Owns:
-- exact final payload shape
-- exact final validation
-- rendering
+Owns: exact final payload shape, exact final validation, rendering
 
 ---
 
 ## 6. Resolver Rules
 
-### Resolver definition
 A resolver is a **local wrapper pattern**, not a required global folder.
 
-### Fixed rules
-- Do **not** create a giant global `resolvers/` folder
-- Resolvers live close to the layer they belong to:
-  - app-level in `app/`
-  - page-level in page folder
-  - feature-level in feature folder
-  - item-level in item family
-  - leaf-level in leaf component usage
+- Resolvers live close to the layer they belong to (page folder, feature folder, etc.)
+- A resolver may: receive a request, add context it owns, forward downward, validate at its abstraction level
+- A resolver must **not**: own full leaf schemas globally, define page structure
 
-### Resolver responsibilities
-A resolver may:
-- receive a request
-- add the context it owns
-- forward the request
-- validate at its own abstraction level
-- return a more specific result downward
-
-### Resolver limits
-A resolver must **not**:
-- own full leaf schemas globally
-- define every exact field shape in the app
-- decide page structure
-
-### Fixed rule
-- Resolver is a local architecture tool, not a replacement for normal React mechanisms
+See `resolveKeepItGoingPageData.js` as a reference implementation — it exports both a pure function and a hook from the same page-local file.
 
 ---
 
 ## 7. Payload Rules
 
-### Leaf request rule
 A leaf component requests a **semantic payload**, not source categories.
 
-### Allowed examples
-- `buttonConfig`
-- `heroPayload`
-- `ctaConfig`
-- `timelineItemPayload`
+**Allowed:** `buttonConfig`, `heroPayload`, `ctaConfig`, `timelineItemPayload`
 
-### Forbidden pattern
-Do not design leaf components to separately request:
-- content
-- data
-- style
-- media
+**Forbidden:** separate `content` / `data` / `style` props to a leaf
 
-### Internal source split is allowed
-Internally, the resolver chain may assemble from:
-- `content`
-- `data`
-- `media`
-- `style definitions`
-
-### Fixed rule
-- Leaf receives final meaningful payload
-- Leaf validates final exact shape
+Internally the resolver chain may assemble from content, data, media, and style config — that split is resolver-private.
 
 ---
 
-## 8. Content / Data / Style Rules
+## 8. App State Rules
 
-### `content/`
-For:
-- static authored copy
-- locale-based text
-- page copy
-- CTA text
-- legal / informational text
+Current app-level context scope: `{ locale, mode, setMode }`
 
-### `data/`
-For:
-- DB access
-- API access
-- dynamic records
-- timeline items
-- normalization / mapping
+Access only via `useAppContext()`. `useAppContext` throws if used outside the provider tree.
 
-### Style resolution
-Allowed for:
-- visual variants
-- theme tokens
-- style config
-- background/media selection
-
-### Fixed rule
-- Resolver may resolve style config
-- Resolver may **not** define page structure
-- Page always owns structure
+- Do **not** drill `locale` / `mode` through pages manually
+- Do **not** add to `AppContext` without an explicit decision
+- Keep it small
 
 ---
 
-## 9. Layout Rules
+## 9. The Two Core Systems
 
-### Root layout
-- Exactly one root layout: `MainLayout`
+### Consciousness Mode (Naor / Shay)
 
-### Feature-local layout
-If a feature needs layout variation:
-- it must stay inside the feature folder
-- it may wrap shared layout primitives
-- it must **not** become a second root layout
+Two visual/emotional personas. Naor = cool blue/purple. Shay = warm coral/honey.
 
-### Fixed rule
-- No multi-layout root architecture
+Mode is stored in `AppContext`, applied as `data-consciousness-mode` on `.main-layout`. All color tokens are CSS custom properties defined on `.main-layout` (Naor default) and overridden by `[data-consciousness-mode="shay"]` in `globals.css`. Page content can branch on mode via `naor`/`shay` sub-objects.
 
----
+**ConsciousnessSwitcher — current implementation:**
+A simple `<button role="switch">` with a CSS knob that slides via `margin` transition. Mode class `.cs-block--{mode}` drives track color and knob position. No Framer Motion. Structure: `.cs-block` → `[cs-label--shay]` `[.cs-toggle-wrap]` `[cs-label--naor]`.
 
-## 10. App State Rules
 
-### Current app state scope
-The default app-level context is:
+**Content keys in use:** `consciousness.label`, `consciousness.optionShay`, `consciousness.optionNaor`
 
-- `locale`
-- `mode`
-- `setMode`
+### Content / i18n
 
-### Access rule
-- Access app state through:
-  - `useAppContext()`
-
-### Fixed rules
-- Do **not** manually drill `locale` / `mode` through pages unless there is a specific justified exception
-- Keep app context small
-- Do **not** turn `AppContext` into a dumping ground
+All copy lives in `src/content/site/{he,en}/` as plain JS objects. Resolver functions pick the right locale. Locale is currently hardcoded to `'he'` in `App.jsx`. `getText(contentObj, 'key')` is a safe accessor — returns `''` for missing keys.
 
 ---
 
-## 11. Timeline Rules
+## 10. Timeline Rules
 
-### Timeline classification
-- `timeline` is a **feature / subsystem**
-- it lives only in:
-
-```text
-features/timeline/
-```
-
-### Timeline may own
-- timeline wrapper
-- timeline item source access
-- item-type selection
-- social-item family wrappers
-- `FacebookTimelineItem`
-- `InstagramTimelineItem`
-- feature-local layout wrapper if needed
-
-### Fixed rules
-- Timeline is **not** a root layout concern
-- Timeline item type is resolved **once**
-- Lower layers do not re-decide item type
+- Timeline is a **feature / subsystem** — lives in `features/timeline/`
+- It is **not** a root layout concern
+- `TimelinePage` in `pages/timeline/` is currently a placeholder — when the feature gets built, the subsystem logic goes in `features/timeline/`, the page only composes it
+- Item type is resolved **once** at the feature layer — lower layers do not re-decide
 
 ---
 
-## 12. Non-Negotiable Rules
+## 11. Styling Rules
 
-1. Root structure is fixed:
+- `globals.css` — tokens, layout primitives, tiny shared elements (e.g. `.page-placeholder`) only
+- Large self-contained components get their own CSS file in `styles/app/`, imported directly by the component
+- Tailwind 4 utilities for layout/spacing
+- No hardcoded colors — always `var(--...)` from `globals.css`
+- RTL via `dir` attribute on `.main-layout` (set by `MainLayout.jsx`)
 
-```text
-App -> AppProviders -> MainLayout -> CurrentPage
-```
+---
 
-2. There is exactly **one root layout**
+## 12. Visual System Rules
 
-3. `App` owns:
-- `locale`
-- `mode`
+- Mobile is the baseline visual reference — spacing, proportion, hierarchy, sticky behavior, component feel
+- Desktop is not solved in the same pass unless explicitly requested
+- Desktop adaptation happens in a **separate pass** after mobile is correct
+- All implementation choices must remain extensible for a later desktop pass
+- No layout choices that require teardown to support desktop
+- No hardcoded dimensions that can't be overridden at a responsive breakpoint
 
-4. `Page` never manually passes:
-- `locale`
-- `mode`
+---
 
+## 13. Non-Negotiable Rules
+
+1. Root structure is fixed: `App -> AppProviders -> MainLayout -> CurrentPage`
+2. Exactly **one root layout**
+3. `App` owns `locale` and `mode`
+4. `Page` never manually passes `locale` or `mode`
 5. Use built-in React mechanisms and standard web-app conventions first
-
 6. Do **not** invent custom infrastructure when a standard solution already fits
-
 7. Resolver is a **local wrapper pattern**, not a giant central system
-
 8. Resolver does **not** own full leaf schemas
-
 9. Page owns structure
-
-10. Resolver may resolve:
-- content
-- data
-- media
-- style config
-
-11. Resolver may **not** define page composition
-
-12. Leaf requests semantic payloads only
-
-13. `content/` and `data/` both remain
-
-14. Feature-local layout variation stays inside the feature
-
-15. Timeline is a feature, not a root layout concern
-
-16. Every decision happens **once**, at the correct layer
+10. Resolver may resolve content, data, media, style config — but not page composition
+11. Leaf requests semantic payloads only
+12. `content/` and `data/` both remain separate layers
+13. Feature-local layout variation stays inside the feature
+14. Timeline is a feature, not a root layout concern
+15. Every decision happens **once**, at the correct layer
+16. Visual systems are validated **mobile-first** by default — desktop is a separate pass

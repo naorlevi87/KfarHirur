@@ -10,7 +10,7 @@ import { JoinTeamPage } from '../pages/joinTeam/JoinTeamPage.jsx';
 import { KeepItGoingPage } from '../pages/keepItGoing/KeepItGoingPage.jsx';
 import { TimelinePage } from '../pages/timeline/TimelinePage.jsx';
 
-function App() {
+export function App() {
   const locale = 'he';
   const [mode, setMode] = useState(() => (Math.random() < 0.5 ? 'shay' : 'naor'));
 
@@ -30,4 +30,3 @@ function App() {
   );
 }
 
-export default App;
