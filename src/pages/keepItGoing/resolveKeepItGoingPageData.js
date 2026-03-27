@@ -1,5 +1,6 @@
 // src/pages/keepItGoing/resolveKeepItGoingPageData.js
-// Page-local: pick locale branch + story by mode; small hook for KeepItGoingPage only.
+// Page-local resolver: merges shared + mode branch into a semantic payload.
+// Exports both a pure function (for tests) and a hook (for the page component).
 
 import { useAppContext } from '../../app/appState/useAppContext.js';
 import { keepItGoingContent as keepItGoingHe } from '../../content/site/he/keepItGoing.content.js';
@@ -14,17 +15,26 @@ function resolveRoot(locale) {
   return byLocale[locale] ?? byLocale.he;
 }
 
-function resolveStory(root, mode) {
-  const key = mode === 'shay' || mode === 'naor' ? mode : 'naor';
+function resolveMode(root, mode) {
+  const key = mode === 'shay' ? 'shay' : 'naor';
   return root[key] ?? root.naor ?? {};
 }
 
 export function resolveKeepItGoingPageData(locale, mode) {
   const root = resolveRoot(locale);
   const shared = root.shared ?? {};
-  const story = resolveStory(root, mode);
-  const meta = shared.supportMeta ?? {};
-  return { shared, story, meta };
+  const branch = resolveMode(root, mode);
+
+  return {
+    hero: branch.hero ?? {},
+    cta: { ...branch.cta, donateUrl: shared.donateUrl, visitUrl: shared.visitUrl },
+    progress: shared.progress ?? {},
+    video: shared.video ?? {},
+    longText: branch.longText ?? {},
+    transparency: shared.transparency ?? {},
+    share: shared.share ?? {},
+    footer: shared.footer ?? {},
+  };
 }
 
 export function useKeepItGoingPageData() {
