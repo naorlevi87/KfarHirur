@@ -1,0 +1,365 @@
+/* src/styles/app/KeepItGoingPage.css */
+/* Fundraising page styles. All colors from globals.css tokens. Mobile-first baseline. */
+
+/* ── Page shell ─────────────────────────────────────────── */
+
+.kig-page {
+  box-sizing: border-box;
+  flex: 1;
+  width: 100%;
+  padding: 0 0 clamp(2.5rem, 10vw, 4rem);
+}
+
+.kig-inner {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 0 clamp(1rem, 5vw, 1.5rem);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.75rem, 6vw, 2.5rem);
+}
+
+/* ── Block 1: Hero ──────────────────────────────────────── */
+
+.kig-hero {
+  padding-top: clamp(1.25rem, 5vw, 2rem);
+}
+
+.kig-heading {
+  margin: 0 0 1rem;
+  font-size: clamp(1.75rem, 7vw, 2.6rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  color: var(--text-heading);
+  text-align: start;
+}
+
+.kig-heroP {
+  margin: 0 0 0.85rem;
+  font-size: clamp(0.97rem, 3.5vw, 1.05rem);
+  line-height: 1.7;
+  color: var(--text-body);
+}
+
+.kig-heroP:last-child {
+  margin-bottom: 0;
+}
+
+/* ── Block 2: CTA + progress ────────────────────────────── */
+
+.kig-cta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Primary donate button — styled via component class */
+.kig-donateBtn {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 1rem 1.5rem;
+  font: inherit;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  color: var(--accent-text);
+  cursor: pointer;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(
+    160deg,
+    var(--accent-soft) 0%,
+    var(--accent) 50%,
+    var(--accent-strong) 100%
+  );
+  box-shadow:
+    0 6px 28px var(--accent-shadow),
+    inset 0 2px 0 var(--accent-highlight);
+}
+
+.kig-donateBtn:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+/* Secondary visit button */
+.kig-visitBtn {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0.9rem 1.5rem;
+  font: inherit;
+  font-size: 0.97rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  border: 1.5px solid var(--surface-border);
+  border-radius: 999px;
+  background: var(--surface);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.kig-visitBtn:hover {
+  border-color: var(--accent);
+  background: var(--page-bg-secondary);
+}
+
+.kig-visitBtn:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+/* ── ProgressBar ────────────────────────────────────────── */
+
+.kig-progress {
+  padding-top: 0.25rem;
+}
+
+.kig-progress-track {
+  position: relative;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--surface-inset);
+  overflow: hidden;
+}
+
+.kig-progress-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent-soft), var(--accent));
+  will-change: width;
+}
+
+.kig-progress-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--surface-border);
+  border-radius: 999px;
+}
+
+.kig-progress-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.45rem;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--text-meta);
+}
+
+.kig-progress-raised strong {
+  color: var(--text-primary);
+}
+
+.kig-progress-milestones {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.65rem;
+  gap: 0.5rem;
+}
+
+.kig-progress-milestone {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.kig-progress-milestone--b {
+  text-align: end;
+}
+
+.kig-progress-milestone-amount {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-meta-label);
+}
+
+.kig-progress-milestone-label {
+  font-size: 0.7rem;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
+/* ── Block 3: Video ─────────────────────────────────────── */
+
+.kig-video {
+  /* section wrapper — no extra style needed, inner card handles visual */
+}
+
+.kig-videoCard {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 11rem;
+  border-radius: 1.15rem;
+  background: var(--surface);
+  border: 1px dashed var(--surface-border);
+  box-shadow: inset 0 0 0 1px var(--surface-inset);
+  padding: 1.25rem;
+}
+
+.kig-videoPlaceholder {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+/* ── Block 4: Long text ─────────────────────────────────── */
+
+.kig-longText {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.kig-longP {
+  margin: 0;
+  font-size: clamp(0.97rem, 3.5vw, 1.05rem);
+  line-height: 1.75;
+  color: var(--text-body);
+  max-width: 65ch;
+}
+
+/* ── Block 5: Transparency ──────────────────────────────── */
+
+.kig-transparency {
+  padding: 1.25rem;
+  border-radius: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+}
+
+.kig-transparencyHeading {
+  margin: 0 0 0.6rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-section);
+}
+
+.kig-transparencyPlaceholder {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+/* ── Block 6: Share ─────────────────────────────────────── */
+
+.kig-shareHeading {
+  margin: 0 0 0.85rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-section);
+}
+
+.kig-shareActions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.kig-whatsappBtn {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0.85rem 1.25rem;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  color: var(--accent-text);
+  border-radius: 999px;
+  background: #25d366;
+  transition: opacity 0.15s ease;
+}
+
+.kig-whatsappBtn:hover {
+  opacity: 0.9;
+}
+
+.kig-whatsappBtn:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+.kig-copyBtn {
+  appearance: none;
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0.75rem 1.25rem;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 500;
+  text-align: center;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border: 1px dashed var(--surface-border);
+  border-radius: 999px;
+  background: transparent;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.kig-copyBtn:hover {
+  color: var(--text-primary);
+  border-color: var(--accent);
+}
+
+.kig-copyBtn:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+/* ── Block 7: Footer link ───────────────────────────────── */
+
+.kig-footer {
+  text-align: center;
+  padding-top: 0.5rem;
+}
+
+.kig-backLink {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.kig-backLink:hover {
+  color: var(--text-primary);
+}
+
+.kig-backLink:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+/* ── Desktop tweaks (mobile-first — desktop is a separate pass) ── */
+
+@media (min-width: 48rem) {
+  .kig-inner {
+    max-width: 42rem;
+  }
+
+  .kig-hero {
+    padding-top: 2rem;
+  }
+
+  .kig-videoCard {
+    min-height: 13rem;
+  }
+}

@@ -3,7 +3,7 @@
 // Isolated motion component — uses useMotionValue + animate, no useState for animation.
 
 import { useRef, useEffect } from 'react';
-import { useMotionValue, useTransform, motion, animate, useInView } from 'motion/react';
+import { useMotionValue, useTransform, motion, animate, useInView } from 'motion/react'; // eslint-disable-line no-unused-vars
 
 export function ProgressBar({ progress }) {
   const {
