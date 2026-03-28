@@ -1,27 +1,37 @@
 // src/features/timeline/timelineData.js
-// Flat array of all timeline items — L0 nodes (minScale:0) + sub-items (minScale:2.0+).
-// Each item has canvas coordinates (x,y), visibility threshold (minScale),
-// size variant, and naor/shay content objects.
-// Canvas size: 3000 x 2200.
+// Timeline items. Position (x, y) and tangent are derived from each item's `date`
+// using the bezier path in timelinePath.js — not hardcoded.
+
+import { evaluateAtDate } from './timelinePath.js';
 
 export const CANVAS_W = 3000;
 export const CANVAS_H = 2200;
 
-export const items = [
-  // ── L0 NODES — always visible ──────────────────────────────────────────────
+const rawItems = [
+  // ── L0 NODES ──────────────────────────────────────────────────────────────
+
+  {
+    id: 'zula',
+    date: '2014-10',
+    minScale: 0,
+    size: 'standard',
+    initialView: true,
+    naor: { tag: 'תחילת 2012', title: 'הזולה בחוף', text: 'תוכן בקרוב.' },
+    shay: { tag: 'תחילת 2012', title: 'הזולה בחוף', text: 'תוכן בקרוב.' },
+  },
 
   {
     id: 'atlit',
-    x: 1400, y: 1900,
+    date: '2014-11',
     minScale: 0,
     size: 'standard',
     naor: {
-      tag: '2013–2015',
+      tag: 'נוב׳ 2014 – דצמ׳ 2016',
       title: 'עתלית',
       text: 'הזולה על חוף הים. DMT, מדורה, סופה. שני אנשים שעדיין לא יודעים מה הם עושים ביחד — אבל יודעים שהם עושים.',
     },
     shay: {
-      tag: '2013–2015',
+      tag: 'נוב׳ 2014 – דצמ׳ 2016',
       title: 'עתלית',
       text: 'הים בלילה. אש. ריח של מלח ועשן. לא ידענו כלום, אבל הכל היה שם כבר — בזולה, ברוח, בעיניים זה של זה.',
     },
@@ -29,24 +39,34 @@ export const items = [
 
   {
     id: 'einkemunim',
-    x: 2060, y: 1700,
+    date: '2016-06',
     minScale: 0,
     size: 'standard',
     naor: {
-      tag: '2014–2015',
+      tag: '2016',
       title: 'עין כמונים',
       text: 'חוות גבינות עיזים בצפון. ניהול ראשון משותף. הבנו שאנחנו יודעים לעשות את זה — ושאנחנו עושים את זה אחרת.',
     },
     shay: {
-      tag: '2014–2015',
+      tag: '2016',
       title: 'עין כמונים',
       text: 'עיזים, גבינה, צפון. בפעם הראשונה ניהלנו ביחד — ולא היה ויכוח אחד על מה "צריך" לעשות. רק עשינו.',
     },
   },
 
   {
+    id: 'project24',
+    date: '2015-05',
+    minScale: 0,
+    size: 'standard',
+    initialView: true,
+    naor: { tag: 'מאי 2015', title: 'פרויקט 24', text: 'תוכן בקרוב.' },
+    shay: { tag: 'מאי 2015', title: 'פרויקט 24', text: 'תוכן בקרוב.' },
+  },
+
+  {
     id: 'manuela',
-    x: 2340, y: 1338,
+    date: '2015-07',
     minScale: 0,
     size: 'standard',
     naor: {
@@ -62,17 +82,35 @@ export const items = [
   },
 
   {
+    id: 'placeholder-1',
+    date: '2015-10',
+    minScale: 0,
+    size: 'standard',
+    naor: { tag: '2015–2016', title: 'פריט 1', text: 'תוכן בקרוב.' },
+    shay:  { tag: '2015–2016', title: 'פריט 1', text: 'תוכן בקרוב.' },
+  },
+
+  {
+    id: 'placeholder-2',
+    date: '2016-04',
+    minScale: 0,
+    size: 'standard',
+    naor: { tag: '2016', title: 'פריט 2', text: 'תוכן בקרוב.' },
+    shay:  { tag: '2016', title: 'פריט 2', text: 'תוכן בקרוב.' },
+  },
+
+  {
     id: 'tlv',
-    x: 1240, y: 638,
+    date: '2016-10',
     minScale: 0,
     size: 'standard',
     naor: {
-      tag: '2016',
+      tag: 'סוף 2016',
       title: 'למה אנחנו מחכים?',
       text: '"נאור, למה אנחנו מחכים?" — שי חזר ממשמרת, שאל אותי. עזבנו את העבודות. 25 אלף כל אחד. שלושה חודשים לגרום לזה לקרות.',
     },
     shay: {
-      tag: '2016',
+      tag: 'סוף 2016',
       title: 'למה אנחנו מחכים?',
       text: 'חזרתי ממשמרת ב-3 בלילה ושאלתי. לא ידעתי מה אני מצפה שיגיד. הוא אמר "לכלום". קמנו בבוקר ועזבנו.',
     },
@@ -80,9 +118,10 @@ export const items = [
 
   {
     id: 'joz-open',
-    x: 1602, y: 378,
+    date: '2017-07',
     minScale: 0,
     size: 'key',
+    initialView: true,
     naor: {
       tag: 'יולי 2017',
       title: "ג'וז ולוז נפתח",
@@ -97,9 +136,10 @@ export const items = [
 
   {
     id: 'corona',
-    x: 1400, y: 75,
+    date: '2020-06',
     minScale: 0,
-    size: 'large',
+    size: 'key',
+    initialView: true,
     naor: {
       tag: '2020',
       title: 'קורונה',
@@ -113,10 +153,20 @@ export const items = [
   },
 
   {
-    id: 'pinum',
-    x: 420, y: 378,
+    id: 'placeholder-3',
+    date: '2020-10',
     minScale: 0,
     size: 'standard',
+    naor: { tag: '2020–2021', title: 'פריט 3', text: 'תוכן בקרוב.' },
+    shay:  { tag: '2020–2021', title: 'פריט 3', text: 'תוכן בקרוב.' },
+  },
+
+  {
+    id: 'pinum',
+    date: '2021-06',
+    minScale: 0,
+    size: 'standard',
+    initialView: true,
     naor: {
       tag: '2021',
       title: '[לא] צו פינוי',
@@ -131,9 +181,10 @@ export const items = [
 
   {
     id: 'milchama',
-    x: 818, y: 378,
+    date: '2023-10',
     minScale: 0,
     size: 'key',
+    initialView: true,
     naor: {
       tag: '7.10.2023',
       title: 'מלחמה',
@@ -148,9 +199,10 @@ export const items = [
 
   {
     id: 'now',
-    x: 280, y: 100,
+    date: '2026-03',
     minScale: 0,
     size: 'standard',
+    initialView: true,
     naor: {
       tag: '2024–2026',
       title: 'עכשיו',
@@ -163,11 +215,11 @@ export const items = [
     },
   },
 
-  // ── SUB-ITEMS — revealed at zoom ≥ 2.0 ────────────────────────────────────
+  // ── SUB-ITEMS — revealed at zoom ≥ 1 ──────────────────────────────────────
 
   {
     id: 'corona-lockdown',
-    x: 1310, y: 130,
+    date: '2020-03',
     minScale: 2.0,
     size: 'small',
     naor: {
@@ -184,7 +236,7 @@ export const items = [
 
   {
     id: 'joz-delivery',
-    x: 1490, y: 130,
+    date: '2020-04',
     minScale: 2.0,
     size: 'small',
     naor: {
@@ -201,7 +253,7 @@ export const items = [
 
   {
     id: 'milchama-return',
-    x: 750, y: 340,
+    date: '2023-11',
     minScale: 2.0,
     size: 'small',
     naor: {
@@ -218,7 +270,7 @@ export const items = [
 
   {
     id: 'joz-no-menu',
-    x: 1670, y: 340,
+    date: '2017-08',
     minScale: 2.0,
     size: 'small',
     naor: {
@@ -233,3 +285,10 @@ export const items = [
     },
   },
 ];
+
+// Pre-compute x, y, tx, ty for every item from its date.
+// Components read item.x / item.y — they don't know about the path.
+export const items = rawItems.map(item => {
+  const { x, y, tx, ty } = evaluateAtDate(item.date);
+  return { ...item, x, y, tx, ty };
+});

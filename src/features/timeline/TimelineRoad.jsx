@@ -1,6 +1,6 @@
 // src/features/timeline/TimelineRoad.jsx
-// Renders the winding SVG road: wide glow stroke + dashed centerline.
-// Colors from var(--road) and var(--road-glow) — change with consciousness mode.
+// Renders the timeline axis — a thick solid SVG line, not a road.
+// Subtle glow behind + clean solid stroke. Color from var(--road).
 
 export function TimelineRoad() {
   const d =
@@ -19,24 +19,23 @@ export function TimelineRoad() {
 
   return (
     <g>
-      {/* atmosphere glow */}
+      {/* soft glow behind the axis */}
       <path
         d={d}
         fill="none"
         stroke="var(--road)"
-        strokeWidth={30}
+        strokeWidth={18}
         strokeLinecap="round"
-        opacity={0.04}
+        opacity={0.07}
       />
-      {/* dashed centerline */}
+      {/* main axis line — solid, clean */}
       <path
         d={d}
         fill="none"
         stroke="var(--road)"
-        strokeWidth={1.5}
-        strokeDasharray="10 8"
+        strokeWidth={3}
         strokeLinecap="round"
-        opacity={0.28}
+        opacity={0.5}
       />
     </g>
   );
