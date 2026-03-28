@@ -4,7 +4,7 @@
 
 import { useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'motion/react'; // eslint-disable-line no-unused-vars
+import { motion } from 'motion/react';
 import '../../styles/app/KeepItGoingPage.css';
 import { getText } from '../../utils/content/getText.js';
 import { useKeepItGoingPageData } from './resolveKeepItGoingPageData.js';

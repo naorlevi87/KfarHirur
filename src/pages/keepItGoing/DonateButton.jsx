@@ -3,7 +3,7 @@
 // Motion via useMotionValue/useTransform only — no useState for animation.
 
 import { useRef } from 'react';
-import { motion, useMotionValue, useTransform, useSpring } from 'motion/react'; // eslint-disable-line no-unused-vars
+import { motion, useMotionValue, useTransform, useSpring } from 'motion/react';
 
 export function DonateButton({ href, label, ariaLabel }) {
   const ref = useRef(null);

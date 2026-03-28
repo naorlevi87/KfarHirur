@@ -34,7 +34,7 @@ export function TimelineFeature() {
     worldY.set(vpH / 2 - 900);
   }, [worldX, worldY]);
 
-  function handleNodeTap(item, screenPos) {
+  function handleNodeTap(item, _screenPos) {
     const vpW = window.innerWidth;
     const vpH = window.innerHeight;
     const targetX = vpW / 2 - item.x * ZOOM_SCALE;
