@@ -62,6 +62,9 @@ body {
 
   --glow: rgba(110, 107, 255, 0.18);
 
+  --road: #7c6fcd;
+  --road-glow: rgba(124, 111, 205, 0.08);
+
   --brand-title: #1f2559;
   --brand-subtitle: #5c6699;
 }
@@ -101,6 +104,9 @@ body {
   --focus-ring: rgba(255, 140, 100, 0.55);
 
   --glow: rgba(255, 107, 74, 0.16);
+
+  --road: #e07a5f;
+  --road-glow: rgba(224, 122, 95, 0.08);
 
   --brand-title: #8a3420;
   --brand-subtitle: #a0562e;
