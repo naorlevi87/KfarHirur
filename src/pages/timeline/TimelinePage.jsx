@@ -1,10 +1,8 @@
 // src/pages/timeline/TimelinePage.jsx
-// Placeholder route shell for timeline (Phase 1 — no final UI).
+// Thin page shell for the timeline route. Renders TimelineFeature full-viewport.
+
+import { TimelineFeature } from '../../features/timeline/TimelineFeature.jsx';
 
 export function TimelinePage() {
-  return (
-    <div className="page-placeholder" data-page="timeline">
-      <p>TimelinePage placeholder</p>
-    </div>
-  );
+  return <TimelineFeature />;
 }
