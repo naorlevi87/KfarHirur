@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { animate, AnimatePresence, useMotionValue } from 'framer-motion';
 import { useAppContext } from '../../app/appState/useAppContext.js';
-import { items, CANVAS_W, CANVAS_H } from './timelineData.js';
+import { items } from './timelineData.js';
 import { TimelineCanvas } from './TimelineCanvas.jsx';
 import { TimelineRoad } from './TimelineRoad.jsx';
 import { TimelineNode } from './TimelineNode.jsx';
