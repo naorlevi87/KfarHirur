@@ -1,42 +1,37 @@
 // src/features/timeline/TimelineRoad.jsx
-// Renders the timeline axis — a thick solid SVG line, not a road.
-// Subtle glow behind + clean solid stroke. Color from var(--road).
+// Renders the timeline axis. Stroke width is counter-scaled to stay fixed on screen.
+// Pencil/brush feel via SVG feTurbulence displacement.
 
-export function TimelineRoad() {
-  const d =
-    'M 1400 1900' +
-    ' C 1600 1820, 1850 1780, 2050 1700' +
-    ' C 2250 1620, 2380 1500, 2340 1340' +
-    ' C 2300 1180, 2100 1100, 1900 1060' +
-    ' C 1700 1020, 1500 1040, 1360 960' +
-    ' C 1220 880, 1160 760, 1240 640' +
-    ' C 1320 520, 1500 480, 1600 380' +
-    ' C 1700 280, 1680 160, 1560 100' +
-    ' C 1440 40, 1280 60, 1160 130' +
-    ' C 1040 200, 940 320, 820 380' +
-    ' C 700 440, 540 440, 420 380' +
-    ' C 300 320, 240 200, 280 100';
+import { useTransform, motion } from 'framer-motion';
+import { buildPathString } from './timelinePath.js';
+
+const CORE_SCREEN_WIDTH = 7;
+const THIN_SCREEN_WIDTH = 2;
+
+export function TimelineRoad({ worldScale }) {
+  const coreWidth = useTransform(worldScale, s => CORE_SCREEN_WIDTH / s);
+  const thinWidth = useTransform(worldScale, s => THIN_SCREEN_WIDTH / s);
+  const glowWidth = useTransform(worldScale, s => 28 / s);
+
+  const d = buildPathString();
 
   return (
     <g>
-      {/* soft glow behind the axis */}
-      <path
-        d={d}
-        fill="none"
-        stroke="var(--road)"
-        strokeWidth={18}
-        strokeLinecap="round"
-        opacity={0.07}
-      />
-      {/* main axis line — solid, clean */}
-      <path
-        d={d}
-        fill="none"
-        stroke="var(--road)"
-        strokeWidth={3}
-        strokeLinecap="round"
-        opacity={0.5}
-      />
+      <defs>
+        <filter id="tl-pencil" x="-4%" y="-4%" width="108%" height="108%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.022 0.012" numOctaves="4" seed="11" result="noise" />
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G" />
+        </filter>
+      </defs>
+
+      {/* wide soft glow */}
+      <motion.path d={d} fill="none" stroke="var(--road)" style={{ strokeWidth: glowWidth }} strokeLinecap="round" opacity={0.06} />
+
+      {/* thick core — distorted for pencil feel */}
+      <motion.path d={d} fill="none" stroke="var(--road)" style={{ strokeWidth: coreWidth }} strokeLinecap="round" opacity={0.52} filter="url(#tl-pencil)" />
+
+      {/* thin overlay for texture variance */}
+      <motion.path d={d} fill="none" stroke="var(--road)" style={{ strokeWidth: thinWidth }} strokeLinecap="round" opacity={0.28} filter="url(#tl-pencil)" />
     </g>
   );
 }

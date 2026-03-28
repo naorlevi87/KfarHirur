@@ -166,13 +166,19 @@
 
 .tl-item-view {
   position: fixed;
-  inset: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-height: 58vh;
   background: var(--page-bg);
+  border-top: 1px solid var(--surface-border);
+  border-radius: 18px 18px 0 0;
   z-index: 200;
   direction: rtl;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  box-shadow: 0 -8px 40px var(--accent-shadow);
 }
 
 .tl-item-view__header {

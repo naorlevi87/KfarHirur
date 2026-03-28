@@ -12,8 +12,8 @@ import { TimelinePreview } from './TimelinePreview.jsx';
 import { TimelineItemView } from './TimelineItemView.jsx';
 import './TimelineFeature.css';
 
-const ZOOM_SCALE   = 1.5;   // zoom-in scale — keeps context visible
-const INITIAL_SCALE = 0.38; // start zoomed out to see the whole axis
+const ZOOM_SCALE    = 1.0;  // zoom-in scale — keeps context visible
+const INITIAL_SCALE = 0.22; // start zoomed out to see the whole axis
 const SPRING = { type: 'spring', stiffness: 200, damping: 30 };
 
 function centeredPan(vpW, vpH, scale) {
@@ -47,14 +47,19 @@ export function TimelineFeature() {
   function handleNodeTap(item) {
     const vpW = window.innerWidth;
     const vpH = window.innerHeight;
+    // Place the node at 35% from the top so the axis remains visible below it
     animate(worldX,     vpW / 2 - item.x * ZOOM_SCALE, SPRING);
-    animate(worldY,     vpH / 2 - item.y * ZOOM_SCALE, SPRING);
+    animate(worldY,     vpH * 0.35 - item.y * ZOOM_SCALE, SPRING);
     animate(worldScale, ZOOM_SCALE, SPRING);
     setZoomLevel(1);
     setPreviewItem(item);
   }
 
   function handleBack() {
+    if (itemViewItem) {
+      setItemViewItem(null);
+      return;
+    }
     const vpW = window.innerWidth;
     const vpH = window.innerHeight;
     const { x, y } = centeredPan(vpW, vpH, INITIAL_SCALE);
@@ -63,7 +68,6 @@ export function TimelineFeature() {
     animate(worldY, y, SPRING);
     setZoomLevel(0);
     setPreviewItem(null);
-    setItemViewItem(null);
   }
 
   function handleBgClick() {
@@ -72,12 +76,13 @@ export function TimelineFeature() {
 
   function handleOpenItem(item) {
     setItemViewItem(item);
-    setPreviewItem(null);
   }
 
-  const visibleItems = items.filter(item =>
-    zoomLevel === 0 ? item.minScale === 0 : true
-  );
+  const visibleItems = items.filter(item => {
+    if (zoomLevel === 0) return item.initialView === true;
+    if (zoomLevel === 1) return item.minScale === 0;
+    return true;
+  });
 
   return (
     <div className="tl-feature" data-mode={mode}>
@@ -87,12 +92,14 @@ export function TimelineFeature() {
         worldScale={worldScale}
         onBgClick={handleBgClick}
       >
-        <TimelineRoad />
+        <TimelineRoad worldScale={worldScale} />
         {visibleItems.map(item => (
           <TimelineNode
             key={item.id}
             item={item}
             mode={mode}
+            worldScale={worldScale}
+            zoomLevel={zoomLevel}
             onTap={handleNodeTap}
           />
         ))}
@@ -121,7 +128,7 @@ export function TimelineFeature() {
         )}
       </AnimatePresence>
 
-      {zoomLevel > 0 && !itemViewItem && (
+      {zoomLevel > 0 && (
         <button className="tl-back-btn" onClick={handleBack} aria-label="חזרה למפה">
           ← חזרה
         </button>

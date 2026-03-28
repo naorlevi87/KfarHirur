@@ -16,7 +16,7 @@ export const siteShellContent = {
     menuLabel: 'Menu',
     closeLabel: 'Close',
     home: 'Home',
-    keepItGoing: 'Keep it going',
+    kenZeOved: 'Yes, it works',
     timeline: 'Timeline',
     joinTeam: 'Join team',
     mainNavAriaLabel: 'Main navigation',

@@ -13,7 +13,7 @@ const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), [tabindex]:not([tab
 /** Stable routes; labels come from siteShell.navigation (locale files). */
 const MENU_ROUTES = [
   { to: '/', labelKey: 'home', end: true },
-  { to: '/keep-it-going', labelKey: 'keepItGoing' },
+  { to: '/ken-ze-oved', labelKey: 'kenZeOved' },
   { to: '/timeline', labelKey: 'timeline' },
   { to: '/join-team', labelKey: 'joinTeam' },
 ];

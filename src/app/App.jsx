@@ -7,7 +7,7 @@ import { AppProviders } from './AppProviders.jsx';
 import { MainLayout } from './MainLayout.jsx';
 import { HomePage } from '../pages/home/HomePage.jsx';
 import { JoinTeamPage } from '../pages/joinTeam/JoinTeamPage.jsx';
-import { KeepItGoingPage } from '../pages/keepItGoing/KeepItGoingPage.jsx';
+import { KenZeOvedPage } from '../pages/kenZeOved/KenZeOvedPage.jsx';
 import { TimelinePage } from '../pages/timeline/TimelinePage.jsx';
 
 export function App() {
@@ -20,7 +20,7 @@ export function App() {
         <Routes>
           <Route element={<MainLayout />}>
             <Route index element={<HomePage />} />
-            <Route path="keep-it-going" element={<KeepItGoingPage />} />
+            <Route path="ken-ze-oved" element={<KenZeOvedPage />} />
             <Route path="timeline" element={<TimelinePage />} />
             <Route path="join-team" element={<JoinTeamPage />} />
           </Route>

@@ -1,4 +1,4 @@
-/* src/styles/app/KeepItGoingPage.css */
+/* src/styles/app/KenZeOvedPage.css */
 /* Fundraising page styles. All colors from globals.css tokens. Mobile-first baseline. */
 
 /* ── Page shell ─────────────────────────────────────────── */
@@ -176,6 +176,10 @@
 }
 
 .kig-progress-milestone--b {
+  text-align: center;
+}
+
+.kig-progress-milestone--c {
   text-align: end;
 }
 
@@ -268,56 +272,79 @@
 
 .kig-shareActions {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 0.6rem;
+  align-items: stretch;
 }
 
-.kig-whatsappBtn {
-  display: block;
+/* Social share buttons — icon + label, equal flex */
+.kig-socialBtn {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
   box-sizing: border-box;
-  width: 100%;
-  padding: 0.85rem 1.25rem;
+  padding: 0.8rem 0.75rem;
   font: inherit;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 600;
   text-align: center;
   text-decoration: none;
-  color: var(--accent-text);
   border-radius: 999px;
-  background: #25d366;
   transition: opacity 0.15s ease;
 }
 
-.kig-whatsappBtn:hover {
-  opacity: 0.9;
-}
-
-.kig-whatsappBtn:focus-visible {
+.kig-socialBtn:focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: 3px;
 }
 
+.kig-socialBtn:hover {
+  opacity: 0.88;
+}
+
+.kig-socialBtn--whatsapp {
+  color: #fff;
+  background: #25d366;
+}
+
+.kig-socialBtn--facebook {
+  color: #fff;
+  background: #1877f2;
+}
+
+.kig-socialIcon {
+  width: 1.1em;
+  height: 1.1em;
+  flex-shrink: 0;
+  fill: currentColor;
+}
+
 .kig-copyBtn {
   appearance: none;
-  display: block;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
   box-sizing: border-box;
-  width: 100%;
-  padding: 0.75rem 1.25rem;
+  padding: 0.8rem 0.75rem;
   font: inherit;
   font-size: 0.88rem;
   font-weight: 500;
   text-align: center;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   cursor: pointer;
-  border: 1px dashed var(--surface-border);
+  border: 1.5px solid var(--surface-border);
   border-radius: 999px;
-  background: transparent;
-  transition: color 0.15s ease, border-color 0.15s ease;
+  background: var(--surface);
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
 }
 
 .kig-copyBtn:hover {
-  color: var(--text-primary);
   border-color: var(--accent);
+  background: var(--page-bg-secondary);
 }
 
 .kig-copyBtn:focus-visible {

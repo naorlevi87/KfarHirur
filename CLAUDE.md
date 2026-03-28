@@ -12,6 +12,7 @@ Read all files in `docs/` before doing anything else:
 - `docs/kfar-hirur-architecture-spec.md`
 - `docs/kfar_hirur_development_workflow.md`
 - `docs/architecture-audit.md`
+- `docs/voice-and-copy.md` — **required before any copy or text work**
 
 These are the source of truth for architecture and workflow decisions.
 
@@ -57,6 +58,12 @@ This site must comply with Israeli accessibility and privacy law at all times:
   - No content that flashes more than 3 times per second
 - **Israeli Privacy Protection Law (חוק הגנת הפרטיות)** — no personal data collected or stored without explicit user consent and a clear privacy policy.
 - When adding any feature that touches user data, forms, or tracking — flag it and handle it according to these requirements.
+
+## Git commits
+
+**Never commit without the user seeing the changes locally first.**
+
+The workflow is always: implement → run dev server → user reviews in browser → user approves → then commit. Do not commit as a "final step" of an implementation task unless the user has explicitly confirmed they've seen and approved the result.
 
 ## Commands
 
@@ -115,6 +122,28 @@ Resolvers are **local wrapper patterns**, not a global central system. They live
 
 Leaf components request **semantic payloads** (e.g. `heroPayload`, `ctaConfig`) — never separate `content` / `data` / `style` props.
 
+### Data source opacity — hard rule
+
+**A component must never know where its data comes from.**
+
+- No component knows about Naor / Shay mode
+- No component knows about DB vs local vs static
+- No component calls a content file or a DB directly
+
+The only thing a component does: call a function (resolver / hook / query fn) and receive a semantic payload. Where that function gets the data from — static file, Vercel DB, CMS, env flag — is invisible to the component. This indirection is not optional and is not negotiable.
+
+This rule applies to all layers: pages, features, and leaf components.
+
+```
+Component → calls fn(params) → receives payload → renders
+                 ↑
+          resolver owns this:
+          reads locale, mode, DB, static — whatever is needed
+          component never sees any of it
+```
+
+Corollary: **do not add `naor`/`shay` sub-objects inside component props or JSX.** Mode-branching happens inside the resolver/data function, never at the render layer.
+
 ### App state
 
 `AppContext` exposes `{ locale, mode, setMode }` only. Access via `useAppContext()`. Do not add to it without a clear decision — keep it small.
@@ -134,6 +163,9 @@ Structure: `.cs-block` → `[cs-label--shay]` `[.cs-toggle-wrap]` `[cs-label--na
 **2. Content / i18n**
 
 All copy lives in `src/content/site/{he,en}/` as plain JS objects. Resolver functions pick the right locale. Locale is currently hardcoded to `'he'` in `App.jsx`. `getText(contentObj, 'key')` is a safe accessor — returns `''` for missing keys. Page content can have `naor`/`shay` sub-objects for mode-specific copy.
+
+**Planned direction — content DB on Vercel:**
+Mode-specific texts (Naor/Shay variants for page copy, timeline items, CTAs, etc.) will move from static JS files to a Vercel-hosted DB (Postgres or KV — TBD). A permissioned admin UI will allow editing without code deploys. The static files are a temporary holding layer — do not deepen the `naor`/`shay` nesting pattern in them. When implementing any new mode-branched content, design with the DB query layer in mind. The data source opacity rule above ensures components won't need to change when the migration happens.
 
 ### Timeline
 

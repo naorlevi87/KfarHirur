@@ -17,6 +17,9 @@ dist-ssr
 .superpowers/
 tools/
 
+# Non-code project files (design, docs, media — not tracked in git)
+/notcode
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

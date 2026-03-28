@@ -10,16 +10,13 @@ export function TimelineItemView({ item, mode, onClose }) {
   return (
     <motion.div
       className="tl-item-view"
-      initial={{ y: '100%' }}
-      animate={{ y: 0 }}
-      exit={{ y: '100%' }}
+      initial={{ y: '100%', opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ y: '100%', opacity: 0 }}
       transition={{ type: 'spring', stiffness: 220, damping: 32 }}
       onClick={e => e.stopPropagation()}
     >
       <div className="tl-item-view__header">
-        <button className="tl-item-view__back" onClick={onClose} aria-label="חזרה">
-          ←
-        </button>
         <span className="tl-item-view__tag">{content.tag}</span>
       </div>
 

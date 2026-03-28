@@ -1,4 +1,4 @@
-// src/pages/keepItGoing/DonateButton.jsx
+// src/pages/kenZeOved/DonateButton.jsx
 // Primary CTA — animated anchor to grow.link. Magnetic hover + spring press.
 // Motion via useMotionValue/useTransform only — no useState for animation.
 
