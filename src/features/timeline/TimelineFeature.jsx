@@ -10,7 +10,9 @@ import {
   CANVAS_W, CANVAS_H,
   ZOOM_MIN, ZOOM_MAX, ZOOM_STEP, INITIAL_SCALE,
   PREVIEW_OFFSET,
+  SCALE_ALWAYS, SCALE_MID, SCALE_CLOSE,
 } from './timelineData.js';
+import { timelineUi } from '../../content/site/he/timeline.content.js';
 import { getOutwardNormal } from './timelineUtils.js';
 import { useTimelineItems } from '../../data/timeline/useTimelineItems.js';
 import { TimelineCanvas } from './TimelineCanvas.jsx';
@@ -53,9 +55,24 @@ export function TimelineFeature() {
     setCurrentScale(INITIAL_SCALE);
   }, [worldX, worldY, worldScale]);
 
-  // Subscribe to worldScale to keep currentScale in sync (drives visible items)
+  // Subscribe to worldScale but only re-render when scale crosses a visibility threshold.
+  // Prevents 60fps React re-renders during animated zoom.
   useEffect(() => {
-    return worldScale.on('change', s => setCurrentScale(s));
+    const THRESHOLDS = [SCALE_ALWAYS, SCALE_MID, SCALE_CLOSE];
+    let lastScale = worldScale.get();
+
+    function crossed(prev, next) {
+      return THRESHOLDS.some(t => (prev < t) !== (next < t));
+    }
+
+    return worldScale.on('change', s => {
+      if (crossed(lastScale, s)) {
+        lastScale = s;
+        setCurrentScale(s);
+      } else {
+        lastScale = s;
+      }
+    });
   }, [worldScale]);
 
   // ── Zoom handler ────────────────────────────────────────────────────────────
@@ -119,6 +136,7 @@ export function TimelineFeature() {
     const vpW = window.innerWidth;
     const vpH = window.innerHeight;
     const { x, y } = centeredPan(vpW, vpH, INITIAL_SCALE);
+    setCurrentScale(INITIAL_SCALE);
     animate(worldScale, INITIAL_SCALE, SPRING);
     animate(worldX, x, SPRING);
     animate(worldY, y, SPRING);
@@ -190,13 +208,13 @@ export function TimelineFeature() {
         <button
           className="tl-zoom-btn"
           onClick={handleZoomIn}
-          aria-label="הגדל"
+          aria-label={timelineUi.zoomIn}
           disabled={currentScale >= ZOOM_MAX}
         >+</button>
         <button
           className="tl-zoom-btn"
           onClick={handleZoomOut}
-          aria-label="הקטן"
+          aria-label={timelineUi.zoomOut}
           disabled={currentScale <= ZOOM_MIN}
         >−</button>
       </div>
