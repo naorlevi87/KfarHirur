@@ -4,7 +4,7 @@
 import '../styles/app/HamburgerMenu.css';
 import { useEffect, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
-import { resolveSiteShellContent } from '../content/site/resolveSiteShellContent.js';
+import { resolveSiteShellContent } from './resolveSiteShellContent.js';
 import { getText } from '../utils/content/getText.js';
 import { useAppContext } from './appState/useAppContext.js';
 

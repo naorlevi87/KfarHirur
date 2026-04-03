@@ -9,17 +9,17 @@ import { useAppContext } from '../../app/appState/useAppContext.js';
 import {
   CANVAS_W, CANVAS_H,
   ZOOM_MIN, ZOOM_MAX, ZOOM_STEP, INITIAL_SCALE,
-  PREVIEW_OFFSET,
+  PREVIEW_OFFSET_Y,
+  PREVIEW_OFFSET_X,
   SCALE_ALWAYS, SCALE_MID, SCALE_CLOSE,
 } from './timelineData.js';
 import { timelineUi } from '../../content/site/he/timeline.content.js';
-import { getOutwardNormal } from './timelineUtils.js';
+import { assignLabelFlips } from './timelineUtils.js';
 import { useTimelineItems } from '../../data/timeline/useTimelineItems.js';
 import { TimelineCanvas } from './TimelineCanvas.jsx';
 import { TimelineRoad } from './TimelineRoad.jsx';
 import { TimelineNode } from './TimelineNode.jsx';
 import { TimelinePreview } from './TimelinePreview.jsx';
-import { TimelineItemView } from './TimelineItemView.jsx';
 import './TimelineFeature.css';
 
 const SPRING = { type: 'spring', stiffness: 200, damping: 30 };
@@ -40,20 +40,38 @@ export function TimelineFeature() {
   const worldScale = useMotionValue(INITIAL_SCALE);
 
   // currentScale drives visible-item filter — updated when worldScale changes
-  const [currentScale,  setCurrentScale]  = useState(INITIAL_SCALE);
-  const [previewItem,   setPreviewItem]   = useState(null);
-  const [itemViewItem,  setItemViewItem]  = useState(null);
+  const [currentScale, setCurrentScale] = useState(INITIAL_SCALE);
+  const [previewId,    setPreviewId]    = useState(null);
 
-  // Initial pan: center the full canvas
+  // Initial pan: restore saved position (after returning from item page) or center canvas.
   useEffect(() => {
-    const vpW = window.innerWidth;
-    const vpH = window.innerHeight;
-    const { x, y } = centeredPan(vpW, vpH, INITIAL_SCALE);
-    worldX.set(x);
-    worldY.set(y);
-    worldScale.set(INITIAL_SCALE);
-    setCurrentScale(INITIAL_SCALE);
+    const vpW   = window.innerWidth;
+    const vpH   = window.innerHeight;
+    const saved = sessionStorage.getItem('tl-pan');
+    if (saved) {
+      sessionStorage.removeItem('tl-pan');
+      const { x, y, scale } = JSON.parse(saved);
+      worldX.set(x);
+      worldY.set(y);
+      worldScale.set(scale);
+      setCurrentScale(scale);
+    } else {
+      const { x, y } = centeredPan(vpW, vpH, INITIAL_SCALE);
+      worldX.set(x);
+      worldY.set(y);
+      worldScale.set(INITIAL_SCALE);
+      setCurrentScale(INITIAL_SCALE);
+    }
   }, [worldX, worldY, worldScale]);
+
+  // Saves current pan/zoom to sessionStorage so TimelineItemPage can restore it on back.
+  function savePosition() {
+    sessionStorage.setItem('tl-pan', JSON.stringify({
+      x:     worldX.get(),
+      y:     worldY.get(),
+      scale: worldScale.get(),
+    }));
+  }
 
   // Subscribe to worldScale but only re-render when scale crosses a visibility threshold.
   // Prevents 60fps React re-renders during animated zoom.
@@ -112,47 +130,42 @@ export function TimelineFeature() {
 
   // ── Node tap ────────────────────────────────────────────────────────────────
   // Pan camera so the preview center (not the node) is at viewport center.
+  // Offset is computed in screen px then converted to world units so the node
+  // stays outside the preview card at any zoom level.
   function handleNodeTap(item) {
     const vpW = window.innerWidth;
     const vpH = window.innerHeight;
-    const scale = worldScale.get();
 
-    const { nx, ny } = getOutwardNormal(item.x, item.y, item.tx ?? 1, item.ty ?? 0);
-    const previewWorldX = item.x + nx * PREVIEW_OFFSET;
-    const previewWorldY = item.y + ny * PREVIEW_OFFSET;
+    // Zoom in one step on tap (capped at ZOOM_MAX)
+    const newScale = Math.min(ZOOM_MAX, worldScale.get() * ZOOM_STEP);
 
-    // Pan so previewWorld maps to viewport center
-    animate(worldX, vpW / 2 - previewWorldX * scale, SPRING);
-    animate(worldY, vpH / 2 - previewWorldY * scale, SPRING);
+    // Offsets in screen px, converted to world units at the new scale
+    const previewWorldX = item.x - PREVIEW_OFFSET_X / newScale;
+    const previewWorldY = item.y - PREVIEW_OFFSET_Y / newScale;
 
-    setPreviewItem(item);
+    animate(worldScale, newScale, SPRING);
+    animate(worldX, vpW / 2 - previewWorldX * newScale, SPRING);
+    animate(worldY, vpH / 2 - previewWorldY * newScale, SPRING);
+
+    setPreviewId(item.id);
   }
 
   function handleBack() {
-    if (itemViewItem) {
-      setItemViewItem(null);
-      return;
-    }
-    const vpW = window.innerWidth;
-    const vpH = window.innerHeight;
-    const { x, y } = centeredPan(vpW, vpH, INITIAL_SCALE);
-    setCurrentScale(INITIAL_SCALE);
-    animate(worldScale, INITIAL_SCALE, SPRING);
-    animate(worldX, x, SPRING);
-    animate(worldY, y, SPRING);
-    setPreviewItem(null);
+    setPreviewId(null);
   }
 
   function handleBgClick() {
-    if (previewItem) setPreviewItem(null);
-  }
-
-  function handleOpenItem(item) {
-    setItemViewItem(item);
+    if (previewId) setPreviewId(null);
   }
 
   // Items visible at current zoom level
   const visibleItems = items.filter(item => (item.minScale ?? 0) <= currentScale);
+
+  // Assign label flip direction — alternates sides for crowded adjacent nodes
+  const labelFlips = assignLabelFlips(visibleItems, currentScale);
+
+  // Derive preview item fresh from items on every render — picks up mode changes automatically
+  const previewItem = previewId ? (items.find(i => i.id === previewId) ?? null) : null;
 
   if (loading) return <div className="tl-feature tl-feature--loading" data-mode={mode} />;
   if (error)   return <div className="tl-feature tl-feature--error"   data-mode={mode} />;
@@ -172,33 +185,24 @@ export function TimelineFeature() {
             key={item.id}
             item={item}
             worldScale={worldScale}
+            labelFlip={labelFlips.get(item.id) ?? false}
             onTap={handleNodeTap}
           />
         ))}
       </TimelineCanvas>
 
       <AnimatePresence>
-        {previewItem && !itemViewItem && (
+        {previewItem && (
           <TimelinePreview
             key={previewItem.id}
             item={previewItem}
             onClose={handleBack}
-            onOpen={handleOpenItem}
+            onSavePosition={savePosition}
           />
         )}
       </AnimatePresence>
 
-      <AnimatePresence>
-        {itemViewItem && (
-          <TimelineItemView
-            key={itemViewItem.id}
-            item={itemViewItem}
-            onClose={() => setItemViewItem(null)}
-          />
-        )}
-      </AnimatePresence>
-
-      {previewItem && !itemViewItem && (
+      {previewItem && (
         <button className="tl-back-btn" onClick={handleBack} aria-label="חזרה למפה">
           ← חזרה
         </button>

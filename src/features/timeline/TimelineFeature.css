@@ -65,11 +65,56 @@
   outline-offset: 2px;
 }
 
+/* ── Zoom buttons ───────────────────────────────────────────────── */
+
+.tl-zoom-btns {
+  position: absolute;
+  bottom: 60px;
+  left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 20;
+}
+
+.tl-zoom-btn {
+  width: 36px;
+  height: 36px;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--road);
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.tl-zoom-btn:hover {
+  background: var(--page-bg-secondary);
+}
+
+.tl-zoom-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.tl-zoom-btn:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  border-radius: 8px;
+  outline-offset: 2px;
+}
+
 /* ── Preview card ───────────────────────────────────────────────── */
 
 .tl-preview {
   position: fixed;
-  width: 240px;
+  width: 300px;
   background: var(--surface);
   border: 1px solid var(--surface-border);
   border-radius: 14px;
@@ -128,6 +173,19 @@
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
+
+.tl-preview__edit {
+  font-size: 14px;
+  line-height: 1;
+  padding: 4px 6px;
+  border-radius: 6px;
+  background: none;
+  text-decoration: none;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+
+.tl-preview__edit:hover { opacity: 1; }
 
 .tl-preview__close {
   position: absolute;

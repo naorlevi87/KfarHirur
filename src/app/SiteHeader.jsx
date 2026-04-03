@@ -3,7 +3,7 @@
 
 import '../styles/app/SiteHeader.css';
 import logoCircle from '../assets/images/kfar-hirur-logo-circleOnly.png';
-import { resolveSiteShellContent } from '../content/site/resolveSiteShellContent.js';
+import { resolveSiteShellContent } from './resolveSiteShellContent.js';
 import { getText } from '../utils/content/getText.js';
 import { useAppContext } from './appState/useAppContext.js';
 import { ConsciousnessSwitcher } from './ConsciousnessSwitcher.jsx';

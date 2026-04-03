@@ -11,7 +11,6 @@ Always respond in English — regardless of what language the user writes in.
 Read all files in `docs/` before doing anything else:
 - `docs/kfar-hirur-architecture-spec.md`
 - `docs/kfar_hirur_development_workflow.md`
-- `docs/architecture-audit.md`
 - `docs/voice-and-copy.md` — **required before any copy or text work**
 
 These are the source of truth for architecture and workflow decisions.
@@ -72,6 +71,24 @@ npm run dev       # Start Vite dev server with HMR
 npm run build     # Production build
 npm run preview   # Preview production build locally
 npm run lint      # Run ESLint
+```
+
+## Running commands — Windows workaround
+
+The bash shell used by Claude has a broken PATH due to the Hebrew characters in the Windows username (`ג'וז מוזיקה`). npm and git are not on PATH.
+
+**Always run npm like this:**
+```bash
+cd "d:/KfarHirurDrive/KfarHirurCom" && PATH="/c/Program Files/nodejs:$PATH" "/c/Program Files/nodejs/npm.cmd" <command>
+```
+
+**git** — try `git <command>` first. If not found: `"/c/Program Files/Git/bin/git" <command>`
+
+**settings.json** at `~/.claude/settings.json` must include these permissions:
+```json
+"Bash(\"/c/Program Files/nodejs/npm.cmd\" *)",
+"Bash(\"/c/Program Files/nodejs/node\" *)",
+"Bash(git *)"
 ```
 
 No test suite is configured.
@@ -171,6 +188,14 @@ Mode-specific texts (Naor/Shay variants for page copy, timeline items, CTAs, etc
 
 The timeline is a **feature**, lives entirely in `features/timeline/`. It is not a root layout concern. Item type is resolved once at the feature layer — lower layers do not re-decide.
 
+Key patterns — must not be broken:
+- **`previewId` not `previewItem`**: store item ID in state, derive `previewItem = items.find(i => i.id === previewId)` each render. Storing the full object causes stale content when mode switches.
+- **Zoom tiers**: `min_scale` per item (0 / 0.45 / 0.9). Items filter by `item.minScale <= currentScale`. `currentScale` React state only updates when `worldScale` crosses a tier threshold — prevents 60fps re-renders.
+- **Route-based item detail**: `/timeline/:slug` renders `TimelineItemPage`. Before navigating, `savePosition()` writes pan/zoom to `sessionStorage`; on mount, `TimelineFeature` restores from it.
+- **Passive event listeners**: `wheel` and `touchmove` are registered via `addEventListener(..., { passive: false })` in a `useEffect` on a `containerRef` — React's synthetic events are passive and cannot call `preventDefault()`.
+
+Full documentation: `src/features/timeline/TIMELINE.md` and `docs/kfar-hirur-architecture-spec.md` § 10.
+
 ### Styling
 
 `globals.css` — site-wide tokens, layout primitives, small shared elements only.
@@ -187,6 +212,30 @@ Tailwind 4 utilities for layout/spacing. Theme colors are CSS variables — do n
 - **No broad cleanup on the way** — only change what was asked
 - **React-first** — use React composition, props, Context, custom hooks before inventing custom infrastructure
 - **Every decision happens once, at the correct layer**
+
+## Infrastructure & Services
+
+### Supabase
+
+- Project URL: `kqlfvwlzayinngrgafec.supabase.co`
+- Auth: `user_roles` table with roles `admin / editor / member`
+- RLS enabled on `timeline_items` and `timeline_item_blocks`
+- **Service role key:** `SUPABASE_SERVICE_ROLE_KEY` in `.env.local` — used only for local scripts that need to bypass RLS (seeding, admin scripting). Never expose to browser. Never commit.
+
+### Email / SMTP
+
+- Provider: **Resend**
+- Key name: `KfarHirur` (created 2026-04-03, ID: `eba83c8e-9b86-4ea0-9ac5-017c78718f0b`)
+- Permission: `sending_access`
+- Key owner: naorlevi87@gmail.com
+- Actual token: stored in `.env` only — never commit
+
+### Admin users
+
+- `naorlevi87@gmail.com` — Naor (owner)
+- `sknic83@gmail.com` — Shay (pending: create account → grant admin via `user_roles`)
+
+---
 
 ### Comments standard
 

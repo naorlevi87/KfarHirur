@@ -3,14 +3,21 @@
 // Always renders at viewport center — the camera pans to center the preview world-point.
 
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../app/appState/AuthContext.jsx';
 
-const CARD_W = 240;
-const CARD_H = 200;
+const CARD_W = 300;
+const CARD_H = 210;
 
-export function TimelinePreview({ item, onClose, onOpen }) {
-  const { role } = useAuth();
+export function TimelinePreview({ item, onClose, onSavePosition }) {
+  const { role }   = useAuth();
+  const navigate   = useNavigate();
   const { content } = item;
+
+  function handleOpen() {
+    onSavePosition?.();
+    navigate(`/timeline/${item.slug}`);
+  }
 
   const vpW  = window.innerWidth;
   const vpH  = window.innerHeight;
@@ -32,7 +39,7 @@ export function TimelinePreview({ item, onClose, onOpen }) {
       <div className="tl-preview__text">{content.text}</div>
 
       <div className="tl-preview__actions">
-        <button className="tl-preview__open" onClick={() => onOpen(item)}>
+        <button className="tl-preview__open" onClick={handleOpen}>
           פתח →
         </button>
         {(role === 'admin' || role === 'editor') && (

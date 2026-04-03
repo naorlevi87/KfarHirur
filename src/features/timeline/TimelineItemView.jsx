@@ -4,8 +4,8 @@
 
 import { motion } from 'framer-motion';
 
-export function TimelineItemView({ item, mode, onClose }) {
-  const content = item[mode] ?? item.naor;
+export function TimelineItemView({ item, onClose: _onClose }) {
+  const { content } = item;
 
   return (
     <motion.div
@@ -22,10 +22,6 @@ export function TimelineItemView({ item, mode, onClose }) {
 
       <div className="tl-item-view__body">
         <h1 className="tl-item-view__title">{content.title}</h1>
-
-        <div className="tl-item-view__image-slot" aria-label="תמונה בקרוב">
-          <span className="tl-item-view__image-placeholder">תמונה</span>
-        </div>
 
         <p className="tl-item-view__text">{content.text}</p>
       </div>

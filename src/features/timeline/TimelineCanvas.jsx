@@ -3,14 +3,17 @@
 // Calls onZoom(newScale, originX, originY) — parent owns pan math.
 // Accepts worldX, worldY, worldScale as MotionValues.
 
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { CANVAS_W, CANVAS_H, ZOOM_MIN, ZOOM_MAX, ZOOM_STEP } from './timelineData.js';
 
 export function TimelineCanvas({ worldX, worldY, worldScale, children, onBgClick, onZoom }) {
-  const pinchRef = useRef(null); // { dist, scale }
+  const containerRef = useRef(null);
+  const pinchRef     = useRef(null); // { dist, scale }
 
   // ── Wheel zoom ─────────────────────────────────────────────────────────────
+  // Registered as non-passive so preventDefault() suppresses page scroll.
+  // React's onWheel is passive by default — must use addEventListener directly.
   const handleWheel = useCallback((e) => {
     e.preventDefault();
     const delta    = e.deltaY < 0 ? ZOOM_STEP : 1 / ZOOM_STEP;
@@ -20,6 +23,7 @@ export function TimelineCanvas({ worldX, worldY, worldScale, children, onBgClick
   }, [worldScale, onZoom]);
 
   // ── Pinch zoom ─────────────────────────────────────────────────────────────
+  // touchmove also registered non-passive to allow preventDefault on pinch.
   const handleTouchStart = useCallback((e) => {
     if (e.touches.length === 2) {
       const dx = e.touches[0].clientX - e.touches[1].clientX;
@@ -51,13 +55,25 @@ export function TimelineCanvas({ worldX, worldY, worldScale, children, onBgClick
     if (pinchRef.current) pinchRef.current = null;
   }, []);
 
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    el.addEventListener('wheel',      handleWheel,      { passive: false });
+    el.addEventListener('touchstart', handleTouchStart, { passive: true  });
+    el.addEventListener('touchmove',  handleTouchMove,  { passive: false });
+    el.addEventListener('touchend',   handleTouchEnd,   { passive: true  });
+    return () => {
+      el.removeEventListener('wheel',      handleWheel);
+      el.removeEventListener('touchstart', handleTouchStart);
+      el.removeEventListener('touchmove',  handleTouchMove);
+      el.removeEventListener('touchend',   handleTouchEnd);
+    };
+  }, [handleWheel, handleTouchStart, handleTouchMove, handleTouchEnd]);
+
   return (
     <div
+      ref={containerRef}
       style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}
-      onWheel={handleWheel}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
     >
       <motion.div
         className="tl-canvas"

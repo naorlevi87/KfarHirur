@@ -12,16 +12,21 @@ export const ZOOM_STEP    = 1.35;   // multiplier per +/− button press
 export const INITIAL_SCALE = 0.22;  // starting scale
 
 // ── Item visibility tiers ─────────────────────────────────────────────────────
-// Items with min_scale <= current scale are visible.
-// SCALE_MID / SCALE_CLOSE match the min_scale values stored in Supabase.
-export const SCALE_ALWAYS = 0;      // main milestones — always visible
-export const SCALE_MID    = 0.45;   // sub-items — visible at mid zoom
-export const SCALE_CLOSE  = 0.9;    // detail items — visible only close up
+// DB stores zoom_tier: 0 | 1 | 2 (semantic level, not a scale value).
+// ZOOM_TIER_SCALE maps tier → the canvas scale at which the item becomes visible.
+// Change thresholds here freely — DB never stores scale values.
+export const SCALE_ALWAYS = 0;      // tier 0 — main milestones, always visible
+export const SCALE_MID    = 0.3;    // tier 1 — sub-items, visible at mid zoom
+export const SCALE_CLOSE  = 0.9;    // tier 2 — detail items, visible only close up
+
+export const ZOOM_TIER_SCALE = [SCALE_ALWAYS, SCALE_MID, SCALE_CLOSE];
 
 // ── Preview positioning ───────────────────────────────────────────────────────
-// World-unit distance from node center to preview center (along outward normal).
-// Tune this if preview feels too far or clips viewport edge on small screens.
-export const PREVIEW_OFFSET = 200;
+// Screen-px distance from node to preview card center.
+// PREVIEW_OFFSET_Y: node sits this many px below card center (vertical).
+// PREVIEW_OFFSET_X: node sits this many px to the RIGHT of card center (horizontal).
+export const PREVIEW_OFFSET_Y = 100;
+export const PREVIEW_OFFSET_X = 90;
 
 // ── Label geometry ────────────────────────────────────────────────────────────
 // Half the road's on-screen glow radius (px). Used to compute dynamic label gap.

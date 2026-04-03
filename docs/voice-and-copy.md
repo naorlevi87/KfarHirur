@@ -24,6 +24,10 @@ Humor comes from unexpected honesty, not from jokes.
 
 Cooler, more factual. Still human, but less personal. Lean, precise.
 
+Naor's longer copy is narrative and storytelling — builds a moment, takes its time. Not a historical recap ("פתחנו ב-2017, עשינו X, אז Y"). Talks *to* the reader, not *about* the place.
+
+Avoid: "אם שווה לכם משהו" — passive aggressive. Assumes doubt. Naor states, doesn't hedge.
+
 ---
 
 ## Authorship log

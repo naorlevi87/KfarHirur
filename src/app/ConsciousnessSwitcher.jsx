@@ -4,7 +4,7 @@
 // .cs-toggle-wrap: flex column containing toggle + sublabel — sublabel centers under the toggle only, not the full row.
 
 import '../styles/app/ConsciousnessSwitcher.css';
-import { resolveSiteShellContent } from '../content/site/resolveSiteShellContent.js';
+import { resolveSiteShellContent } from './resolveSiteShellContent.js';
 import { getText } from '../utils/content/getText.js';
 import { useAppContext } from './appState/useAppContext.js';
 
