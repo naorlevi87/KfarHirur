@@ -56,7 +56,51 @@ const H_GAP = 3;
 // ny=1.0 → label shifts V_SCALE px down; ny=-1.0 → V_SCALE px up
 const V_SCALE = 11;
 
-export function TimelineNode({ item, worldScale, labelFlip = false, onTap }) {
+const DRAW_DURATION     = 1200; // ms — must match TimelineRoad
+const NODE_DELAY_OFFSET = 100;  // ms after brush passes node before it appears
+const NODE_APPEAR_DUR   = 200;  // ms
+
+// Generates a deterministic organic blob path around (cx, cy) with radius r.
+// seed is a stable integer derived from item.id — same node always same shape.
+// Returns an SVG path `d` string.
+function blobPath(cx, cy, r, seed) {
+  const POINTS = 8;
+  const WOBBLE = 0.32;
+  const golden = 2.399; // golden angle radians
+
+  const pts = [];
+  for (let i = 0; i < POINTS; i++) {
+    const angle  = (i / POINTS) * Math.PI * 2;
+    const wobble = 1 + WOBBLE * Math.sin(seed + i * golden);
+    const pr     = r * wobble;
+    pts.push([cx + Math.cos(angle) * pr, cy + Math.sin(angle) * pr]);
+  }
+
+  // Smooth closed curve through points using quadratic bezier midpoints
+  const n = pts.length;
+  let d = '';
+  for (let i = 0; i < n; i++) {
+    const curr = pts[i];
+    const next = pts[(i + 1) % n];
+    const nextNext = pts[(i + 2) % n];
+    const mid  = [(curr[0] + next[0]) / 2, (curr[1] + next[1]) / 2];
+    const mid2 = [(next[0] + nextNext[0]) / 2, (next[1] + nextNext[1]) / 2];
+    if (i === 0) {
+      d += `M ${mid[0]} ${mid[1]} `;
+    }
+    d += `Q ${next[0]} ${next[1]} ${mid2[0]} ${mid2[1]} `;
+  }
+  return d + 'Z';
+}
+
+// Stable integer seed from item id string
+function idToSeed(id) {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (Math.imul(31, h) + id.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
+export function TimelineNode({ item, worldScale, labelFlip = false, onTap, isEntering = false, pathProgress = 0 }) {
   const { id, x, y, tx = 1, ty = 0, minScale = 0, content } = item;
   const isClose = minScale >= SCALE_CLOSE;
   const isMid   = minScale > 0 && !isClose;
@@ -83,9 +127,37 @@ export function TimelineNode({ item, worldScale, labelFlip = false, onTap }) {
   // Tag stacks in the same vertical direction as the label offset
   const tagDir = effectiveNy < 0 ? -1 : 1;
 
-  const groupRef = useRef(null);
-  const labelRef = useRef(null);
-  const tagRef   = useRef(null);
+  const groupRef     = useRef(null);
+  const labelRef     = useRef(null);
+  const tagRef       = useRef(null);
+  const nodeGroupRef = useRef(null);
+
+  useEffect(() => {
+    const el = nodeGroupRef.current;
+    if (!el) return;
+
+    if (!isEntering) {
+      el.style.opacity    = '1';
+      el.style.transform  = 'none';
+      el.style.transition = 'none';
+      return;
+    }
+
+    // Start hidden and scaled down around node center
+    el.style.opacity    = '0';
+    el.style.transform  = `translate(${x}px, ${y}px) scale(0) translate(${-x}px, ${-y}px)`;
+    el.style.transition = 'none';
+
+    const delay = pathProgress * DRAW_DURATION + NODE_DELAY_OFFSET;
+
+    const timer = setTimeout(() => {
+      el.style.transition = `opacity ${NODE_APPEAR_DUR}ms cubic-bezier(0, 0, 0.2, 1), transform ${NODE_APPEAR_DUR}ms cubic-bezier(0, 0, 0.2, 1)`;
+      el.style.opacity    = '1';
+      el.style.transform  = 'none';
+    }, delay);
+
+    return () => clearTimeout(timer);
+  }, [isEntering, pathProgress, x, y]);
 
   useEffect(() => {
     function update(s) {
@@ -131,52 +203,56 @@ export function TimelineNode({ item, worldScale, labelFlip = false, onTap }) {
   }
 
   return (
-    <g
-      ref={groupRef}
-      className={`tl-node tl-node--${isSub ? 'sub' : 'main'}`}
-      data-id={id}
-      onClick={handleClick}
-      style={{ cursor: 'pointer' }}
-    >
-      <circle cx={x} cy={y} r={glowR} fill="var(--road)"
-        fillOpacity={isSub ? 0.04 : 0.07} />
-
-      <circle cx={x} cy={y} r={r} fill="var(--page-bg)" stroke="var(--road)"
-        strokeWidth={isSub ? 1.5 : 2}
-        strokeOpacity={isSub ? 0.4 : 0.65} />
-
-      {/*
-        Initial positions are placeholders — useEffect sets the real positions
-        on first render and on every worldScale change.
-      */}
-      <text
-        ref={labelRef}
-        x={x} y={y}
-        fill="var(--text-secondary)"
-        fillOpacity={isSub ? 0.7 : 0.9}
-        fontSize={labelSize}
-        fontWeight={700}
-        fontFamily="Alef, sans-serif"
-        textAnchor={anchor}
-        dominantBaseline="middle"
-        pointerEvents="none"
+    <g ref={nodeGroupRef}>
+      <g
+        ref={groupRef}
+        className={`tl-node tl-node--${isSub ? 'sub' : 'main'}`}
+        data-id={id}
+        onClick={handleClick}
+        style={{ cursor: 'pointer' }}
       >
-        {content.title}
-      </text>
+        <path
+          d={blobPath(x, y, r, idToSeed(String(id)))}
+          fill="var(--page-bg)"
+          stroke="var(--road)"
+          strokeWidth={isSub ? 1.5 : 2.5}
+          strokeOpacity={isSub ? 0.38 : 0.60}
+          filter="url(#tl-pencil)"
+        />
 
-      <text
-        ref={tagRef}
-        x={x} y={y}
-        fill="var(--road)"
-        fillOpacity={0.65}
-        fontSize={TAG_SIZE}
-        fontFamily="Alef, sans-serif"
-        textAnchor="middle"
-        dominantBaseline="middle"
-        pointerEvents="none"
-      >
-        {content.tag}
-      </text>
+        {/*
+          Initial positions are placeholders — useEffect sets the real positions
+          on first render and on every worldScale change.
+        */}
+        <text
+          ref={labelRef}
+          x={x} y={y}
+          fill="var(--text-secondary)"
+          fillOpacity={isSub ? 0.7 : 0.9}
+          fontSize={labelSize}
+          fontWeight={700}
+          fontFamily="Alef, sans-serif"
+          textAnchor={anchor}
+          dominantBaseline="middle"
+          pointerEvents="none"
+        >
+          {content.title}
+        </text>
+
+        <text
+          ref={tagRef}
+          x={x} y={y}
+          fill="var(--road)"
+          fillOpacity={0.65}
+          fontSize={TAG_SIZE}
+          fontFamily="Alef, sans-serif"
+          textAnchor="middle"
+          dominantBaseline="middle"
+          pointerEvents="none"
+        >
+          {content.tag}
+        </text>
+      </g>
     </g>
   );
 }
