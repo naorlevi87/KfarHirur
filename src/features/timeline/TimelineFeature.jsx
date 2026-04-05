@@ -17,6 +17,7 @@ import {
 
 import { timelineUi } from '../../content/site/he/timeline.content.js';
 import { clampPan, assignLabelFlips } from './timelineUtils.js';
+import { getPathProgress } from './timelinePath.js';
 import { useTimelineItems } from '../../data/timeline/useTimelineItems.js';
 import { TimelineCanvas } from './TimelineCanvas.jsx';
 import { TimelineRoad } from './TimelineRoad.jsx';
@@ -24,7 +25,9 @@ import { TimelineNode } from './TimelineNode.jsx';
 import { TimelinePreview } from './TimelinePreview.jsx';
 import './TimelineFeature.css';
 
-const SPRING = { type: 'spring', stiffness: 200, damping: 30 };
+const SPRING        = { type: 'spring', stiffness: 200, damping: 30 };
+const SPRING_ENTER  = { type: 'spring', stiffness: 120, damping: 22 };
+const ENTRY_SCALE   = 0.07; // starting zoom for entrance animation
 
 function centeredPan(vpW, vpH, scale) {
   return {
@@ -47,8 +50,11 @@ export function TimelineFeature({ initialSlug = null }) {
   const [currentScale, setCurrentScale] = useState(INITIAL_SCALE);
   const [previewId,    setPreviewId]    = useState(null);
   const [expanded,     setExpanded]     = useState(false);
+  // true during initial entrance animation — false once restored or settled
+  const [isEntering,   setIsEntering]   = useState(false);
 
-  // Initial pan — restore saved position (after back from expanded) or center canvas
+  // Initial pan — restore saved position (back from item page, no animation)
+  // or entrance animation: start zoomed way out, spring into INITIAL_SCALE.
   useEffect(() => {
     const vpW   = window.innerWidth;
     const vpH   = window.innerHeight;
@@ -59,13 +65,20 @@ export function TimelineFeature({ initialSlug = null }) {
       worldX.set(x);
       worldY.set(y);
       worldScale.set(scale);
-      setCurrentScale(scale); // eslint-disable-line react-hooks/set-state-in-effect
+      setCurrentScale(scale);    // eslint-disable-line react-hooks/set-state-in-effect
+      setIsEntering(false);      // eslint-disable-line react-hooks/set-state-in-effect
     } else {
-      const { x, y } = centeredPan(vpW, vpH, INITIAL_SCALE);
-      worldX.set(x);
-      worldY.set(y);
-      worldScale.set(INITIAL_SCALE);
-      setCurrentScale(INITIAL_SCALE);
+      // Entrance: snap to entry scale centered, then spring into INITIAL_SCALE.
+      const { x: tx, y: ty } = centeredPan(vpW, vpH, INITIAL_SCALE);
+      const { x: sx, y: sy } = centeredPan(vpW, vpH, ENTRY_SCALE);
+      worldX.set(sx);
+      worldY.set(sy);
+      worldScale.set(ENTRY_SCALE);
+      setCurrentScale(ENTRY_SCALE); // eslint-disable-line react-hooks/set-state-in-effect
+      animate(worldScale, INITIAL_SCALE, SPRING_ENTER);
+      animate(worldX,     tx,            SPRING_ENTER);
+      animate(worldY,     ty,            SPRING_ENTER);
+      setIsEntering(true);       // eslint-disable-line react-hooks/set-state-in-effect
     }
   }, [worldX, worldY, worldScale]);
 
@@ -189,13 +202,13 @@ export function TimelineFeature({ initialSlug = null }) {
     if (!previewItem) return;
     savePosition();
     setExpanded(true);
-    navigate(`/timeline/${previewItem.slug}`, { state: locationState });
+    navigate(`/timeline/${previewItem.slug}`, { state: locationState, replace: true });
   }
 
   function handleClose() {
     setPreviewId(null);
     setExpanded(false);
-    navigate('/timeline', { state: locationState });
+    navigate('/timeline', { state: locationState, replace: true });
   }
 
   // Clicking the canvas closes small preview only (backdrop handles expanded close)
@@ -219,7 +232,7 @@ export function TimelineFeature({ initialSlug = null }) {
         onBgClick={handleBgClick}
         onZoom={handleZoom}
       >
-        <TimelineRoad worldScale={worldScale} />
+        <TimelineRoad worldScale={worldScale} isEntering={isEntering} />
         {visibleItems.map(item => (
           <TimelineNode
             key={item.id}
@@ -227,6 +240,8 @@ export function TimelineFeature({ initialSlug = null }) {
             worldScale={worldScale}
             labelFlip={labelFlips.get(item.id) ?? false}
             onTap={handleNodeTap}
+            isEntering={isEntering}
+            pathProgress={getPathProgress(item.date ?? '2020-01')}
           />
         ))}
       </TimelineCanvas>
