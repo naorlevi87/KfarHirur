@@ -122,3 +122,16 @@ export function labelOffset(tx, ty, labelSide, gap) {
   const ny = labelSide === 'left' ?  tx : -tx;
   return { dx: nx * gap, dy: ny * gap };
 }
+
+/**
+ * Returns a 0–1 fraction representing where along the full path this date falls.
+ * 0 = start of path (oldest date), 1 = end (newest date).
+ * Used by TimelineNode to compute entrance animation delay.
+ */
+export function getPathProgress(dateStr) {
+  const totalStart = toMonths(SEGMENT_DATES[0][0]);
+  const totalEnd   = toMonths(SEGMENT_DATES[SEGMENT_DATES.length - 1][1]);
+  const totalSpan  = totalEnd - totalStart;
+  const target     = Math.min(totalEnd, Math.max(totalStart, toMonths(dateStr)));
+  return (target - totalStart) / totalSpan;
+}
