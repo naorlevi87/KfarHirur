@@ -68,17 +68,27 @@ export function TimelineFeature({ initialSlug = null }) {
       setCurrentScale(scale);    // eslint-disable-line react-hooks/set-state-in-effect
       setIsEntering(false);      // eslint-disable-line react-hooks/set-state-in-effect
     } else {
-      // Entrance: snap to entry scale centered, then spring into INITIAL_SCALE.
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       const { x: tx, y: ty } = centeredPan(vpW, vpH, INITIAL_SCALE);
-      const { x: sx, y: sy } = centeredPan(vpW, vpH, ENTRY_SCALE);
-      worldX.set(sx);
-      worldY.set(sy);
-      worldScale.set(ENTRY_SCALE);
-      setCurrentScale(ENTRY_SCALE); // eslint-disable-line react-hooks/set-state-in-effect
-      animate(worldScale, INITIAL_SCALE, SPRING_ENTER);
-      animate(worldX,     tx,            SPRING_ENTER);
-      animate(worldY,     ty,            SPRING_ENTER);
-      setIsEntering(true);       // eslint-disable-line react-hooks/set-state-in-effect
+
+      if (prefersReduced) {
+        worldX.set(tx);
+        worldY.set(ty);
+        worldScale.set(INITIAL_SCALE);
+        setCurrentScale(INITIAL_SCALE); // eslint-disable-line react-hooks/set-state-in-effect
+        setIsEntering(false);           // eslint-disable-line react-hooks/set-state-in-effect
+      } else {
+        // Entrance: snap to entry scale centered, then spring into INITIAL_SCALE.
+        const { x: sx, y: sy } = centeredPan(vpW, vpH, ENTRY_SCALE);
+        worldX.set(sx);
+        worldY.set(sy);
+        worldScale.set(ENTRY_SCALE);
+        setCurrentScale(ENTRY_SCALE); // eslint-disable-line react-hooks/set-state-in-effect
+        animate(worldScale, INITIAL_SCALE, SPRING_ENTER);
+        animate(worldX,     tx,            SPRING_ENTER);
+        animate(worldY,     ty,            SPRING_ENTER);
+        setIsEntering(true); // eslint-disable-line react-hooks/set-state-in-effect
+      }
     }
   }, [worldX, worldY, worldScale]);
 

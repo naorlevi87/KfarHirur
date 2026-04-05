@@ -36,12 +36,9 @@ import { getOutwardNormal, estimateLabelBox } from './timelineUtils.js';
 import { SCALE_CLOSE } from './timelineData.js';
 
 // Node circle sizes by tier (screen px, counter-scaled)
-const MAIN_R     = 8;
-const MAIN_GLOW  = 18;
-const MID_R      = 5;
-const MID_GLOW   = 12;
-const CLOSE_R    = 4;
-const CLOSE_GLOW = 9;
+const MAIN_R  = 8;
+const MID_R   = 5;
+const CLOSE_R = 4;
 
 // Label font sizes by tier (screen px)
 const LABEL_MAIN  = 16; // minScale=0 — always-visible milestones
@@ -106,8 +103,7 @@ export function TimelineNode({ item, worldScale, labelFlip = false, onTap, isEnt
   const isMid   = minScale > 0 && !isClose;
   const isSub   = minScale > 0; // any non-main item
 
-  const r         = isClose ? CLOSE_R    : isMid ? MID_R    : MAIN_R;
-  const glowR     = isClose ? CLOSE_GLOW : isMid ? MID_GLOW : MAIN_GLOW;
+  const r         = isClose ? CLOSE_R : isMid ? MID_R : MAIN_R;
   const labelSize = isClose ? LABEL_CLOSE : isMid ? LABEL_MID : LABEL_MAIN;
 
   // Outward normal at this node's position on the bezier path
