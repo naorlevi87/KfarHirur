@@ -8,11 +8,14 @@ import { createBlock, reorderBlocks } from '../../../data/admin/timelineAdminQue
 import './BlockEditor.css';
 
 const BLOCK_TYPES = [
-  { value: 'text',  label: 'טקסט' },
-  { value: 'image', label: 'תמונה' },
-  { value: 'video', label: 'וידאו' },
-  { value: 'link',  label: 'לינק' },
-  { value: 'cta',   label: 'כפתור' },
+  { value: 'text',      label: 'טקסט' },
+  { value: 'image',     label: 'תמונה' },
+  { value: 'video',     label: 'וידאו' },
+  { value: 'link',      label: 'לינק' },
+  { value: 'cta',       label: 'כפתור' },
+  { value: 'youtube',   label: 'YouTube' },
+  { value: 'facebook',  label: 'Facebook' },
+  { value: 'instagram', label: 'Instagram' },
 ];
 
 const emptyContent = () => ({ naor: {}, shay: {} });

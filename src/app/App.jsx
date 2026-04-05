@@ -10,10 +10,13 @@ import { HomePage } from '../pages/home/HomePage.jsx';
 import { JoinTeamPage } from '../pages/joinTeam/JoinTeamPage.jsx';
 import { KenZeOvedPage } from '../pages/kenZeOved/KenZeOvedPage.jsx';
 import { TimelinePage } from '../pages/timeline/TimelinePage.jsx';
-import { TimelineItemPage } from '../pages/timeline/TimelineItemPage.jsx';
 import { LoginPage } from '../pages/login/LoginPage.jsx';
+import { ProfilePage } from '../pages/profile/ProfilePage.jsx';
+import { PrivacyPage } from '../pages/privacy/PrivacyPage.jsx';
+import { AdminDashboardPage } from '../pages/admin/AdminDashboardPage.jsx';
 import { AdminListPage } from '../pages/admin/AdminListPage.jsx';
 import { AdminItemPage } from '../pages/admin/AdminItemPage.jsx';
+import { AdminUsersPage } from '../pages/admin/AdminUsersPage.jsx';
 
 export function App() {
   const locale = 'he';
@@ -28,23 +31,33 @@ export function App() {
             <Route index element={<HomePage />} />
             <Route path="ken-ze-oved" element={<KenZeOvedPage />} />
             <Route path="timeline" element={<TimelinePage />} />
-            <Route path="timeline/:slug" element={<TimelineItemPage />} />
+            <Route path="timeline/:slug" element={<TimelinePage />} />
             <Route path="join-team" element={<JoinTeamPage />} />
           </Route>
 
-          {/* Auth */}
+          {/* Auth & static */}
           <Route path="login" element={<LoginPage />} />
+          <Route path="privacy" element={<PrivacyPage />} />
+
+          {/* Protected — any authenticated user */}
+          <Route element={<ProtectedRoute allowedRoles={[]} />}>
+            <Route element={<MainLayout />}>
+              <Route path="profile" element={<ProfilePage />} />
+            </Route>
+          </Route>
 
           {/* Admin — editor or admin role required */}
           <Route element={<ProtectedRoute allowedRoles={['admin', 'editor']} />}>
-            <Route path="admin" element={<AdminListPage />} />
-            <Route path="admin/timeline" element={<AdminListPage />} />
-            <Route path="admin/timeline/items/new" element={<AdminItemPage />} />
-            <Route path="admin/timeline/items/:slug" element={<AdminItemPage />} />
+            <Route element={<MainLayout />}>
+              <Route path="admin" element={<AdminDashboardPage />} />
+              <Route path="admin/users" element={<AdminUsersPage />} />
+              <Route path="admin/timeline" element={<AdminListPage />} />
+              <Route path="admin/timeline/items/new" element={<AdminItemPage />} />
+              <Route path="admin/timeline/items/:slug" element={<AdminItemPage />} />
+            </Route>
           </Route>
         </Routes>
       </BrowserRouter>
     </AppProviders>
   );
 }
-

@@ -1,0 +1,60 @@
+/* src/pages/admin/AdminDashboardPage.css */
+/* Admin dashboard landing page. */
+
+.admin-dashboard {
+  min-height: 100dvh;
+  background: var(--color-bg, #f9fafb);
+  color: var(--color-text, #111);
+}
+
+.admin-dashboard__main {
+  padding: 2rem 1.25rem;
+}
+
+.admin-dashboard__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.25rem;
+  max-width: 600px;
+}
+
+.admin-dashboard__card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid var(--color-border, #e5e7eb);
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow 0.15s ease, transform 0.12s ease;
+}
+
+.admin-dashboard__card:hover {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  transform: translateY(-2px);
+}
+
+.admin-dashboard__card:focus-visible {
+  outline: 2px solid var(--focus-ring, #6366f1);
+  outline-offset: 2px;
+}
+
+.admin-dashboard__card-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.admin-dashboard__card-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.admin-dashboard__card-desc {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary, #6b7280);
+  margin: 0;
+}

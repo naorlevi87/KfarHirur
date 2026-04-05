@@ -1,35 +1,37 @@
 // src/app/appState/AuthContext.jsx
-// Auth context: current user session + role.
-// Subscribes to Supabase auth state changes. Components never import supabase directly.
+// Auth context: current user session, role, and profile (display_name, avatar_url).
+// Subscribes to Supabase auth state changes.
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../../data/timeline/supabaseClient.js';
 import { fetchUserRole } from '../../data/auth/authQueries.js';
+import { fetchUserProfile } from '../../data/auth/profileQueries.js';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user,    setUser]    = useState(null);
   const [role,    setRole]    = useState(null);
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // onAuthStateChange fires immediately with INITIAL_SESSION — handles both
-    // the initial load and all subsequent auth changes (sign in, sign out, token refresh).
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         const nextUser = session?.user ?? null;
         setUser(nextUser);
 
-        // Defer DB call to next tick — avoids deadlock with Supabase's internal lock
-        // that is held during the onAuthStateChange callback.
         setTimeout(async () => {
           if (nextUser) {
-            const r = await fetchUserRole(nextUser.id);
-            console.log('[AuthContext] role:', r);
+            const [r, p] = await Promise.all([
+              fetchUserRole(nextUser.id),
+              fetchUserProfile(nextUser.id),
+            ]);
             setRole(r);
+            setProfile(p ? { displayName: p.display_name, avatarUrl: p.avatar_url } : {});
           } else {
             setRole(null);
+            setProfile(null);
           }
           setLoading(false);
         }, 0);
@@ -39,8 +41,12 @@ export function AuthProvider({ children }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  function refreshProfile(updates) {
+    setProfile(prev => ({ ...prev, ...updates }));
+  }
+
   return (
-    <AuthContext.Provider value={{ user, role, loading }}>
+    <AuthContext.Provider value={{ user, role, profile, loading, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );

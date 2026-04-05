@@ -12,8 +12,6 @@ import {
 import { EVENT_TYPES } from '../../data/admin/eventTypes.js';
 import { NaorShayInput } from './components/NaorShayInput.jsx';
 import { BlockEditor } from './components/BlockEditor.jsx';
-import { useAuth } from '../../app/appState/AuthContext.jsx';
-import { supabase } from '../../data/timeline/supabaseClient.js';
 import './AdminItemPage.css';
 
 const SIZE_OPTIONS = [
@@ -58,7 +56,6 @@ export function AdminItemPage() {
   const { slug } = useParams();   // undefined when creating new
   const isNew = !slug || slug === 'new';
   const navigate = useNavigate();
-  const { user, role } = useAuth();
 
   const [form,     setForm]     = useState(emptyForm);
   const [itemId,   setItemId]   = useState(null);
@@ -159,11 +156,6 @@ export function AdminItemPage() {
           <h1 className="admin-header__title">
             {isNew ? 'פריט חדש' : (form.naor_title || form.slug || 'עריכת פריט')}
           </h1>
-        </div>
-        <div className="admin-header__user">
-          <span className="admin-role-badge">{role}</span>
-          <span className="admin-email">{user?.email}</span>
-          <button className="admin-signout" onClick={() => supabase.auth.signOut()}>יציאה</button>
         </div>
       </header>
 

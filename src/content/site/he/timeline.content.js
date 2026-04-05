@@ -1,13 +1,15 @@
 // src/content/site/he/timeline.content.js
-// Authored timeline items — Hebrew. Geometry (x, y) is NOT here.
-// Each item: id, date, minScale, size, initialView?, naor, shay.
+// UI strings for the timeline feature.
 
 export const timelineUi = {
   zoomIn:  'הגדל',
   zoomOut: 'הקטן',
+  hint:    'גרור לשוטט · פינץ׳ לזום · לחץ על נקודה',
 };
 
-export const timelineItems = [
+// NOTE: Timeline items are served from Supabase (timeline_items table).
+// Use the admin UI to add or edit items. Do not add content here.
+const _legacyTimelineItems = [
   // ── L0 NODES ──────────────────────────────────────────────────────────────
 
   {
@@ -285,3 +287,4 @@ export const timelineItems = [
     },
   },
 ];
+void _legacyTimelineItems; // suppress unused-variable warning — intentionally kept as reference

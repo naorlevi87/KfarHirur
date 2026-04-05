@@ -1,0 +1,228 @@
+/* src/features/auth/AuthModal.css */
+/* Auth modal — consciousness-mode aware, mobile-first. */
+
+.auth-modal-root {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+@media (min-width: 640px) {
+  .auth-modal-root {
+    align-items: center;
+  }
+}
+
+.auth-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.auth-modal-panel {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  box-sizing: border-box;
+  padding: 2rem 1.5rem 2.5rem;
+  background: var(--page-bg);
+  border-radius: 20px 20px 0 0;
+  border: 1px solid var(--surface-border);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  animation: auth-slide-up 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@media (min-width: 640px) {
+  .auth-modal-panel {
+    border-radius: 20px;
+    animation: auth-fade-in 0.22s ease both;
+  }
+}
+
+@keyframes auth-slide-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes auth-fade-in {
+  from { transform: translateY(12px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.auth-modal-close {
+  position: absolute;
+  top: 1rem;
+  inset-inline-end: 1rem;
+  background: none;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  line-height: 1;
+}
+
+.auth-modal-close:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.auth-modal-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  text-align: center;
+}
+
+.auth-modal-providers {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.auth-provider-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.7rem 1rem;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.12s ease;
+  border: 1px solid var(--surface-border);
+}
+
+.auth-provider-btn:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+.auth-provider-btn:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.auth-provider-btn--google {
+  background: var(--page-bg);
+  color: var(--text-primary);
+}
+
+.auth-provider-btn--facebook {
+  background: #1877F2;
+  color: #fff;
+  border-color: #1877F2;
+}
+
+.auth-modal-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+}
+
+.auth-modal-divider::before,
+.auth-modal-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--surface-border);
+}
+
+.auth-email-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.auth-field__label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.auth-field__input {
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  border: 1px solid var(--surface-border);
+  background: var(--surface-inset);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 0.95rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.auth-field__input:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.auth-field__error {
+  font-size: 0.82rem;
+  color: #e05252;
+  margin: 0;
+}
+
+.auth-submit-btn {
+  margin-top: 0.3rem;
+  padding: 0.7rem;
+  border-radius: 10px;
+  border: none;
+  background: var(--accent);
+  color: var(--on-accent, #fff);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.auth-submit-btn:disabled { opacity: 0.6; cursor: default; }
+
+.auth-submit-btn:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.auth-switch-btn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+  text-align: center;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.auth-email-sent {
+  text-align: center;
+  padding: 0.5rem 0;
+}
+
+.auth-email-sent__title {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text-primary);
+  margin: 0 0 0.5rem;
+}
+
+.auth-email-sent__body {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin: 0;
+}

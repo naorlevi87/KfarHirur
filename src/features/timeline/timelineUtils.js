@@ -1,9 +1,30 @@
 // src/features/timeline/timelineUtils.js
-// Shared geometry helpers for timeline label and preview positioning.
+// Shared geometry helpers for timeline label, preview positioning, and pan clamping.
 //
 // Used by:
-//   TimelineNode.jsx  — getOutwardNormal, estimateLabelBox, assignLabelFlips
-//   TimelineFeature.jsx — getOutwardNormal (preview pan target)
+//   TimelineNode.jsx    — getOutwardNormal, estimateLabelBox, assignLabelFlips
+//   TimelineFeature.jsx — clampPan, getOutwardNormal
+//   TimelineCanvas.jsx  — clampPan
+
+import { CANVAS_W, CANVAS_H } from './timelineData.js';
+
+// How much of the viewport (fraction) must remain covered by the canvas when panning.
+const PAN_GUARD = 0.7;
+
+/**
+ * Clamps a pan position so the canvas always covers at least PAN_GUARD of the viewport.
+ * scale is the current worldScale value.
+ */
+export function clampPan(x, y, scale) {
+  const vpW    = window.innerWidth;
+  const vpH    = window.innerHeight;
+  const guardX = vpW * PAN_GUARD;
+  const guardY = vpH * PAN_GUARD;
+  return {
+    x: Math.min(vpW - guardX, Math.max(guardX - CANVAS_W * scale, x)),
+    y: Math.min(vpH - guardY, Math.max(guardY - CANVAS_H * scale, y)),
+  };
+}
 
 // Approximate geometric center of the bezier path in canvas coords.
 // Used to determine which perpendicular side of the tangent faces "outward".

@@ -4,8 +4,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchAllItems } from '../../data/admin/timelineAdminQueries.js';
-import { useAuth } from '../../app/appState/AuthContext.jsx';
-import { supabase } from '../../data/timeline/supabaseClient.js';
 import './AdminListPage.css';
 
 const STATUS_LABELS  = { published: 'פורסם', draft: 'טיוטה' };
@@ -13,13 +11,21 @@ const SIZE_LABELS    = { small: 'קטן', standard: 'רגיל', key: 'מרכזי
 const VIS_LABELS     = { both: 'שניהם', naor_only: 'נאור', shay_only: 'שי' };
 
 export function AdminListPage() {
-  const { user, role } = useAuth();
-
   const [items,   setItems]   = useState([]);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState('');
   const [search,  setSearch]  = useState('');
   const [sortBy,  setSortBy]  = useState('date');
+  const [sortDir, setSortDir] = useState('asc');
+
+  function toggleSort(col) {
+    if (sortBy === col) {
+      setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(col);
+      setSortDir('asc');
+    }
+  }
 
   useEffect(() => {
     fetchAllItems()
@@ -36,22 +42,21 @@ export function AdminListPage() {
              (item.slug ?? '').toLowerCase().includes(q);
     })
     .sort((a, b) => {
-      if (sortBy === 'date')  return a.date.localeCompare(b.date);
-      if (sortBy === 'title') return (a.naor_title ?? '').localeCompare(b.naor_title ?? '', 'he');
-      return 0;
+      let cmp = 0;
+      if (sortBy === 'date')       cmp = (a.date ?? '').localeCompare(b.date ?? '');
+      else if (sortBy === 'title') cmp = (a.naor_title ?? '').localeCompare(b.naor_title ?? '', 'he');
+      else if (sortBy === 'size')  cmp = (a.size ?? '').localeCompare(b.size ?? '');
+      else if (sortBy === 'status') cmp = (a.status ?? '').localeCompare(b.status ?? '');
+      else if (sortBy === 'visibility') cmp = (a.visibility ?? '').localeCompare(b.visibility ?? '');
+      return sortDir === 'asc' ? cmp : -cmp;
     });
 
   return (
     <div className="admin-list-page" dir="rtl">
       <header className="admin-header">
         <div className="admin-header__right">
-          <h1 className="admin-header__title">כפר הירעור — ניהול</h1>
-          <span className="admin-header__section">ציר הזמן</span>
-        </div>
-        <div className="admin-header__user">
-          <span className="admin-role-badge">{role}</span>
-          <span className="admin-email">{user?.email}</span>
-          <button className="admin-signout" onClick={() => supabase.auth.signOut()}>יציאה</button>
+          <Link to="/admin" className="admin-back-btn">← חזרה</Link>
+          <h1 className="admin-header__title">עריכת ציר זמן</h1>
         </div>
       </header>
 
@@ -63,14 +68,6 @@ export function AdminListPage() {
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
-        <select
-          className="admin-list-page__sort"
-          value={sortBy}
-          onChange={e => setSortBy(e.target.value)}
-        >
-          <option value="date">מיון: תאריך</option>
-          <option value="title">מיון: שם</option>
-        </select>
         <Link className="admin-list-page__new-btn" to="/admin/timeline/items/new">
           + פריט חדש
         </Link>
@@ -84,11 +81,27 @@ export function AdminListPage() {
           <table className="admin-list-page__table">
             <thead>
               <tr>
-                <th>כותרת</th>
-                <th>תאריך</th>
-                <th>גודל</th>
-                <th>סטטוס</th>
-                <th>נראות</th>
+                {[
+                  { key: 'title',      label: 'כותרת' },
+                  { key: 'date',       label: 'תאריך' },
+                  { key: 'size',       label: 'גודל' },
+                  { key: 'status',     label: 'סטטוס' },
+                  { key: 'visibility', label: 'נראות' },
+                ].map(({ key, label }) => (
+                  <th
+                    key={key}
+                    className="admin-list-page__th--sortable"
+                    onClick={() => toggleSort(key)}
+                    aria-sort={sortBy === key ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
+                  >
+                    {label}
+                    {sortBy === key && (
+                      <span className="admin-list-page__sort-arrow">
+                        {sortDir === 'asc' ? ' ↑' : ' ↓'}
+                      </span>
+                    )}
+                  </th>
+                ))}
                 <th></th>
               </tr>
             </thead>

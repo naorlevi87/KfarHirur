@@ -5,6 +5,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { animate, AnimatePresence, useMotionValue } from 'framer-motion';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppContext } from '../../app/appState/useAppContext.js';
 import {
   CANVAS_W, CANVAS_H,
@@ -13,8 +14,9 @@ import {
   PREVIEW_OFFSET_X,
   SCALE_ALWAYS, SCALE_MID, SCALE_CLOSE,
 } from './timelineData.js';
+
 import { timelineUi } from '../../content/site/he/timeline.content.js';
-import { assignLabelFlips } from './timelineUtils.js';
+import { clampPan, assignLabelFlips } from './timelineUtils.js';
 import { useTimelineItems } from '../../data/timeline/useTimelineItems.js';
 import { TimelineCanvas } from './TimelineCanvas.jsx';
 import { TimelineRoad } from './TimelineRoad.jsx';
@@ -31,8 +33,10 @@ function centeredPan(vpW, vpH, scale) {
   };
 }
 
-export function TimelineFeature() {
+export function TimelineFeature({ initialSlug = null }) {
   const { mode } = useAppContext();
+  const navigate  = useNavigate();
+  const { state: locationState } = useLocation();
   const { items, loading, error } = useTimelineItems();
 
   const worldX     = useMotionValue(0);
@@ -42,8 +46,9 @@ export function TimelineFeature() {
   // currentScale drives visible-item filter — updated when worldScale changes
   const [currentScale, setCurrentScale] = useState(INITIAL_SCALE);
   const [previewId,    setPreviewId]    = useState(null);
+  const [expanded,     setExpanded]     = useState(false);
 
-  // Initial pan: restore saved position (after returning from item page) or center canvas.
+  // Initial pan — restore saved position (after back from expanded) or center canvas
   useEffect(() => {
     const vpW   = window.innerWidth;
     const vpH   = window.innerHeight;
@@ -54,7 +59,7 @@ export function TimelineFeature() {
       worldX.set(x);
       worldY.set(y);
       worldScale.set(scale);
-      setCurrentScale(scale);
+      setCurrentScale(scale); // eslint-disable-line react-hooks/set-state-in-effect
     } else {
       const { x, y } = centeredPan(vpW, vpH, INITIAL_SCALE);
       worldX.set(x);
@@ -64,7 +69,6 @@ export function TimelineFeature() {
     }
   }, [worldX, worldY, worldScale]);
 
-  // Saves current pan/zoom to sessionStorage so TimelineItemPage can restore it on back.
   function savePosition() {
     sessionStorage.setItem('tl-pan', JSON.stringify({
       x:     worldX.get(),
@@ -72,6 +76,24 @@ export function TimelineFeature() {
       scale: worldScale.get(),
     }));
   }
+
+  // Reset when URL returns to /timeline (menu nav) — runs only on slug change.
+  useEffect(() => {
+    if (!initialSlug) {
+      setPreviewId(null); // eslint-disable-line react-hooks/set-state-in-effect
+      setExpanded(false);
+    }
+  }, [initialSlug]);
+
+  // Auto-open expanded view when arriving directly at /timeline/:slug.
+  useEffect(() => {
+    if (!initialSlug || !items.length || expanded) return;
+    const item = items.find(i => i.slug === initialSlug);
+    if (item) {
+      setPreviewId(item.id); // eslint-disable-line react-hooks/set-state-in-effect
+      setExpanded(true);
+    }
+  }, [initialSlug, items]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Subscribe to worldScale but only re-render when scale crosses a visibility threshold.
   // Prevents 60fps React re-renders during animated zoom.
@@ -94,78 +116,96 @@ export function TimelineFeature() {
   }, [worldScale]);
 
   // ── Zoom handler ────────────────────────────────────────────────────────────
-  // Zooms to newScale around screen point (originX, originY).
   const handleZoom = useCallback((newScale, originX, originY) => {
     const currentS = worldScale.get();
     const curX     = worldX.get();
     const curY     = worldY.get();
 
-    // World point currently under the origin (stays fixed after zoom)
     const worldPtX = (originX - curX) / currentS;
     const worldPtY = (originY - curY) / currentS;
 
-    // New pan so worldPt stays under origin
-    const newX = originX - worldPtX * newScale;
-    const newY = originY - worldPtY * newScale;
+    const { x: newX, y: newY } = clampPan(
+      originX - worldPtX * newScale,
+      originY - worldPtY * newScale,
+      newScale,
+    );
 
     animate(worldScale, newScale, SPRING);
     animate(worldX,     newX,     SPRING);
     animate(worldY,     newY,     SPRING);
   }, [worldX, worldY, worldScale]);
 
-  // +/− button handlers — zoom around viewport center
   function handleZoomIn() {
     const vpW = window.innerWidth;
     const vpH = window.innerHeight;
-    const newScale = Math.min(ZOOM_MAX, worldScale.get() * ZOOM_STEP);
-    handleZoom(newScale, vpW / 2, vpH / 2);
+    handleZoom(Math.min(ZOOM_MAX, worldScale.get() * ZOOM_STEP), vpW / 2, vpH / 2);
   }
 
   function handleZoomOut() {
     const vpW = window.innerWidth;
     const vpH = window.innerHeight;
-    const newScale = Math.max(ZOOM_MIN, worldScale.get() / ZOOM_STEP);
-    handleZoom(newScale, vpW / 2, vpH / 2);
+    handleZoom(Math.max(ZOOM_MIN, worldScale.get() / ZOOM_STEP), vpW / 2, vpH / 2);
   }
 
   // ── Node tap ────────────────────────────────────────────────────────────────
-  // Pan camera so the preview center (not the node) is at viewport center.
-  // Offset is computed in screen px then converted to world units so the node
-  // stays outside the preview card at any zoom level.
+  // Zoom only when needed to reveal the next tier.
+  // tier-0 items zoom to SCALE_MID, tier-1 items zoom to SCALE_CLOSE,
+  // tier-2 items (and anything already at the right scale) just pan.
   function handleNodeTap(item) {
-    const vpW = window.innerWidth;
-    const vpH = window.innerHeight;
+    const vpW      = window.innerWidth;
+    const vpH      = window.innerHeight;
+    const currentS = worldScale.get();
+    const itemTier = item.minScale ?? 0;
 
-    // Zoom in one step on tap (capped at ZOOM_MAX)
-    const newScale = Math.min(ZOOM_MAX, worldScale.get() * ZOOM_STEP);
+    // The threshold that must be crossed to reveal the tier below this one
+    const nextReveal =
+      itemTier <= SCALE_ALWAYS ? SCALE_MID :
+      itemTier <= SCALE_MID    ? SCALE_CLOSE :
+      null; // tier-2: no deeper tier to reveal
 
-    // Offsets in screen px, converted to world units at the new scale
+    const shouldZoom = nextReveal !== null && currentS < nextReveal;
+    // Zoom to at least nextReveal so the next tier actually appears
+    const newScale = shouldZoom
+      ? Math.min(ZOOM_MAX, Math.max(nextReveal, currentS * ZOOM_STEP))
+      : currentS;
+
     const previewWorldX = item.x - PREVIEW_OFFSET_X / newScale;
     const previewWorldY = item.y - PREVIEW_OFFSET_Y / newScale;
+    const { x: clampedX, y: clampedY } = clampPan(
+      vpW / 2 - previewWorldX * newScale,
+      vpH / 2 - previewWorldY * newScale,
+      newScale,
+    );
 
-    animate(worldScale, newScale, SPRING);
-    animate(worldX, vpW / 2 - previewWorldX * newScale, SPRING);
-    animate(worldY, vpH / 2 - previewWorldY * newScale, SPRING);
+    if (shouldZoom) animate(worldScale, newScale, SPRING);
+    animate(worldX, clampedX, SPRING);
+    animate(worldY, clampedY, SPRING);
 
     setPreviewId(item.id);
+    setExpanded(false);
   }
 
-  function handleBack() {
+  function handleExpand() {
+    if (!previewItem) return;
+    savePosition();
+    setExpanded(true);
+    navigate(`/timeline/${previewItem.slug}`, { state: locationState });
+  }
+
+  function handleClose() {
     setPreviewId(null);
+    setExpanded(false);
+    navigate('/timeline', { state: locationState });
   }
 
+  // Clicking the canvas closes small preview only (backdrop handles expanded close)
   function handleBgClick() {
-    if (previewId) setPreviewId(null);
+    if (previewId && !expanded) setPreviewId(null);
   }
 
-  // Items visible at current zoom level
   const visibleItems = items.filter(item => (item.minScale ?? 0) <= currentScale);
-
-  // Assign label flip direction — alternates sides for crowded adjacent nodes
-  const labelFlips = assignLabelFlips(visibleItems, currentScale);
-
-  // Derive preview item fresh from items on every render — picks up mode changes automatically
-  const previewItem = previewId ? (items.find(i => i.id === previewId) ?? null) : null;
+  const labelFlips   = assignLabelFlips(visibleItems, currentScale);
+  const previewItem  = previewId ? (items.find(i => i.id === previewId) ?? null) : null;
 
   if (loading) return <div className="tl-feature tl-feature--loading" data-mode={mode} />;
   if (error)   return <div className="tl-feature tl-feature--error"   data-mode={mode} />;
@@ -196,35 +236,32 @@ export function TimelineFeature() {
           <TimelinePreview
             key={previewItem.id}
             item={previewItem}
-            onClose={handleBack}
-            onSavePosition={savePosition}
+            expanded={expanded}
+            onExpand={handleExpand}
+            onClose={handleClose}
           />
         )}
       </AnimatePresence>
 
-      {previewItem && (
-        <button className="tl-back-btn" onClick={handleBack} aria-label="חזרה למפה">
-          ← חזרה
-        </button>
+      {!expanded && (
+        <div className="tl-zoom-btns" aria-label="פקדי זום">
+          <button
+            className="tl-zoom-btn"
+            onClick={handleZoomIn}
+            aria-label={timelineUi.zoomIn}
+            disabled={currentScale >= ZOOM_MAX}
+          >+</button>
+          <button
+            className="tl-zoom-btn"
+            onClick={handleZoomOut}
+            aria-label={timelineUi.zoomOut}
+            disabled={currentScale <= ZOOM_MIN}
+          >−</button>
+        </div>
       )}
 
-      <div className="tl-zoom-btns" aria-label="פקדי זום">
-        <button
-          className="tl-zoom-btn"
-          onClick={handleZoomIn}
-          aria-label={timelineUi.zoomIn}
-          disabled={currentScale >= ZOOM_MAX}
-        >+</button>
-        <button
-          className="tl-zoom-btn"
-          onClick={handleZoomOut}
-          aria-label={timelineUi.zoomOut}
-          disabled={currentScale <= ZOOM_MIN}
-        >−</button>
-      </div>
-
       <div className="tl-hint" aria-hidden="true">
-        גרור לשוטט · פינץ׳ לזום · לחץ על נקודה
+        {timelineUi.hint}
       </div>
     </div>
   );

@@ -1,0 +1,54 @@
+/* src/pages/privacy/PrivacyPage.css */
+/* מדיניות פרטיות — דף סטטי קריא. */
+
+.privacy-page {
+  padding: 3rem 1.25rem 5rem;
+}
+
+.privacy-content {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.privacy-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0 0 0.4rem;
+}
+
+.privacy-updated {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin: 0 0 2.5rem;
+}
+
+.privacy-section {
+  margin-bottom: 2rem;
+}
+
+.privacy-section h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 0.6rem;
+}
+
+.privacy-section p,
+.privacy-section li {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  margin: 0 0 0.5rem;
+}
+
+.privacy-section ul {
+  padding-inline-start: 1.4rem;
+  margin: 0 0 0.5rem;
+}
+
+.privacy-section a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

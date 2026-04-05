@@ -2,6 +2,18 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## CRITICAL: File operations on this machine
+
+The Windows username is `ג'וז מוזיקה` (Hebrew). Bash cannot handle paths that include it.
+
+**Never use Bash for file operations.** Always use dedicated tools:
+- Read files → `Read` tool
+- Write files → `Write` tool
+- Edit files → `Edit` tool
+- Search files → `Glob` / `Grep` tools
+
+This applies to project files, memory files, and any path under `C:\Users\ג'וז מוזיקה\`.
+
 ## Language
 
 Always respond in English — regardless of what language the user writes in.
@@ -9,9 +21,9 @@ Always respond in English — regardless of what language the user writes in.
 ## On conversation start
 
 Read all files in `docs/` before doing anything else:
-- `docs/kfar-hirur-architecture-spec.md`
-- `docs/kfar_hirur_development_workflow.md`
-- `docs/voice-and-copy.md` — **required before any copy or text work**
+- `docs/architecture.md`
+- `docs/workflow.md`
+- `docs/voice.md` — **required before any copy or text work**
 
 These are the source of truth for architecture and workflow decisions.
 
@@ -72,6 +84,91 @@ npm run build     # Production build
 npm run preview   # Preview production build locally
 npm run lint      # Run ESLint
 ```
+
+## נקיון סוף יום — End-of-day cleanup command
+
+When the user says **"נקיון סוף יום"**, become an external peer reviewer. You have no loyalty to today's decisions. Read the relevant files before forming opinions. Fix what can be fixed inline — report what needs a decision.
+
+Three concerns, in order. Work through all of them completely.
+
+---
+
+### 0. Sync today's work
+
+Before anything else — reconstruct what changed in this session. Read the git diff, recent commits, or the conversation if needed.
+
+For every meaningful change made today, ask:
+- Does `docs/architecture.md` still reflect reality? (routes, components, data flows, conventions)
+- Does the relevant feature doc in `docs/features/` still describe what was built?
+- Did any decision get made today that contradicts something documented elsewhere?
+
+Update what's stale. This is not a deep review — it's a sync. Fast, targeted, complete.
+
+---
+
+### Code
+
+**Dead weight** — unused imports, unreferenced components, orphaned CSS classes, commented-out code. Remove it.
+
+**Comments** — must explain *why*, not *what*. Remove comments that restate the code in words. File headers must accurately describe what the file does. Non-obvious logic must have a brief explanation.
+
+**Structure** — look for logic patched multiple times that is now hard to follow. Look for state managed at the wrong layer (UI logic in a data hook, layout decisions in a leaf component). Simplify where possible without changing behavior.
+
+**Standards** — check for violations:
+- Hardcoded colors instead of `var(--...)` tokens
+- `useState` for continuous animation instead of `useMotionValue` / Framer Motion
+- Components referencing `naor`/`shay` directly (data source opacity rule)
+- Layout and content mixed in the same component
+
+**Consistency** — props and function names should be consistent for the same concept across files. No duplicate logic solving the same problem in two places.
+
+---
+
+### Docs
+
+**Accuracy** — read all files under `docs/`. Update anything that no longer reflects reality: routes, file paths, component names, data flows, architectural decisions. Do not append — rewrite sections so they stay readable.
+
+**Hygiene** — for each doc, ask: does this still serve a purpose? Delete what is obsolete. If two docs describe the same thing, consolidate or add a clear cross-reference. Architecture decisions belong in `architecture.md`, process decisions in `workflow.md`.
+
+**Handoff test** — read `docs/` as a new agent arriving cold with zero context. Ask:
+- Would I understand the project's structure and constraints without reading any code?
+- Would I know what I'm allowed to do and what I must never do?
+- Are there things that exist in the code but are explained nowhere?
+- Is anything described in a way that would cause wrong decisions?
+
+Fix what fails. Goal: a capable developer or agent should be able to read `docs/` and contribute correctly — without asking questions about architecture, conventions, or intent.
+
+---
+
+### Accessibility
+
+For any UI built or modified today, verify:
+- Contrast ratios meet 4.5:1 (normal text) / 3:1 (large text) — IS 5568 / WCAG 2.1 AA
+- All interactive elements are keyboard-navigable with visible focus indicators
+- Images have meaningful `alt` text
+- No content flashes more than 3 times per second
+
+Flag violations. This is a legal requirement — not optional.
+
+---
+
+### Build
+
+Run `npm run lint` and `npm run build`. Fix any errors before calling the session done. A clean review means nothing if the code doesn't compile.
+
+---
+
+### Log
+
+Append an entry to `docs/log.md`:
+
+```
+## YYYY-MM-DD
+**Built / changed:** [2-4 bullet points — what was actually done]
+**Open / deferred:** [anything flagged that needs a future decision, or left intentionally incomplete]
+```
+
+Keep it short. This is a record, not a report.
 
 ## Running commands — Windows workaround
 

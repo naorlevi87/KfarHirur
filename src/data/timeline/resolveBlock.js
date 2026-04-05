@@ -7,13 +7,17 @@ import { resolveImageBlock } from './blockResolvers/image.js';
 import { resolveVideoBlock } from './blockResolvers/video.js';
 import { resolveLinkBlock  } from './blockResolvers/link.js';
 import { resolveCtaBlock   } from './blockResolvers/cta.js';
+import { resolveEmbedBlock } from './blockResolvers/embed.js';
 
 const resolvers = {
-  text:  resolveTextBlock,
-  image: resolveImageBlock,
-  video: resolveVideoBlock,
-  link:  resolveLinkBlock,
-  cta:   resolveCtaBlock,
+  text:      resolveTextBlock,
+  image:     resolveImageBlock,
+  video:     resolveVideoBlock,
+  link:      resolveLinkBlock,
+  cta:       resolveCtaBlock,
+  youtube:   resolveEmbedBlock,
+  facebook:  resolveEmbedBlock,
+  instagram: resolveEmbedBlock,
 };
 
 export function resolveBlock(block, mode) {

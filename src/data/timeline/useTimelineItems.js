@@ -8,20 +8,36 @@ import { evaluateAtDate } from '../../features/timeline/timelinePath.js';
 import { fetchTimelineItems } from './timelineQueries.js';
 import { resolveTimelineItem } from './resolveTimelineItem.js';
 
+// Module-level cache — survives remounts within the same session.
+let cachedRaw = null;
+let cacheError = null;
+
 export function useTimelineItems() {
   const { mode } = useAppContext();
-  const [rawItems, setRawItems]   = useState([]);
-  const [loading,  setLoading]    = useState(true);
-  const [error,    setError]      = useState(null);
+  const [rawItems, setRawItems] = useState(() => cachedRaw ?? []);
+  const [loading,  setLoading]  = useState(cachedRaw === null);
+  const [error,    setError]    = useState(cacheError);
 
   useEffect(() => {
+    if (cachedRaw !== null) return; // already cached — skip fetch
     let cancelled = false;
     fetchTimelineItems()
-      .then(data => { if (!cancelled) { setRawItems(data); setLoading(false); } })
-      .catch(err  => { if (!cancelled) { setError(err);   setLoading(false); } });
-
+      .then(data => {
+        if (!cancelled) {
+          cachedRaw = data;
+          setRawItems(data);
+          setLoading(false);
+        }
+      })
+      .catch(err => {
+        if (!cancelled) {
+          cacheError = err;
+          setError(err);
+          setLoading(false);
+        }
+      });
     return () => { cancelled = true; };
-  }, []); // fetch once — items don't change during a session
+  }, []);
 
   // Re-resolve when mode changes (visibility + naor/shay content).
   const items = rawItems

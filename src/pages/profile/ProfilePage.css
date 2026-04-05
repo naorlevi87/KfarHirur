@@ -1,0 +1,133 @@
+/* src/pages/profile/ProfilePage.css */
+/* Profile editing page. */
+
+.profile-page {
+  max-width: 480px;
+  margin: 3rem auto;
+  padding: 0 1.25rem;
+}
+
+.profile-page__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 2rem;
+}
+
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.profile-avatar-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+.profile-avatar-btn {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  background: var(--accent);
+  overflow: hidden;
+  padding: 0;
+}
+
+.profile-avatar__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-avatar__initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--on-accent, #fff);
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.profile-avatar__overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.profile-avatar-btn:hover .profile-avatar__overlay,
+.profile-avatar-btn:focus-visible .profile-avatar__overlay {
+  opacity: 1;
+}
+
+.profile-avatar-btn:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+.profile-avatar__file-input {
+  display: none;
+}
+
+.profile-form__label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.profile-form__input {
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  border: 1px solid var(--surface-border);
+  background: var(--surface-inset);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 0.95rem;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.profile-form__input:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.profile-form__error {
+  font-size: 0.82rem;
+  color: #e05252;
+  margin: 0;
+}
+
+.profile-form__save {
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  border-radius: 10px;
+  border: none;
+  background: var(--accent);
+  color: var(--on-accent, #fff);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.profile-form__save:disabled { opacity: 0.6; cursor: default; }
+
+.profile-form__save:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}

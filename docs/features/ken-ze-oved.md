@@ -1,5 +1,6 @@
 # Design Spec — Keep It Going (גיוס המונים) Page
-> Created: 2026-03-27. Status: approved for implementation.
+> Created: 2026-03-27. Status: implemented.
+> **Note:** The page was renamed during implementation. Route is `/ken-ze-oved`, component is `KenZeOvedPage.jsx`, content file is `kenZeOved.content.js`.
 
 ---
 
@@ -28,7 +29,7 @@ The community started in 2015 with a beach cleanup project in Atlit (Project 24 
 
 ## 3. Page Route
 
-`/keep-it-going` — existing route, existing page component (`KeepItGoingPage.jsx`). This spec describes the full redesign of that page.
+`/ken-ze-oved` — implemented as `KenZeOvedPage.jsx` in `src/pages/kenZeOved/`.
 
 ---
 
@@ -100,7 +101,7 @@ Follows project taste rules (`DESIGN_VARIANCE: 8`, `MOTION_INTENSITY: 6`, `VISUA
 
 ## 6. Content Layer
 
-All copy lives in `src/content/site/he/keepItGoing.content.js` and `src/content/site/en/keepItGoing.content.js`.
+All copy lives in `src/content/site/he/kenZeOved.content.js` and `src/content/site/en/kenZeOved.content.js`.
 
 New keys needed:
 - `hero.heading` — main page title
@@ -133,10 +134,10 @@ Mode-branching (naor/shay): **required by architecture** — even if content is 
 
 Follows existing project architecture exactly:
 
-- **Page:** `src/pages/keepItGoing/KeepItGoingPage.jsx` — owns structure and composition only
-- **Resolver:** `src/pages/keepItGoing/resolveKeepItGoingPageData.js` — assembles content payload from locale/mode, exports pure function + hook
-- **CSS:** `src/styles/app/KeepItGoingPage.css` — component-scoped styles
-- **Content:** `src/content/site/he/keepItGoing.content.js` + `en/` equivalent
+- **Page:** `src/pages/kenZeOved/KenZeOvedPage.jsx` — owns structure and composition only
+- **Resolver:** `src/pages/kenZeOved/resolveKenZeOvedPageData.js` — assembles content payload from locale/mode, exports pure function + hook
+- **CSS:** `src/styles/app/KenZeOvedPage.css` — component-scoped styles
+- **Content:** `src/content/site/he/kenZeOved.content.js` + `en/` equivalent
 
 No new folders. No new global providers. No new app state.
 

@@ -7,12 +7,29 @@ import { MediaInput } from './MediaInput.jsx';
 import { updateBlock, deleteBlock } from '../../../data/admin/timelineAdminQueries.js';
 import './BlockField.css';
 
+const EMBED_TYPES = ['youtube', 'facebook', 'instagram'];
+
+const EMBED_PLACEHOLDERS = {
+  youtube:   'https://www.youtube.com/watch?v=...',
+  facebook:  'https://www.facebook.com/photo?...',
+  instagram: 'https://www.instagram.com/p/...',
+};
+
+const EMBED_HINTS = {
+  youtube:   'קישור לסרטון מיוטיוב',
+  facebook:  'קישור לפוסט או תמונה מפייסבוק',
+  instagram: 'קישור לפוסט או ריל מאינסטגרם',
+};
+
 const BLOCK_LABELS = {
-  text:  'טקסט',
-  image: 'תמונה',
-  video: 'וידאו',
-  link:  'לינק',
-  cta:   'כפתור',
+  text:      'טקסט',
+  image:     'תמונה',
+  video:     'וידאו',
+  link:      'לינק',
+  cta:       'כפתור',
+  youtube:   'YouTube',
+  facebook:  'Facebook',
+  instagram: 'Instagram',
 };
 
 const VISIBILITY_OPTIONS = [
@@ -116,6 +133,24 @@ export function BlockField({ block, onDeleted, onSaved }) {
             </select>
           </div>
 
+          {fields.length === 0 && EMBED_TYPES.includes(block.block_type) && (
+            <div className="block-field__embed-input">
+              <label className="block-field__embed-label">קישור</label>
+              <input
+                className="block-field__embed-url"
+                type="url"
+                dir="ltr"
+                placeholder={EMBED_PLACEHOLDERS[block.block_type] ?? 'https://...'}
+                value={content.naor?.url ?? ''}
+                onChange={e => {
+                  const url = e.target.value;
+                  setContent(prev => ({ naor: { ...prev.naor, url }, shay: { ...prev.shay, url } }));
+                }}
+              />
+              <p className="block-field__embed-hint">{EMBED_HINTS[block.block_type] ?? ''}</p>
+            </div>
+          )}
+
           {fields.map(field => field.isMedia ? (
             <div key={field.key} className="block-field__media-pair">
               <MediaInput
@@ -179,6 +214,10 @@ function getFieldsForType(type) {
       { key: 'url',   label: 'כתובת URL' },
       { key: 'style', label: 'סגנון' },
     ];
+    case 'youtube':
+    case 'facebook':
+    case 'instagram':
+      return []; // handled by embed input above
     default: return [];
   }
 }

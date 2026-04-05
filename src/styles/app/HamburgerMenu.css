@@ -3,31 +3,21 @@
 
 .site-menuRoot {
   position: fixed;
-  inset: 0;
-  z-index: 40;
-  /* Closed by default: must not steal pointer events from header (z-index 10) */
+  top: var(--header-h, 56px); /* sit below the header so the hamburger stays visible */
+  inset-inline-start: 0;
+  inset-inline-end: 0;
+  bottom: 0;
+  z-index: 101; /* above preview card (z-100); starts below header top so hamburger stays visible */
   pointer-events: none;
+  /* delay visibility removal until after the close animation finishes */
   visibility: hidden;
+  transition: visibility 0s linear 0.3s;
 }
 
 .site-menuRoot.site-menuRoot--open {
   pointer-events: auto;
   visibility: visible;
-}
-
-/* Closed: hidden + non-interactive */
-.site-menuRoot:not(.site-menuRoot--open) .site-menuBackdrop,
-.site-menuRoot:not(.site-menuRoot--open) .site-menuPanel {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-}
-
-.site-menuRoot--open .site-menuBackdrop,
-.site-menuRoot--open .site-menuPanel {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
+  transition: visibility 0s; /* show instantly */
 }
 
 /* Neutral dark scrim — intentionally mode-independent */
@@ -36,12 +26,17 @@
   position: absolute;
   inset: 0;
   background: var(--menu-backdrop);
+  opacity: 0;
+  transition: opacity 0.28s ease;
+}
+
+.site-menuRoot--open .site-menuBackdrop {
+  opacity: 1;
 }
 
 .site-menuPanel {
   position: absolute;
-  top: 0;
-  bottom: 0;
+  inset-block: 0;
   inset-inline-start: 0;
   width: min(280px, 86vw);
   max-width: 100%;
@@ -54,6 +49,13 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  /* slide off to inline-start edge when closed */
+  transform: translateX(110%);
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.site-menuRoot--open .site-menuPanel {
+  transform: translateX(0);
 }
 
 .site-menuList {
@@ -103,6 +105,137 @@
 }
 
 .site-menuClose:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Auth section */
+.site-menuAuth {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--surface-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Row: avatar + admin badge side by side */
+.site-menuUserRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.site-menuUserRow .site-menuAvatar {
+  flex: 1;
+  min-width: 0;
+}
+
+.site-menuAdminBtn {
+  flex-shrink: 0;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--accent);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.site-menuAdminBtn:hover {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.site-menuAdminBtn:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.site-menuLoginBtn {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+}
+
+.site-menuLoginBtn:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.site-menuAvatar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.3rem 0.35rem;
+  border-radius: 8px;
+  width: 100%;
+  text-align: start;
+  color: var(--text-primary);
+}
+
+.site-menuAvatar:hover,
+.site-menuAvatar:focus-visible {
+  background: var(--surface-inset);
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.site-menuAvatar__img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.site-menuAvatar__initials {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--on-accent, #fff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.site-menuAvatar__name {
+  font-size: 0.9rem;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.site-menuLogout {
+  background: none;
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  padding: 0.45rem 0.75rem;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: center;
+}
+
+.site-menuLogout:focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }

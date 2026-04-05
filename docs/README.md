@@ -1,8 +1,17 @@
 # תיעוד פרויקט כפר הירעור
 
+## מסמכים ראשיים
+
 | מסמך | תוכן |
 |------|------|
-| [kfar-hirur-architecture-spec.md](./kfar-hirur-architecture-spec.md) | ארכיטקטורת האפליקציה (שכבות, תיקיות, כללי resolver/payload) |
-| [kfar_hirur_development_workflow.md](./kfar_hirur_development_workflow.md) | שיטת עבודה מול Cursor — החלטות, scope, review |
+| [log.md](./log.md) | לוג יומי — מה נעשה, מה נשאר פתוח |
+| [architecture.md](./architecture.md) | ארכיטקטורת האפליקציה — מקור האמת לכל החלטות מבנה |
+| [workflow.md](./workflow.md) | שיטת עבודה — איך עובדים, מקבלים החלטות, ועובדים מול Claude |
+| [voice.md](./voice.md) | קול ושפה — חובה לקרוא לפני כל עבודה על טקסטים |
 
-גרסאות אלה שמורות גם תחת `docs/` בשורש הריפו לעבודה משותפת עם Cursor ועם הצוות.
+## תיעוד פיצ'רים
+
+| מסמך | תוכן |
+|------|------|
+| [features/ken-ze-oved.md](./features/ken-ze-oved.md) | עיצוב ורציונל לעמוד גיוס ההמונים |
+| [features/timeline.md](./features/timeline.md) | ארכיטקטורה ומכניקה של ציר הזמן |

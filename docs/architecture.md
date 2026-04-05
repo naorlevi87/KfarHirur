@@ -1,6 +1,6 @@
 # Kfar Hirur — Architecture Spec
-> Source of truth for architecture decisions. Last updated: 2026-04-04.
-> For workflow, briefing, and development process — see `kfar_hirur_development_workflow.md`.
+> Source of truth for architecture decisions. Last updated: 2026-04-05.
+> For workflow, briefing, and development process — see `workflow.md`.
 
 ---
 
@@ -85,17 +85,21 @@ src/
       ProgressBar.jsx
       DonateButton.jsx
     timeline/
-      TimelinePage.jsx               — thin shell: renders TimelineFeature
-      TimelineItemPage.jsx           — full-screen item detail at /timeline/:slug
-      TimelineItemPage.css
+      TimelinePage.jsx               — thin shell: renders TimelineFeature, handles remount key
     joinTeam/
       JoinTeamPage.jsx
     login/
       LoginPage.jsx
+    privacy/
+      PrivacyPage.jsx              — static privacy policy (Israeli privacy law compliance)
+    profile/
+      ProfilePage.jsx              — display name + avatar editing
+      ProfilePage.css
     admin/
+      AdminDashboardPage.jsx         — admin home with nav links
+      AdminUsersPage.jsx             — user list + role management
       AdminListPage.jsx              — list of all timeline items
       AdminItemPage.jsx              — create/edit a single item + blocks
-      AdminPage.jsx
       components/
         NaorShayInput.jsx
         BlockEditor.jsx
@@ -103,17 +107,20 @@ src/
         MediaInput.jsx
 
   features/
+    auth/
+      AuthModal.jsx                — modal shell: Google / Facebook / email tabs
+      AuthModal.css
+      EmailAuthForm.jsx            — email+password form (sign-in / sign-up / email-sent states)
     timeline/
       TimelineFeature.jsx            — root orchestrator: pan/zoom state, items, preview
       TimelineCanvas.jsx             — zoom+pan input layer (wheel, pinch, drag)
       TimelineRoad.jsx               — bezier path rendering
       TimelineNode.jsx               — node circle + counter-scaled label
-      TimelinePreview.jsx            — tap-to-open preview card
-      TimelineItemView.jsx           — (legacy overlay, superseded by route)
+      TimelinePreview.jsx            — tap-to-open preview card (in-place expand, no route change)
       timelinePath.js                — bezier math, evaluateAtDate()
       timelineData.js                — all constants (zoom, scale tiers, offsets)
-      timelineUtils.js               — geometry helpers (outward normal, label sizing)
-      TIMELINE.md                    — full subsystem documentation
+      timelineUtils.js               — geometry helpers (clampPan, outward normal, label sizing)
+
       TimelineFeature.css
 
   utils/
@@ -144,6 +151,7 @@ src/
       eventTypes.js
     auth/
       authQueries.js                 — fetchUserRole()
+      profileQueries.js              — fetchUserProfile(), upsertUserProfile(), uploadAvatar()
 
   styles/
     globals.css                      — tokens, layout primitives only
@@ -173,19 +181,24 @@ supabase/                            — Supabase config / migrations (if any)
 ## 4. Routing
 
 ```
-/                          → HomePage         (public, under MainLayout)
-/ken-ze-oved               → KenZeOvedPage    (public)
-/timeline                  → TimelinePage     (public)
-/timeline/:slug            → TimelineItemPage (public)
-/join-team                 → JoinTeamPage     (public)
-/login                     → LoginPage        (no MainLayout)
-/admin                     → AdminListPage    (ProtectedRoute: admin|editor)
-/admin/timeline            → AdminListPage
-/admin/timeline/items/new  → AdminItemPage
-/admin/timeline/items/:slug → AdminItemPage
+/                            → HomePage              (public, under MainLayout)
+/ken-ze-oved                 → KenZeOvedPage         (public)
+/timeline                    → TimelinePage           (public)
+/timeline/:slug              → TimelinePage           (public — TimelineFeature expands preview in-place)
+/join-team                   → JoinTeamPage           (public)
+/login                       → LoginPage              (no MainLayout)
+/privacy                     → PrivacyPage            (no MainLayout — static, required by Israeli privacy law)
+/profile                     → ProfilePage            (ProtectedRoute: any authenticated user, under MainLayout)
+/admin                       → AdminDashboardPage     (ProtectedRoute: admin|editor, under MainLayout)
+/admin/users                 → AdminUsersPage         (ProtectedRoute: admin|editor)
+/admin/timeline              → AdminListPage          (ProtectedRoute: admin|editor)
+/admin/timeline/items/new    → AdminItemPage          (ProtectedRoute: admin|editor)
+/admin/timeline/items/:slug  → AdminItemPage          (ProtectedRoute: admin|editor)
 ```
 
-`ProtectedRoute` uses `useAuth()` to check `role`. Redirects to `/login` if role not allowed.
+`ProtectedRoute` uses `useAuth()` to check `role`. Redirects to `/login` if not authenticated.
+- `allowedRoles={[]}` — any authenticated user (used for `/profile`)
+- `allowedRoles={['admin','editor']}` — restricted roles only
 
 ---
 
@@ -195,8 +208,10 @@ supabase/                            — Supabase config / migrations (if any)
 - **Auth:** Supabase email/password auth
 - **Roles table:** `user_roles` — columns: `user_id`, `role` (enum: `admin | editor | member`)
 - **RLS:** enabled on `timeline_items` and `timeline_item_blocks`
-- **AuthContext** subscribes to `supabase.auth.onAuthStateChange` → exposes `{ user, role, loading }`
+- **AuthContext** subscribes to `supabase.auth.onAuthStateChange` → exposes `{ user, role, profile, loading }`
+  - `profile`: `{ displayName, avatarUrl }` — fetched from `user_profiles` table on sign-in
 - **Hook:** `useAuth()` from `AuthContext.jsx`
+- **Auth UI:** `AuthModal` (in `features/auth/`) — rendered by `MainLayout`, opened via `onOpenAuth` prop passed to `HamburgerMenu`
 
 ### Admin users
 - `naorlevi87@gmail.com` — Naor (owner, admin)
@@ -288,46 +303,64 @@ Resolvers are **local wrapper patterns**, not a global central system.
 
 ## 10. Timeline Feature
 
-Full documentation: `src/features/timeline/TIMELINE.md`
+Full documentation: `docs/features/timeline.md`
 
 ### Architecture summary
 
 `TimelineFeature` is the root orchestrator. It owns:
 - Pan/zoom MotionValues (`worldX`, `worldY`, `worldScale`) — 60fps without React re-renders
 - `currentScale` React state — only updated when `worldScale` crosses a visibility threshold
-- `previewId` state — ID of the currently open preview (item object derived fresh each render)
+- `previewId` / `expanded` state — preview is derived (`items.find(...)`) not stored
 - Item fetch via `useTimelineItems()` — resolves for current mode
-- `savePosition()` — writes pan/zoom to `sessionStorage` before navigating to item detail
+- `useTimelineItems` holds a module-level cache (`cachedRaw`) so remounts within the same session skip the Supabase fetch
 
 ### Item visibility tiers (min_scale)
 | Constant | Value | Meaning |
 |---|---|---|
 | SCALE_ALWAYS | 0 | Always visible — main milestones |
-| SCALE_MID | 0.45 | Visible at mid zoom |
+| SCALE_MID | 0.3 | Visible at mid zoom |
 | SCALE_CLOSE | 0.9 | Visible only when close |
 
 `min_scale` is stored per item in Supabase. Editable via `/admin/timeline/items/:slug`.
 
 ### Preview → item detail navigation
-1. Tap node → `handleNodeTap` pans camera, sets `previewId`
-2. `TimelinePreview` shows — `previewItem` derived from `items.find(id === previewId)`
-3. "פתח" → saves pan/zoom to `sessionStorage`, navigates to `/timeline/:slug`
-4. `TimelineItemPage` fetches item via `useTimelineItem(slug)`
-5. Back button OR browser back → `navigate('/timeline')` → `TimelineFeature` restores pan/zoom from `sessionStorage`
+1. Tap node → `handleNodeTap` zooms if needed to reveal the next tier, pans camera to preview center, sets `previewId`
+2. `TimelinePreview` renders — `previewItem` derived from `items.find(i => i.id === previewId)` each render
+3. "קרא עוד..." → `setExpanded(true)`, navigates to `/timeline/:slug` (carrying `locationState` to preserve key)
+4. `TimelinePreview` expands in-place via `layout` animation (same Framer Motion node) — no full-screen route change
+5. Close (×) → `setExpanded(false)`, navigates to `/timeline` (carrying `locationState`)
+6. `TimelinePage` key: `state?.menuNav ?? 'tl'` — only menu navigations (which set `state.menuNav`) remount `TimelineFeature`. Expand/close navigations preserve the instance.
+7. `savePosition()` / `sessionStorage` is no longer used for preview expand (pan stays live). Reserved for future use if a full-screen item page is ever added.
 
 ### Label placement
-Always horizontal. Placed by outward normal of bezier path. SVG Hebrew RTL quirk: `textAnchor="end"` = LEFT visual edge. Full algorithm in `TIMELINE.md`.
+Always horizontal. Placed by outward normal of bezier path. SVG Hebrew RTL quirk: `textAnchor="end"` = LEFT visual edge. Full algorithm in `docs/features/timeline.md`.
 
 ### Zoom
 - Wheel, pinch, +/− buttons all call `handleZoom(newScale, originX, originY)`
 - Zoom-toward-pointer math: `newPan = origin - worldPt * newScale`
 - `wheel` and `touchmove` registered with `{ passive: false }` via `addEventListener` (React's synthetic events are passive — can't preventDefault)
 
+### Pan clamping
+- Pan is clamped in `clampPan(x, y, scale)` (exported from `timelineUtils.js`)
+- Rule: canvas must cover at least 70% (`PAN_GUARD = 0.7`) of the viewport on each axis
+- Applied in `TimelineCanvas.jsx` (pointer/touch drag) and `TimelineFeature.jsx` (zoom + node tap)
+- `TimelineCanvas.jsx` does NOT use Framer Motion `drag` — manual `onPointerDown/Move/Up` handlers to apply clamping on every move
+
+### Node tap zoom
+- Tapping a node only zooms if the current scale hasn't yet crossed the threshold needed to reveal the next tier below it
+- Tier-0 items (SCALE_ALWAYS): zoom to SCALE_MID if `currentScale < SCALE_MID`
+- Tier-1 items (SCALE_MID): zoom to SCALE_CLOSE if `currentScale < SCALE_CLOSE`
+- Tier-2 items (SCALE_CLOSE): never zoom — only pan
+- Logic lives in `handleNodeTap` in `TimelineFeature.jsx`
+
 ---
 
 ## 11. Admin System
 
 Protected at `/admin/**` via `ProtectedRoute` (requires `admin` or `editor` role).
+All admin routes render under `MainLayout` (SiteHeader + HamburgerMenu visible). No separate admin shell.
+
+Admin CSS uses its own token set (`--color-bg`, `--color-accent`, etc.) that does **not** respond to consciousness mode — intentional. Admin is a work tool, not part of the site experience.
 
 ### AdminListPage
 - Lists all timeline items (all statuses)
@@ -340,7 +373,10 @@ Protected at `/admin/**` via `ProtectedRoute` (requires `admin` or `editor` role
 - All writes go through `timelineAdminQueries.js`
 
 ### Block types
-`text | image | video | link | cta` — each has a `content` JSONB with naor/shay sub-objects.
+`text | image | video | link | cta | youtube | facebook | instagram`
+
+`text / image / video / link / cta` — have a `content` JSONB with naor/shay sub-objects.
+`youtube / facebook / instagram` — embed blocks; URL is shared across modes (resolved by `resolveEmbedBlock`).
 
 ---
 

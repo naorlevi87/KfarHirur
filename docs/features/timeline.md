@@ -8,7 +8,6 @@ TimelineCanvas.jsx    — pannable SVG world, handles zoom input
 TimelineRoad.jsx      — renders the bezier path (axis)
 TimelineNode.jsx      — single node + label/tag placement
 TimelinePreview.jsx   — preview card (shown on node tap)
-TimelineItemView.jsx  — full item view (bottom sheet)
 timelinePath.js       — bezier math, date→position, path definition
 timelineData.js       — canvas dims + all shared constants
 timelineUtils.js      — geometry helpers: normal vector, label layout, flip assignment
@@ -125,6 +124,29 @@ in `tagDir = sign(effectiveNy)`. Hidden at low zoom (`worldScale < 0.5`).
 `TimelineFeature` runs a layout pass over `visibleItems` (sorted by path date order).
 Any item whose screen position is within 80px of the previous item gets `labelFlip=true`,
 alternating sides for visual separation.
+
+---
+
+## Preview — Expand State
+
+`TimelineFeature` holds two state variables:
+- `previewId: string | null` — which item is selected
+- `expanded: boolean` — whether the card is in full-screen mode
+
+State transitions:
+```
+null                        → node tap      → previewId set, expanded=false
+previewId, expanded=false   → "קרא עוד..."  → expanded=true, navigate('/timeline/:slug')
+previewId, expanded=true    → close/Esc     → previewId=null, expanded=false, navigate(-1)
+```
+
+Direct URL (`/timeline/:slug`) → on mount, finds item by slug, sets `previewId + expanded=true`.
+
+### Key constraints (non-obvious — do not change without reading this)
+
+**No `layoutId`** — Framer Motion has known quirks when animating between `position: absolute` and `position: fixed` using `layoutId`. We use `layout` on a single node that transitions via CSS class instead.
+
+**No background location pattern** — both `/timeline` and `/timeline/:slug` render the same `TimelineFeature` component directly. `TimelinePage` uses `key={state?.menuNav ?? 'tl'}` to remount only on explicit menu navigations; expand/close navigations carry no `menuNav` so the component instance is preserved.
 
 ---
 
