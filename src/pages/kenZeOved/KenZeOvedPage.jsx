@@ -3,7 +3,6 @@
 // All copy from useKenZeOvedPageData. Motion via staggered section entries.
 
 import { useCallback, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import '../../styles/app/KenZeOvedPage.css';
 import { getText } from '../../utils/content/getText.js';
@@ -23,7 +22,7 @@ const blockVariants = {
 };
 
 export function KenZeOvedPage() {
-  const { hero, cta, progress, video, longText, transparency, share, footer } =
+  const { hero, cta, progress, video, longText, transparency, share } =
     useKenZeOvedPageData();
 
   const [copied, setCopied] = useState(false);
@@ -181,12 +180,6 @@ export function KenZeOvedPage() {
           </div>
         </motion.section>
 
-        {/* Block 8 — Footer link */}
-        <motion.div className="kig-footer" variants={blockVariants}>
-          <Link to="/" className="kig-backLink">
-            {getText(footer, 'backLabel')}
-          </Link>
-        </motion.div>
       </motion.div>
     </div>
   );

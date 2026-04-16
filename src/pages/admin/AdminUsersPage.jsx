@@ -39,9 +39,11 @@ export function AdminUsersPage() {
   return (
     <div className="admin-users-page" dir="rtl">
       <header className="admin-header">
-        <div className="admin-header__right">
-          <Link to="/admin" className="admin-back-btn">← חזרה</Link>
-          <h1 className="admin-header__title">ניהול משתמשים</h1>
+        <div className="admin-header__inner">
+          <div className="admin-header__right">
+            <Link to="/admin" className="admin-back-btn">→ חזרה</Link>
+            <h1 className="admin-header__title">ניהול משתמשים</h1>
+          </div>
         </div>
       </header>
 

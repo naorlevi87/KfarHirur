@@ -13,7 +13,7 @@ const FIBER_SCREEN_WIDTH = 1;
 const PRESSURE_WIDTH     = 11; // wider layer for brush pressure illusion
 
 // Brushstroke draw timing
-const DRAW_DURATION = 1200; // ms
+const DRAW_DURATION = 1800; // ms
 const DRAW_EASING   = 'cubic-bezier(0.4, 0, 0.2, 1)';
 
 export function TimelineRoad({ worldScale, isEntering }) {
@@ -79,7 +79,7 @@ export function TimelineRoad({ worldScale, isEntering }) {
       <motion.path
         ref={pressureRef}
         d={d} fill="none" stroke="var(--road)"
-        style={{ strokeWidth: pressureWidth }}
+        style={{ strokeWidth: pressureWidth, ...(isEntering && { strokeDasharray: 99999, strokeDashoffset: 99999 }) }}
         strokeLinecap="round" opacity={0.09}
         filter="url(#tl-pencil2)"
       />
@@ -88,7 +88,7 @@ export function TimelineRoad({ worldScale, isEntering }) {
       <motion.path
         ref={coreRef}
         d={d} fill="none" stroke="var(--road)"
-        style={{ strokeWidth: coreWidth }}
+        style={{ strokeWidth: coreWidth, ...(isEntering && { strokeDasharray: 99999, strokeDashoffset: 99999 }) }}
         strokeLinecap="round" opacity={0.50}
         filter="url(#tl-pencil)"
       />
@@ -97,7 +97,7 @@ export function TimelineRoad({ worldScale, isEntering }) {
       <motion.path
         ref={thinRef}
         d={d} fill="none" stroke="var(--road)"
-        style={{ strokeWidth: thinWidth }}
+        style={{ strokeWidth: thinWidth, ...(isEntering && { strokeDasharray: 99999, strokeDashoffset: 99999 }) }}
         strokeLinecap="round" opacity={0.26}
         filter="url(#tl-pencil)"
       />
@@ -106,7 +106,7 @@ export function TimelineRoad({ worldScale, isEntering }) {
       <motion.path
         ref={fiberRef}
         d={d} fill="none" stroke="var(--road)"
-        style={{ strokeWidth: fiberWidth }}
+        style={{ strokeWidth: fiberWidth, ...(isEntering && { strokeDashoffset: 99999 }) }}
         strokeLinecap="round" opacity={0.18}
         strokeDasharray="2 14"
         filter="url(#tl-pencil)"

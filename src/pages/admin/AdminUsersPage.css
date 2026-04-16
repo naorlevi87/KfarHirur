@@ -3,13 +3,16 @@
 
 .admin-users-page {
   min-height: 100dvh;
-  background: var(--color-bg, #f9fafb);
-  color: var(--color-text, #111);
+  background: #f9fafb;
+  color: #111;
 }
 
 .admin-users-page__content {
   padding: 1.5rem 1.25rem;
   overflow-x: auto;
+  max-width: 720px;
+  margin: 0 auto;
+  box-sizing: border-box;
 }
 
 .admin-users-page__msg {
@@ -28,7 +31,7 @@
 }
 
 .admin-back-btn:hover {
-  color: var(--color-text, #111);
+  color: #111;
 }
 
 .admin-users-table {

@@ -17,8 +17,6 @@ export function TimelinePreview({ item, expanded, onExpand, onClose }) {
   // Fetch full item (with blocks) only when expanded
   const { item: fullItem } = useTimelineItem(expanded ? item.slug : null);
   const blocks = fullItem?.blocks ?? [];
-  const date   = fullItem?.date ?? null;
-  const year   = date ? new Date(date).getFullYear() : null;
 
   // Close on Escape
   useEffect(() => {
@@ -67,27 +65,22 @@ export function TimelinePreview({ item, expanded, onExpand, onClose }) {
       >
         {expanded ? (
           <div className="tl-preview__expanded-scroll">
-            <div className="tl-preview__expanded-topbar">
-              <button
-                className="tl-preview__close-expanded"
-                onClick={onClose}
-                aria-label="חזרה לציר הזמן"
-              >
-                ← חזרה
-              </button>
-              {(role === 'admin' || role === 'editor') && (
-                <a
-                  className="tl-preview__edit-expanded"
-                  href={`/admin/timeline/items/${item.slug}`}
-                  aria-label="ערוך פריט"
-                >
-                  ✏️ עריכה
-                </a>
-              )}
-            </div>
-
-            <div className="tl-preview__expanded-content">
-              <div className="tl-preview__expanded-year">{content.tag || year}</div>
+              <div className="tl-preview__expanded-content">
+              <div className="tl-preview__expanded-year">
+                <button
+                  className="tl-preview__close-expanded"
+                  onClick={onClose}
+                  aria-label="חזרה לציר הזמן"
+                >×</button>
+                <span>{fullItem?.content?.fullDate || content.tag}</span>
+                {(role === 'admin' || role === 'editor') && (
+                  <a
+                    className="tl-preview__edit-expanded"
+                    href={`/admin/timeline/items/${item.slug}`}
+                    aria-label="ערוך פריט"
+                  >✏️</a>
+                )}
+              </div>
               <h1 className="tl-preview__expanded-title">{content.title}</h1>
 
               <motion.div

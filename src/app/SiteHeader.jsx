@@ -1,6 +1,7 @@
 // src/app/SiteHeader.jsx
 // Single-row sticky header: consciousness toggle | [spacer] | site identity | logo | hamburger.
 
+import { Link } from 'react-router-dom';
 import '../styles/app/SiteHeader.css';
 import logoCircle from '../assets/images/kfar-hirur-logo-circleOnly.png';
 import { resolveSiteShellContent } from './resolveSiteShellContent.js';
@@ -28,11 +29,13 @@ export function SiteHeader({ isMenuOpen, onToggleMenu }) {
           <p className="site-identity-subtitle">{getText(brand, 'subtitle')}</p>
         </div>
 
-        <img
-          src={logoCircle}
-          alt={getText(brand, 'logoAlt')}
-          className="site-headerLogo"
-        />
+        <Link to="/" className="site-headerLogo-link" aria-label={getText(brand, 'logoAlt')}>
+          <img
+            src={logoCircle}
+            alt=""
+            className="site-headerLogo"
+          />
+        </Link>
 
         <button
           type="button"

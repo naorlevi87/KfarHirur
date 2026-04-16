@@ -48,8 +48,6 @@ const emptyForm = () => ({
   zoom_tier:  0,
   naor_title: '',
   shay_title: '',
-  naor_label: '',
-  shay_label: '',
 });
 
 export function AdminItemPage() {
@@ -67,7 +65,6 @@ export function AdminItemPage() {
   const [saved,    setSaved]    = useState(false);
 
   const [titleDiff, setTitleDiff] = useState(false);
-  const [labelDiff, setLabelDiff] = useState(false);
 
   useEffect(() => {
     if (isNew) return;
@@ -76,7 +73,6 @@ export function AdminItemPage() {
         setItemId(item.id);
         setBlocks(item.timeline_item_blocks ?? []);
         setTitleDiff((item.naor_title ?? '') !== (item.shay_title ?? ''));
-        setLabelDiff((item.naor_label ?? '') !== (item.shay_label ?? ''));
         setForm({
           slug:       item.slug ?? '',
           date:       item.date?.slice(0, 10) ?? '',
@@ -87,8 +83,6 @@ export function AdminItemPage() {
           zoom_tier:  item.zoom_tier ?? (item.initial_view ? 0 : 1),
           naor_title: item.naor_title ?? '',
           shay_title: item.shay_title ?? '',
-          naor_label: item.naor_label ?? '',
-          shay_label: item.shay_label ?? '',
         });
       })
       .catch(err => setError(err.message))
@@ -115,8 +109,6 @@ export function AdminItemPage() {
         zoom_tier:  form.zoom_tier,
         naor_title: form.naor_title,
         shay_title: titleDiff ? form.shay_title : form.naor_title,
-        naor_label: form.naor_label,
-        shay_label: labelDiff ? form.shay_label : form.naor_label,
       };
       if (isNew) {
         const created = await createItem(payload);
@@ -145,17 +137,32 @@ export function AdminItemPage() {
     }
   }
 
-  if (loading) return <div className="admin-item-page__loading" dir="rtl">טוען...</div>;
+  if (loading) return (
+    <div className="admin-item-page" dir="rtl">
+      <header className="admin-header">
+        <div className="admin-header__inner">
+          <div className="admin-header__right">
+            <Link className="admin-header__back" to="/admin/timeline">→ רשימה</Link>
+          </div>
+        </div>
+      </header>
+      <div className="admin-item-page__body">
+        <p className="admin-item-page__loading">טוען...</p>
+      </div>
+    </div>
+  );
 
   return (
     <div className="admin-item-page" dir="rtl">
       {/* Header */}
       <header className="admin-header">
-        <div className="admin-header__right">
-          <Link className="admin-header__back" to="/admin/timeline">רשימה →</Link>
-          <h1 className="admin-header__title">
-            {isNew ? 'פריט חדש' : (form.naor_title || form.slug || 'עריכת פריט')}
-          </h1>
+        <div className="admin-header__inner">
+          <div className="admin-header__right">
+            <Link className="admin-header__back" to="/admin/timeline">→ רשימה</Link>
+            <h1 className="admin-header__title">
+              {isNew ? 'פריט חדש' : (form.naor_title || form.slug || 'עריכת פריט')}
+            </h1>
+          </div>
         </div>
       </header>
 
@@ -246,16 +253,6 @@ export function AdminItemPage() {
               }}
             />
 
-            <NaorShayInput
-              label="תווית קצרה (label)"
-              value={{ naor: form.naor_label, shay: form.shay_label }}
-              onChange={val => { set('naor_label', val.naor); set('shay_label', val.shay); }}
-              isDifferent={labelDiff}
-              onToggleDifferent={() => {
-                if (labelDiff) set('shay_label', form.naor_label);
-                setLabelDiff(d => !d);
-              }}
-            />
           </section>
 
         </form>

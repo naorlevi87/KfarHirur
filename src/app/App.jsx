@@ -17,6 +17,8 @@ import { AdminDashboardPage } from '../pages/admin/AdminDashboardPage.jsx';
 import { AdminListPage } from '../pages/admin/AdminListPage.jsx';
 import { AdminItemPage } from '../pages/admin/AdminItemPage.jsx';
 import { AdminUsersPage } from '../pages/admin/AdminUsersPage.jsx';
+import { AdminContentListPage } from '../pages/admin/AdminContentListPage.jsx';
+import { AdminContentEditorPage } from '../pages/admin/AdminContentEditorPage.jsx';
 
 export function App() {
   const locale = 'he';
@@ -54,6 +56,8 @@ export function App() {
               <Route path="admin/timeline" element={<AdminListPage />} />
               <Route path="admin/timeline/items/new" element={<AdminItemPage />} />
               <Route path="admin/timeline/items/:slug" element={<AdminItemPage />} />
+              <Route path="admin/content" element={<AdminContentListPage />} />
+              <Route path="admin/content/:pageKey" element={<AdminContentEditorPage />} />
             </Route>
           </Route>
         </Routes>

@@ -32,29 +32,32 @@
 //      (same direction as effectiveNy — away from the axis).
 
 import { useEffect, useRef } from 'react';
-import { getOutwardNormal, estimateLabelBox } from './timelineUtils.js';
+import { getOutwardNormal } from './timelineUtils.js';
 import { SCALE_CLOSE } from './timelineData.js';
 
 // Node circle sizes by tier (screen px, counter-scaled)
 const MAIN_R  = 8;
-const MID_R   = 5;
-const CLOSE_R = 4;
+const MID_R   = 7;
+const CLOSE_R = 6;
 
 // Label font sizes by tier (screen px)
 const LABEL_MAIN  = 16; // minScale=0 — always-visible milestones
-const LABEL_MID   = 12; // mid-zoom items
-const LABEL_CLOSE = 9;  // close-zoom items
-const TAG_SIZE    = 10;
+const LABEL_MID   = 14; // mid-zoom items
+const LABEL_CLOSE = 13; // close-zoom items
+const TAG_SIZE    = 11;
 
 // Horizontal gap from node edge to nearest text edge (screen px)
 const H_GAP = 3;
+
+// Invisible tap target radius (screen px) — large enough for comfortable mobile touch
+const TAP_R = 22;
 
 // How much ny shifts the label vertically from node center (screen px per unit normal)
 // ny=1.0 → label shifts V_SCALE px down; ny=-1.0 → V_SCALE px up
 const V_SCALE = 11;
 
-const DRAW_DURATION     = 1200; // ms — must match TimelineRoad
-const NODE_DELAY_OFFSET = 100;  // ms after brush passes node before it appears
+const DRAW_DURATION     = 1800; // ms — must match TimelineRoad
+const NODE_DELAY_OFFSET = 150;  // ms after brush passes node before it appears
 const NODE_APPEAR_DUR   = 200;  // ms
 
 // Generates a deterministic organic blob path around (cx, cy) with radius r.
@@ -123,33 +126,30 @@ export function TimelineNode({ item, worldScale, labelFlip = false, onTap, isEnt
   // Tag stacks in the same vertical direction as the label offset
   const tagDir = effectiveNy < 0 ? -1 : 1;
 
-  const groupRef     = useRef(null);
-  const labelRef     = useRef(null);
-  const tagRef       = useRef(null);
-  const nodeGroupRef = useRef(null);
+  const groupRef = useRef(null);
+  const labelRef = useRef(null);
+  const tagRef   = useRef(null);
 
   useEffect(() => {
-    const el = nodeGroupRef.current;
+    const el = groupRef.current;
     if (!el) return;
 
     if (!isEntering) {
-      el.style.opacity    = '1';
-      el.style.transform  = 'none';
+      // Ensure fully visible and interactive
+      el.setAttribute('opacity', '1');
       el.style.transition = 'none';
       return;
     }
 
-    // Start hidden and scaled down around node center
-    el.style.opacity    = '0';
-    el.style.transform  = `translate(${x}px, ${y}px) scale(0) translate(${-x}px, ${-y}px)`;
+    // Hide via SVG attribute — CSS opacity on <g> blocks pointer-events in SVG
+    el.setAttribute('opacity', '0');
     el.style.transition = 'none';
 
     const delay = pathProgress * DRAW_DURATION + NODE_DELAY_OFFSET;
 
     const timer = setTimeout(() => {
-      el.style.transition = `opacity ${NODE_APPEAR_DUR}ms cubic-bezier(0, 0, 0.2, 1), transform ${NODE_APPEAR_DUR}ms cubic-bezier(0, 0, 0.2, 1)`;
-      el.style.opacity    = '1';
-      el.style.transform  = 'none';
+      el.style.transition = `opacity ${NODE_APPEAR_DUR}ms cubic-bezier(0, 0, 0.2, 1)`;
+      el.setAttribute('opacity', '1');
     }, delay);
 
     return () => clearTimeout(timer);
@@ -175,17 +175,18 @@ export function TimelineNode({ item, worldScale, labelFlip = false, onTap, isEnt
         labelRef.current.setAttribute('y', ay);
       }
 
-      // Tag centered horizontally on the label.
-      // Estimate label width to find its visual center:
-      // anchor="end" (left edge at ax) → center = ax + w/2
-      // anchor="start" (right edge at ax) → center = ax - w/2
-      const { w: labelW } = estimateLabelBox(content.title, labelSize);
-      const labelCenterX = ax + (anchor === 'end' ? labelW / 2 : -labelW / 2);
+      if (tagRef.current && labelRef.current) {
+        const tagY = ay + tagDir * (labelSize * 0.9 + 3);
+        tagRef.current.setAttribute('y', tagY);
+        tagRef.current.setAttribute('text-anchor', 'middle');
+        tagRef.current.setAttribute('opacity', '0.7');
 
-      if (tagRef.current) {
-        tagRef.current.setAttribute('x', labelCenterX);
-        tagRef.current.setAttribute('y', ay + tagDir * (labelSize * 0.9 + 3));
-        tagRef.current.setAttribute('opacity', s < 0.5 ? '0' : '0.65');
+        // Center tag on the title's rendered midpoint — needs a frame for layout.
+        requestAnimationFrame(() => {
+          if (!labelRef.current || !tagRef.current) return;
+          const bbox = labelRef.current.getBBox();
+          tagRef.current.setAttribute('x', bbox.x + bbox.width / 2);
+        });
       }
     }
 
@@ -198,22 +199,31 @@ export function TimelineNode({ item, worldScale, labelFlip = false, onTap, isEnt
     onTap(item);
   }
 
+  // Stop pointerdown from bubbling to TimelineCanvas, which calls setPointerCapture
+  // on the container. Pointer capture redirects the synthesized click away from this <g>.
+  function handlePointerDown(e) {
+    e.stopPropagation();
+  }
+
   return (
-    <g ref={nodeGroupRef}>
-      <g
-        ref={groupRef}
-        className={`tl-node tl-node--${isSub ? 'sub' : 'main'}`}
+    <g
+      ref={groupRef}
+      className={`tl-node tl-node--${isSub ? 'sub' : 'main'}`}
         data-id={id}
         onClick={handleClick}
+        onPointerDown={handlePointerDown}
         style={{ cursor: 'pointer' }}
       >
+        {/* Invisible tap target — larger than the visual blob for easy touch */}
+        <circle cx={x} cy={y} r={TAP_R} fill="transparent" />
+
+        {/* Blob centered at (x,y) in screen px inside the counter-scaled group */}
         <path
           d={blobPath(x, y, r, idToSeed(String(id)))}
           fill="var(--page-bg)"
           stroke="var(--road)"
           strokeWidth={isSub ? 1.5 : 2.5}
           strokeOpacity={isSub ? 0.38 : 0.60}
-          filter="url(#tl-pencil)"
         />
 
         {/*
@@ -230,7 +240,6 @@ export function TimelineNode({ item, worldScale, labelFlip = false, onTap, isEnt
           fontFamily="Alef, sans-serif"
           textAnchor={anchor}
           dominantBaseline="middle"
-          pointerEvents="none"
         >
           {content.title}
         </text>
@@ -239,16 +248,14 @@ export function TimelineNode({ item, worldScale, labelFlip = false, onTap, isEnt
           ref={tagRef}
           x={x} y={y}
           fill="var(--road)"
-          fillOpacity={0.65}
+          fillOpacity={0.7}
           fontSize={TAG_SIZE}
           fontFamily="Alef, sans-serif"
-          textAnchor="middle"
+          textAnchor={anchor}
           dominantBaseline="middle"
-          pointerEvents="none"
         >
           {content.tag}
         </text>
-      </g>
     </g>
   );
 }

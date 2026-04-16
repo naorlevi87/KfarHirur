@@ -1,0 +1,144 @@
+/* src/pages/home/HomePage.css */
+/* Home page — alternating-bg sections. Each section = text block + its media.
+   Heading sits close to its media below; more space separates it from what's above. */
+
+.hp {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── Section wrapper — heading + media share the same bg ────── */
+
+.hp-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.hp-section:nth-child(odd) {
+  background: var(--page-bg);
+}
+
+.hp-section:nth-child(even) {
+  background: var(--surface-inset);
+}
+
+/* ─── Text block — top-heavy padding so heading hugs media below */
+
+.hp-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2.5rem 1.5rem 0.75rem;
+  gap: 0.75rem;
+}
+
+/* ─── Typography ─────────────────────────────────────────────── */
+
+.hp-heading {
+  font-size: clamp(1.4rem, 5.5vw, 1.9rem);
+  font-weight: 700;
+  color: var(--text-heading);
+  margin: 0;
+  line-height: 1.25;
+}
+
+.hp-body {
+  font-size: 1rem;
+  line-height: 1.75;
+  color: var(--text-body);
+  margin: 0;
+  max-width: 34ch;
+}
+
+/* ─── CTA button ─────────────────────────────────────────────── */
+
+.hp-cta {
+  display: inline-block;
+  background: var(--accent);
+  color: var(--accent-text);
+  text-decoration: none;
+  border-radius: 10px;
+  padding: 0.85rem 1.75rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: background 0.18s ease, box-shadow 0.18s ease;
+  margin-top: 0.25rem;
+}
+
+.hp-cta:hover {
+  background: var(--accent-strong);
+  box-shadow: 0 4px 14px var(--accent-shadow);
+}
+
+.hp-cta:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* ─── Joz visit links ────────────────────────────────────────── */
+
+.hp-visit-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin: 0.5rem 0 0;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.hp-joz-links {
+  display: flex;
+  gap: 0.6rem;
+  width: 100%;
+  max-width: 320px;
+}
+
+.hp-joz-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-radius: 10px;
+  padding: 0.8rem 0.4rem;
+  text-decoration: none;
+  font-size: 0.78rem;
+  color: var(--text-primary);
+  font-weight: 500;
+  transition: background 0.18s ease;
+}
+
+.hp-joz-link:hover {
+  background: var(--surface-inset);
+}
+
+.hp-joz-link:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.hp-joz-link__icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+/* ─── Bottom breathing room after last section ───────────────── */
+
+.hp-section:last-child {
+  padding-bottom: 2.5rem;
+}
+
+/* ─── Desktop ────────────────────────────────────────────────── */
+
+@media (min-width: 768px) {
+  .hp-block {
+    padding: 3rem 4rem 1rem;
+  }
+
+  .hp-body { max-width: 42ch; }
+}

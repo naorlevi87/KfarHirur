@@ -114,6 +114,7 @@ body {
 
 /* Full-viewport background + column layout on root layout */
 .main-layout {
+  --header-h: 68px; /* shared with SiteHeader + HamburgerMenu — must match SiteHeader.css */
   box-sizing: border-box;
   min-height: 100%;
   min-height: 100dvh;
@@ -145,6 +146,34 @@ body {
 .main-layout[data-consciousness-mode="naor"] .cs-block {
   --cs-shay: #7a2a10;   /* muted warm red — less prominent in naor mode */
   --cs-naor: #1c1a78;   /* deep celestial indigo — sky/quiet personality */
+}
+
+@media (max-width: 640px) {
+  .main-layout {
+    --header-h: 52px; /* must match SiteHeader.css mobile override */
+  }
+}
+
+/* Admin pages — neutral, immune to consciousness mode */
+.admin-list-page,
+.admin-item-page,
+.ace-page {
+  --page-bg:        #f9fafb;
+  --surface:        #ffffff;
+  --surface-inset:  #f3f4f6;
+  --surface-border: #e5e7eb;
+  --text-primary:   #111827;
+  --text-heading:   #111827;
+  --text-body:      #374151;
+  --text-muted:     #9ca3af;
+  --accent:         #6366f1;
+  --accent-strong:  #4f46e5;
+  --accent-text:    #ffffff;
+  --accent-shadow:  rgba(99, 102, 241, 0.25);
+  --focus-ring:     rgba(99, 102, 241, 0.4);
+  --glow:           rgba(99, 102, 241, 0.12);
+  color: #111827;
+  background: #f9fafb;
 }
 
 /* Respect user motion preferences — required by IS 5568 */

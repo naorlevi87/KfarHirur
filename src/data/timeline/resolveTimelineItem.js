@@ -9,6 +9,26 @@
 import { resolveBlock } from './resolveBlock.js';
 import { ZOOM_TIER_SCALE } from '../../features/timeline/timelineData.js';
 
+// "1 ביוני 2017" or "יוני 2017" if no day
+function formatHebrewDate(dateStr) {
+  if (!dateStr) return '';
+  const hasDay = dateStr.length > 7;
+  const d = new Date(dateStr + (hasDay ? '' : '-01'));
+  if (hasDay) return d.toLocaleDateString('he-IL', { day: 'numeric', month: 'long', year: 'numeric' });
+  return d.toLocaleDateString('he-IL', { month: 'long', year: 'numeric' });
+}
+
+// "dd.mm.yy" — compact format for inline timeline node tags
+function formatShortDate(dateStr) {
+  if (!dateStr) return '';
+  const hasDay = dateStr.length > 7;
+  const d = new Date(dateStr + (hasDay ? '' : '-01'));
+  const dd = hasDay ? String(d.getDate()).padStart(2, '0') + '.' : '';
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yy = String(d.getFullYear()).slice(2);
+  return `${dd}${mm}.${yy}`;
+}
+
 // Returns null if this item should not appear for the given mode.
 export function resolveTimelineItem(rawItem, mode, geometry) {
   const { visibility } = rawItem;
@@ -18,8 +38,6 @@ export function resolveTimelineItem(rawItem, mode, geometry) {
 
   const title = mode === 'shay' ? (rawItem.shay_title ?? rawItem.naor_title ?? '')
                                 : (rawItem.naor_title ?? '');
-  const label = mode === 'shay' ? (rawItem.shay_label ?? rawItem.naor_label ?? '')
-                                : (rawItem.naor_label ?? '');
 
   const blocks = (rawItem.timeline_item_blocks ?? [])
     .filter(block => {
@@ -34,7 +52,8 @@ export function resolveTimelineItem(rawItem, mode, geometry) {
   // First text block provides content.text; title + label come from item fields.
   const firstText = blocks.find(b => b.type === 'text');
   const content = {
-    tag:   label,
+    tag:      formatShortDate(rawItem.date),
+    fullDate: formatHebrewDate(rawItem.date),
     title,
     text:  firstText?.text ?? '',
   };

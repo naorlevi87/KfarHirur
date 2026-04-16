@@ -3,19 +3,20 @@
 
 .admin-dashboard {
   min-height: 100dvh;
-  background: var(--color-bg, #f9fafb);
-  color: var(--color-text, #111);
+  background: #f9fafb;
+  color: #111;
 }
 
 .admin-dashboard__main {
   padding: 2rem 1.25rem;
+  max-width: 720px;
+  margin: 0 auto;
 }
 
 .admin-dashboard__grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 1.25rem;
-  max-width: 600px;
 }
 
 .admin-dashboard__card {

@@ -1,0 +1,48 @@
+/* src/pages/home/HomeCarousel.css */
+
+.hp-carousel {
+  width: 100%;
+  height: 220px;
+  background: var(--surface-inset);
+}
+
+.hp-carousel .swiper-slide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Landscape: crop to fill the box */
+.hp-carousel__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Portrait: show fully, bg fills the sides */
+.hp-carousel__img--portrait {
+  object-fit: contain;
+}
+
+.hp-carousel .swiper-pagination-bullet {
+  background: var(--accent);
+  opacity: 0.35;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.hp-carousel .swiper-pagination-bullet-active {
+  background: var(--accent);
+  opacity: 1;
+  transform: scale(1.3);
+}
+
+@media (min-width: 768px) {
+  .hp-carousel {
+    height: 340px;
+    max-width: 560px;
+    margin-inline: auto;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+}

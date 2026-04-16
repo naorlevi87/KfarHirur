@@ -11,8 +11,10 @@ export function AdminDashboardPage() {
   return (
     <div className="admin-dashboard" dir="rtl">
       <header className="admin-header">
-        <div className="admin-header__right">
-          <h1 className="admin-header__title">כפר הירעור — ניהול</h1>
+        <div className="admin-header__inner">
+          <div className="admin-header__right">
+            <h1 className="admin-header__title">כפר הירעור — ניהול</h1>
+          </div>
         </div>
       </header>
 
@@ -29,6 +31,11 @@ export function AdminDashboardPage() {
             <div className="admin-dashboard__card-icon">📅</div>
             <h2 className="admin-dashboard__card-title">ציר זמן</h2>
             <p className="admin-dashboard__card-desc">עריכת פריטים בציר הזמן</p>
+          </Link>
+          <Link to="/admin/content" className="admin-dashboard__card">
+            <div className="admin-dashboard__card-icon">📝</div>
+            <h2 className="admin-dashboard__card-title">עריכת תוכן</h2>
+            <p className="admin-dashboard__card-desc">עריכת טקסטים, כותרות וכפתורים לפי עמוד</p>
           </Link>
         </div>
       </main>

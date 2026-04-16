@@ -2,8 +2,7 @@
 /* Sticky site header: layout tokens, inner row, hamburger, site identity, logo. */
 
 .site-header {
-  /* Height system: logo ≈ 82% anchor, controls = upper 70% zone */
-  --header-h: 68px;
+  /* --header-h is inherited from .main-layout (globals.css) — defined there so HamburgerMenu can also use it */
   --header-controls-h: 48px;
   --header-logo-h: 56px;
   --header-secondary-fs: clamp(0.78rem, 1.6vw, 1.0rem);
@@ -105,20 +104,30 @@
   color: var(--brand-subtitle);
 }
 
+/* Logo link wrapper — no underline, keeps logo layout intact */
+.site-headerLogo-link {
+  display: flex;
+  align-self: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  outline-offset: 3px;
+}
+
+.site-headerLogo-link:focus-visible {
+  outline: 2px solid var(--focus-ring, #6366f1);
+}
+
 /* Logo: full-height anchor, vertically centered regardless of flex-start row alignment */
 .site-headerLogo {
   display: block;
   height: var(--header-logo-h);
   width: auto;
-  align-self: center;
-  flex-shrink: 0;
   border-radius: 50%;
 }
 
 @media (max-width: 640px) {
   .site-header {
-    --header-h: 52px;
-    /* Logo scales with header height — keeps anchors proportional, no independent oversize */
+    /* --header-h: 52px is set on .main-layout in globals.css for mobile — inherited here */
     --header-logo-h: calc(var(--header-h) * 0.80);
   }
 

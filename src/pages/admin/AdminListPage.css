@@ -2,7 +2,7 @@
 
 .admin-list-page {
   min-height: 100dvh;
-  background: var(--page-bg);
+  background: #f9fafb;
   color: var(--text-primary);
   display: flex;
   flex-direction: column;
@@ -20,13 +20,19 @@
 }
 
 .admin-header {
+  border-bottom: 1px solid var(--color-border, #e5e7eb);
+  padding: 1rem 1.25rem;
+}
+
+.admin-header__inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.25rem;
-  border-bottom: 1px solid var(--color-border, #e5e7eb);
   gap: 1rem;
   flex-wrap: wrap;
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
 }
 
 .admin-header__right {
@@ -39,7 +45,7 @@
   font-size: 1.125rem;
   font-weight: 700;
   margin: 0;
-  color: var(--color-text);
+  color: #111;
 }
 
 .admin-header__section {
@@ -76,7 +82,7 @@
   border: 1px solid var(--color-border, #d1d5db);
   border-radius: 0.375rem;
   background: none;
-  color: var(--color-text);
+  color: #111;
   cursor: pointer;
 }
 
@@ -88,6 +94,10 @@
   padding: 0.875rem 1.25rem;
   border-bottom: 1px solid var(--color-border, #e5e7eb);
   flex-wrap: wrap;
+  max-width: 720px;
+  margin-inline: auto;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .admin-list-page__search {
@@ -97,7 +107,7 @@
   border: 1px solid var(--surface-border);
   border-radius: 0.375rem;
   font-size: 0.875rem;
-  background: var(--page-bg);
+  background: #f9fafb;
   color: var(--text-primary);
 }
 
@@ -131,6 +141,9 @@
 .admin-list-page__msg {
   padding: 1.5rem 1.25rem;
   font-size: 0.875rem;
+  max-width: 720px;
+  margin-inline: auto;
+  box-sizing: border-box;
   color: var(--color-text-muted, #6b7280);
 }
 
@@ -141,6 +154,10 @@
   flex: 1;
   overflow-x: auto;
   padding: 0.75rem 1.25rem 2rem;
+  max-width: 720px;
+  margin-inline: auto;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .admin-list-page__table {

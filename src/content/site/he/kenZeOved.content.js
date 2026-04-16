@@ -29,10 +29,6 @@ export const kenZeOvedContent = {
       whatsappMessage: 'ג׳וז ולוז עדיין עובדת. אם יכולים — עוזרים: ',
       _meta: { author: 'claude', ts: '2026-03-28' },
     },
-    footer: {
-      backLabel: 'חזרה לאתר',
-      _meta: { author: 'claude', ts: '2026-03-28' },
-    },
   },
 
   naor: {

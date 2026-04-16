@@ -8,8 +8,8 @@ import { animate, AnimatePresence, useMotionValue } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppContext } from '../../app/appState/useAppContext.js';
 import {
-  CANVAS_W, CANVAS_H,
-  ZOOM_MIN, ZOOM_MAX, ZOOM_STEP, INITIAL_SCALE,
+  ZOOM_MIN, ZOOM_MAX, ZOOM_STEP,
+  PATH_BBOX,
   PREVIEW_OFFSET_Y,
   PREVIEW_OFFSET_X,
   SCALE_ALWAYS, SCALE_MID, SCALE_CLOSE,
@@ -28,12 +28,24 @@ import './TimelineFeature.css';
 const SPRING        = { type: 'spring', stiffness: 200, damping: 30 };
 const SPRING_ENTER  = { type: 'spring', stiffness: 120, damping: 22 };
 const ENTRY_SCALE   = 0.07; // starting zoom for entrance animation
+const PATH_PADDING  = 0.10; // fraction of viewport to leave as breathing room around path
 
-function centeredPan(vpW, vpH, scale) {
-  return {
-    x: (vpW - CANVAS_W * scale) / 2,
-    y: (vpH - CANVAS_H * scale) / 2,
-  };
+// Fit the path bounding box into the viewport with padding.
+// Returns { scale, x, y } — the scale and pan that show the full path.
+function fitPathView(vpW, vpH) {
+  const pathW = PATH_BBOX.maxX - PATH_BBOX.minX;
+  const pathH = PATH_BBOX.maxY - PATH_BBOX.minY;
+  const scale = Math.min(
+    ZOOM_MAX,
+    Math.max(ZOOM_MIN, Math.min(
+      vpW * (1 - PATH_PADDING) / pathW,
+      vpH * (1 - PATH_PADDING) / pathH,
+    ))
+  );
+  // Center the path bbox in the viewport
+  const x = (vpW - pathW * scale) / 2 - PATH_BBOX.minX * scale;
+  const y = (vpH - pathH * scale) / 2 - PATH_BBOX.minY * scale;
+  return { scale, x, y };
 }
 
 export function TimelineFeature({ initialSlug = null }) {
@@ -44,17 +56,20 @@ export function TimelineFeature({ initialSlug = null }) {
 
   const worldX     = useMotionValue(0);
   const worldY     = useMotionValue(0);
-  const worldScale = useMotionValue(INITIAL_SCALE);
+  const worldScale = useMotionValue(ZOOM_MIN);
 
   // currentScale drives visible-item filter — updated when worldScale changes
-  const [currentScale, setCurrentScale] = useState(INITIAL_SCALE);
+  const [currentScale, setCurrentScale] = useState(ZOOM_MIN);
   const [previewId,    setPreviewId]    = useState(null);
   const [expanded,     setExpanded]     = useState(false);
-  // true during initial entrance animation — false once restored or settled
-  const [isEntering,   setIsEntering]   = useState(false);
+  // Initialised synchronously so the first render already knows whether to animate.
+  // sessionStorage check here prevents a visible flash before useEffect runs.
+  const [isEntering, setIsEntering] = useState(
+    () => !sessionStorage.getItem('tl-pan')
+  );
 
   // Initial pan — restore saved position (back from item page, no animation)
-  // or entrance animation: start zoomed way out, spring into INITIAL_SCALE.
+  // or entrance animation: start zoomed way out, spring into fit view.
   useEffect(() => {
     const vpW   = window.innerWidth;
     const vpH   = window.innerHeight;
@@ -69,25 +84,29 @@ export function TimelineFeature({ initialSlug = null }) {
       setIsEntering(false);      // eslint-disable-line react-hooks/set-state-in-effect
     } else {
       const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const { x: tx, y: ty } = centeredPan(vpW, vpH, INITIAL_SCALE);
+      const { scale: fitScale, x: fitX, y: fitY } = fitPathView(vpW, vpH);
 
       if (prefersReduced) {
-        worldX.set(tx);
-        worldY.set(ty);
-        worldScale.set(INITIAL_SCALE);
-        setCurrentScale(INITIAL_SCALE); // eslint-disable-line react-hooks/set-state-in-effect
-        setIsEntering(false);           // eslint-disable-line react-hooks/set-state-in-effect
+        worldX.set(fitX);
+        worldY.set(fitY);
+        worldScale.set(fitScale);
+        setCurrentScale(fitScale); // eslint-disable-line react-hooks/set-state-in-effect
+        setIsEntering(false);      // eslint-disable-line react-hooks/set-state-in-effect
       } else {
-        // Entrance: snap to entry scale centered, then spring into INITIAL_SCALE.
-        const { x: sx, y: sy } = centeredPan(vpW, vpH, ENTRY_SCALE);
-        worldX.set(sx);
-        worldY.set(sy);
+        // Entrance: snap to entry scale, then spring into fit view.
+        const entryX = (vpW - PATH_BBOX.minX) / 2;
+        const entryY = (vpH - PATH_BBOX.minY) / 2;
+        worldX.set(entryX);
+        worldY.set(entryY);
         worldScale.set(ENTRY_SCALE);
         setCurrentScale(ENTRY_SCALE); // eslint-disable-line react-hooks/set-state-in-effect
-        animate(worldScale, INITIAL_SCALE, SPRING_ENTER);
-        animate(worldX,     tx,            SPRING_ENTER);
-        animate(worldY,     ty,            SPRING_ENTER);
+        animate(worldScale, fitScale, SPRING_ENTER);
+        animate(worldX,     fitX,     SPRING_ENTER);
+        animate(worldY,     fitY,     SPRING_ENTER);
         setIsEntering(true); // eslint-disable-line react-hooks/set-state-in-effect
+        // Clear entering flag after animation completes so nodes become interactive.
+        // 1800 = DRAW_DURATION, 200 = NODE_APPEAR_DUR, 200 = buffer
+        setTimeout(() => setIsEntering(false), 1800 + 200 + 200);
       }
     }
   }, [worldX, worldY, worldScale]);
@@ -212,7 +231,9 @@ export function TimelineFeature({ initialSlug = null }) {
     if (!previewItem) return;
     savePosition();
     setExpanded(true);
-    navigate(`/timeline/${previewItem.slug}`, { state: locationState, replace: true });
+    // Push — not replace — so Back closes the panel and returns to /timeline,
+    // and a second Back exits to wherever the user came from.
+    navigate(`/timeline/${previewItem.slug}`, { state: locationState });
   }
 
   function handleClose() {

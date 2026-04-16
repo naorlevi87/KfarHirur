@@ -1,7 +1,7 @@
 // src/features/timeline/TimelineCanvas.jsx
 // Pannable world container. Handles pointer drag, wheel zoom, and pinch zoom.
-// Calls onZoom(newScale, originX, originY) — parent owns zoom math.
-// Accepts worldX, worldY, worldScale as MotionValues.
+// Pinch zoom: direct .set() on MotionValues — no spring, tracks fingers frame-by-frame.
+// Wheel zoom: calls onZoom(newScale, originX, originY) — parent animates with spring.
 // Pan is clamped so the canvas never fully leaves the viewport.
 
 import { useRef, useCallback, useEffect } from 'react';
@@ -11,13 +11,14 @@ import { clampPan } from './timelineUtils.js';
 
 export function TimelineCanvas({ worldX, worldY, worldScale, children, onBgClick, onZoom }) {
   const containerRef = useRef(null);
-  const pinchRef     = useRef(null); // { dist, scale }
+  const pinchRef     = useRef(null); // { dist, scale, wx, wy, originX, originY }
   const pointerDrag  = useRef(null); // { px, py, wx, wy }
   const touchPan     = useRef(null); // { px, py, wx, wy }
 
   // ── Pointer drag (mouse + stylus) ──────────────────────────────────────────
   function handlePointerDown(e) {
     if (e.button !== 0) return;
+    if (e.pointerType === 'touch') return; // touch events handle pan/pinch
     pointerDrag.current = {
       px: e.clientX, py: e.clientY,
       wx: worldX.get(), wy: worldY.get(),
@@ -52,11 +53,23 @@ export function TimelineCanvas({ worldX, worldY, worldScale, children, onBgClick
   // ── Touch: single-finger pan + two-finger pinch ────────────────────────────
   // touchmove registered non-passive to allow preventDefault on pinch.
   const handleTouchStart = useCallback((e) => {
+    // Close preview immediately on touch — don't wait for touchend.
+    if (!e.target.closest('[data-id]')) onBgClick();
     if (e.touches.length === 2) {
       touchPan.current = null;
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
-      pinchRef.current = { dist: Math.sqrt(dx * dx + dy * dy), scale: worldScale.get() };
+      const originX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      const originY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      // Snapshot the full state at pinch start — all frame calculations are relative to this.
+      pinchRef.current = {
+        dist:    Math.sqrt(dx * dx + dy * dy),
+        scale:   worldScale.get(),
+        wx:      worldX.get(),
+        wy:      worldY.get(),
+        originX,
+        originY,
+      };
     } else if (e.touches.length === 1) {
       pinchRef.current = null;
       touchPan.current = {
@@ -64,7 +77,7 @@ export function TimelineCanvas({ worldX, worldY, worldScale, children, onBgClick
         wx: worldX.get(), wy: worldY.get(),
       };
     }
-  }, [worldX, worldY, worldScale]);
+  }, [worldX, worldY, worldScale, onBgClick]);
 
   const handleTouchMove = useCallback((e) => {
     if (e.touches.length === 2 && pinchRef.current) {
@@ -72,22 +85,42 @@ export function TimelineCanvas({ worldX, worldY, worldScale, children, onBgClick
       const dx      = e.touches[0].clientX - e.touches[1].clientX;
       const dy      = e.touches[0].clientY - e.touches[1].clientY;
       const newDist = Math.sqrt(dx * dx + dy * dy);
-      const newScale = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN,
-        pinchRef.current.scale * (newDist / pinchRef.current.dist)
-      ));
-      const originX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-      const originY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-      onZoom(newScale, originX, originY);
-    } else if (e.touches.length === 1 && touchPan.current) {
+
+      const { dist: initDist, scale: initScale, wx: initWx, wy: initWy, originX: initOriginX, originY: initOriginY } = pinchRef.current;
+      const newScale = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, initScale * (newDist / initDist)));
+
+      // Current midpoint — fingers may have translated as well as scaled.
+      const newOriginX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      const newOriginY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+
+      // World point that was under the initial pinch center — stays fixed.
+      const worldPtX = (initOriginX - initWx) / initScale;
+      const worldPtY = (initOriginY - initWy) / initScale;
+
+      // Pan so that world point stays under the new midpoint, and translate by finger movement.
       const { x, y } = clampPan(
-        touchPan.current.wx + (e.touches[0].clientX - touchPan.current.px),
-        touchPan.current.wy + (e.touches[0].clientY - touchPan.current.py),
-        worldScale.get(),
+        newOriginX - worldPtX * newScale,
+        newOriginY - worldPtY * newScale,
+        newScale,
+      );
+
+      // Direct set — no spring — pinch must track fingers instantly.
+      worldScale.set(newScale);
+      worldX.set(x);
+      worldY.set(y);
+    } else if (e.touches.length === 1 && touchPan.current) {
+      const s = worldScale.get();
+      // At zoom-out (s<1) keep 1:1 feel; at zoom-in (s>1) scale up so content keeps up with finger.
+      const speed = Math.max(1, s);
+      const { x, y } = clampPan(
+        touchPan.current.wx + (e.touches[0].clientX - touchPan.current.px) * speed,
+        touchPan.current.wy + (e.touches[0].clientY - touchPan.current.py) * speed,
+        s,
       );
       worldX.set(x);
       worldY.set(y);
     }
-  }, [worldX, worldY, worldScale, onZoom]);
+  }, [worldX, worldY, worldScale]);
 
   const handleTouchEnd = useCallback((e) => {
     if (e.touches.length < 2) pinchRef.current = null;
@@ -136,7 +169,6 @@ export function TimelineCanvas({ worldX, worldY, worldScale, children, onBgClick
           width={CANVAS_W}
           height={CANVAS_H}
           viewBox={`0 0 ${CANVAS_W} ${CANVAS_H}`}
-          onClick={onBgClick}
           style={{ display: 'block', overflow: 'visible' }}
         >
           <defs>
@@ -151,7 +183,8 @@ export function TimelineCanvas({ worldX, worldY, worldScale, children, onBgClick
               <circle cx="30" cy="30" r="0.8" fill="var(--road)" opacity="0.05" />
             </pattern>
           </defs>
-          <rect width={CANVAS_W} height={CANVAS_H} fill="url(#tl-dots)" />
+          {/* Background rect owns the bg-click — nodes use stopPropagation to prevent it */}
+          <rect width={CANVAS_W} height={CANVAS_H} fill="url(#tl-dots)" onClick={onBgClick} />
           {children}
         </svg>
       </motion.div>

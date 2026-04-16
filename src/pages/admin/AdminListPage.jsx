@@ -54,9 +54,11 @@ export function AdminListPage() {
   return (
     <div className="admin-list-page" dir="rtl">
       <header className="admin-header">
-        <div className="admin-header__right">
-          <Link to="/admin" className="admin-back-btn">← חזרה</Link>
-          <h1 className="admin-header__title">עריכת ציר זמן</h1>
+        <div className="admin-header__inner">
+          <div className="admin-header__right">
+            <Link to="/admin" className="admin-back-btn">→ חזרה</Link>
+            <h1 className="admin-header__title">עריכת ציר זמן</h1>
+          </div>
         </div>
       </header>
 

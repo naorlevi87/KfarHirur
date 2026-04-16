@@ -9,7 +9,9 @@ export const CANVAS_H = 2200;
 export const ZOOM_MIN     = 0.12;   // most zoomed out (full overview)
 export const ZOOM_MAX     = 2.5;    // most zoomed in
 export const ZOOM_STEP    = 1.35;   // multiplier per +/− button press
-export const INITIAL_SCALE = 0.22;  // starting scale
+// Bounding box of PATH_SEGMENTS endpoints — used to fit the initial view.
+// Update if PATH_SEGMENTS changes significantly.
+export const PATH_BBOX = { minX: 280, maxX: 2340, minY: 100, maxY: 2080 };
 
 // ── Item visibility tiers ─────────────────────────────────────────────────────
 // DB stores zoom_tier: 0 | 1 | 2 (semantic level, not a scale value).

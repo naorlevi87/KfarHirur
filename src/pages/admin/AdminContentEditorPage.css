@@ -1,0 +1,285 @@
+/* src/pages/admin/AdminContentEditorPage.css */
+/* Admin page content editor — section cards with naor/shay field inputs. */
+
+.ace-page {
+  min-height: 100dvh;
+  background: #f9fafb;
+  color: #111;
+}
+
+.ace-main {
+  padding: 1.5rem 1.25rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.ace-page .admin-header__inner {
+  max-width: 900px;
+}
+
+/* Section card */
+.ace-section {
+  background: #fff;
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 14px;
+  margin-bottom: 1.25rem;
+  overflow: hidden;
+}
+
+.ace-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  user-select: none;
+  gap: 0.75rem;
+}
+
+.ace-section__title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ace-section__dirty {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-accent, #f59e0b);
+}
+
+.ace-section__chevron {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary, #6b7280);
+  transition: transform 0.2s ease;
+}
+
+.ace-section__chevron--open {
+  transform: rotate(180deg);
+}
+
+.ace-section__body {
+  padding: 0 1.25rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Field row */
+.ace-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.ace-field__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.ace-field__label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.ace-split-select {
+  font-size: 0.72rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: 6px;
+  border: 1px solid var(--surface-border, #e5e7eb);
+  background: var(--surface, #fff);
+  color: var(--text-body, #374151);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* naor + shay side by side */
+.ace-field__cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+@media (max-width: 600px) {
+  .ace-field__cols {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ace-field__col-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--color-text-secondary, #6b7280);
+  margin-bottom: 0.25rem;
+}
+
+.ace-input,
+.ace-textarea {
+  width: 100%;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 8px;
+  /* 1rem = 16px — prevents iOS Safari from zooming on focus */
+  font-size: 1rem;
+  font-family: inherit;
+  background: #fafafa;
+  color: #111;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+
+.ace-input:focus,
+.ace-textarea:focus {
+  outline: none;
+  border-color: var(--focus-ring, #6366f1);
+  background: #fff;
+}
+
+.ace-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Paragraphs field */
+.ace-paragraphs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ace-para-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.ace-para-row__controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-top: 0.25rem;
+}
+
+.ace-para-btn {
+  background: none;
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 6px;
+  /* min 44px touch target per WCAG / IS 5568 */
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0.2rem 0.4rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  line-height: 1;
+  color: #111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ace-para-btn:hover {
+  background: var(--color-border, #e5e7eb);
+}
+
+.ace-para-btn--delete {
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+.ace-para-btn--delete:hover {
+  background: #fef2f2;
+}
+
+.ace-add-para-btn {
+  align-self: flex-start;
+  padding: 0.4rem 0.75rem;
+  border: 1px dashed var(--color-border, #e5e7eb);
+  border-radius: 8px;
+  background: none;
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: var(--color-text-secondary, #6b7280);
+  margin-top: 0.25rem;
+}
+
+.ace-add-para-btn:hover {
+  border-color: var(--focus-ring, #6366f1);
+  color: var(--focus-ring, #6366f1);
+}
+
+/* Section footer */
+.ace-section__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid var(--color-border, #e5e7eb);
+  background: #fafafa;
+}
+
+.ace-cancel-btn {
+  padding: 0.5rem 1rem;
+  background: transparent;
+  color: var(--text-muted, #9ca3af);
+  border: 1px solid var(--surface-border, #e5e7eb);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.ace-cancel-btn:hover:not(:disabled) {
+  color: var(--text-body, #374151);
+  border-color: var(--text-muted, #9ca3af);
+}
+
+.ace-save-btn {
+  padding: 0.5rem 1.25rem;
+  background: var(--color-accent, #6366f1);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.ace-save-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ace-save-btn:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.ace-save-status {
+  font-size: 0.82rem;
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.ace-save-status--error {
+  color: #dc2626;
+}
+
+.ace-save-status--ok {
+  color: #16a34a;
+}
+
+/* Loading / error states */
+.ace-state {
+  padding: 2rem;
+  text-align: center;
+  color: var(--color-text-secondary, #6b7280);
+}
