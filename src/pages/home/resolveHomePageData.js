@@ -4,11 +4,10 @@
 import { useEffect, useState } from 'react';
 import { useAppContext } from '../../app/appState/useAppContext.js';
 import { homeContent as homeHe } from '../../content/site/he/home.content.js';
-import { homeContent as homeEn } from '../../content/site/en/home.content.js';
 import { fetchPageContent } from '../../data/pageContent/pageContent.queries.js';
 import { buildDbOverlay, deepMerge } from '../../data/pageContent/resolvePageContent.js';
 
-const byLocale = { he: homeHe, en: homeEn };
+const byLocale = { he: homeHe };
 
 function resolveRoot(locale) {
   return byLocale[locale] ?? byLocale.he;
