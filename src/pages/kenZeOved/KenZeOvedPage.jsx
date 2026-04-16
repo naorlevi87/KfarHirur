@@ -41,7 +41,7 @@ export function KenZeOvedPage() {
   const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}`;
 
   const heroParagraphs = (getText(hero, 'body') || '').split('\n\n').filter(Boolean);
-  const longParagraphs = longText.paragraphs ?? [];
+  const longParagraphs = (getText(longText, 'body') || '').split('\n\n').filter(Boolean);
 
   return (
     <div className="kig-page">
