@@ -68,5 +68,19 @@ export const kenZeOvedSchema = {
         { path: 'video.placeholder', label: 'טקסט placeholder', type: 'input', mode: 'shared' },
       ],
     },
+    {
+      key: 'video_short',
+      label: 'סרטון קצר (למעלה, autoplay)',
+      fields: [
+        { path: 'videoShort.src', label: 'סרטון קצר', type: 'media-single', mode: 'shared' },
+      ],
+    },
+    {
+      key: 'video_long',
+      label: 'סרטון ארוך (למטה)',
+      fields: [
+        { path: 'videoLong', label: 'סרטון ארוך', type: 'video', mode: 'shared' },
+      ],
+    },
   ],
 };
