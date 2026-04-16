@@ -283,3 +283,27 @@
   text-align: center;
   color: var(--color-text-secondary, #6b7280);
 }
+
+/* Media field trigger button */
+.ace-media-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 0.875rem;
+  cursor: pointer;
+  color: #374151;
+  min-height: 44px;
+  transition: border-color 0.15s;
+  text-align: start;
+}
+
+.ace-media-btn:hover { border-color: #9ca3af; }
+
+/* Textarea resize handle is too small to grab on mobile — disable it */
+@media (max-width: 768px) {
+  .ace-textarea {
+    resize: none;
+    min-height: 120px;
+  }
+}

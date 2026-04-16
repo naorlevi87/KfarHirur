@@ -9,6 +9,7 @@ import { kenZeOvedSchema } from '../../data/pageContent/kenZeOved.schema.js';
 import { homeSchema } from '../../data/pageContent/home.schema.js';
 import { resolveKenZeOvedPageData } from '../../pages/kenZeOved/resolveKenZeOvedPageData.js';
 import { resolveHomePageData } from '../../pages/home/resolveHomePageData.js';
+import { MediaGalleryModal } from './components/MediaGalleryModal.jsx';
 import './AdminContentEditorPage.css';
 
 // Extract only schema-declared field paths from a resolved payload
@@ -97,7 +98,11 @@ function isSectionDirty(section, edits, saved, splitPaths) {
 function getValue(edits, mode, path, type) {
   const val = edits[mode]?.[path];
   if (val !== undefined) return val;
-  return type === 'paragraphs' ? [] : '';
+  if (type === 'paragraphs') return [];
+  if (type === 'media-gallery') return [];
+  if (type === 'media-single') return '';
+  if (type === 'video') return null;
+  return '';
 }
 
 function ParagraphsField({ value, onChange }) {
@@ -149,13 +154,61 @@ function ParagraphsField({ value, onChange }) {
   );
 }
 
+// Trigger button + modal for media-gallery, media-single, and video field types
+function MediaFieldButton({ field, edits, dispatch, mode }) {
+  const [open, setOpen] = useState(false);
+
+  const type = field.type === 'media-gallery' ? 'gallery'
+             : field.type === 'media-single'  ? 'single'
+             : 'video';
+
+  const rawValue = edits[mode]?.[field.path];
+  const value = rawValue !== undefined
+    ? rawValue
+    : (type === 'gallery' ? [] : type === 'single' ? '' : null);
+
+  const count = type === 'gallery' && Array.isArray(value) ? value.length : null;
+
+  function handleSave(newValue) {
+    dispatch({ type: 'set', mode, path: field.path, value: newValue });
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        className="ace-media-btn"
+        onClick={() => setOpen(true)}
+      >
+        {type === 'video'
+          ? `🎬 ${value?.url ? 'ערוך וידאו' : 'הוסף וידאו'}`
+          : count !== null
+            ? `📷 ערוך תמונות (${count})`
+            : `📷 ${value ? 'ערוך תמונה' : 'הוסף תמונה'}`
+        }
+      </button>
+      <MediaGalleryModal
+        open={open}
+        title={field.label}
+        type={type}
+        value={value}
+        onSave={handleSave}
+        onClose={() => setOpen(false)}
+      />
+    </>
+  );
+}
+
 function FieldInput({ field, edits, dispatch, split, onToggleSplit }) {
   const isShared = !split;
 
   function renderInput(mode, value, onChange) {
     if (field.type === 'paragraphs') return <ParagraphsField value={value} onChange={onChange} />;
-    if (field.type === 'textarea')   return <textarea className="ace-textarea" value={value} onChange={e => onChange(e.target.value)} />;
-    return <input className="ace-input" type="text" value={value} onChange={e => onChange(e.target.value)} />;
+    if (field.type === 'textarea')   return <textarea className="ace-textarea" value={value ?? ''} onChange={e => onChange(e.target.value)} />;
+    if (field.type === 'media-gallery' || field.type === 'media-single' || field.type === 'video') {
+      return <MediaFieldButton field={field} edits={edits} dispatch={dispatch} mode={mode} />;
+    }
+    return <input className="ace-input" type="text" value={value ?? ''} onChange={e => onChange(e.target.value)} />;
   }
 
   return (
@@ -224,24 +277,21 @@ function SectionCard({ section, pageKey, edits, dispatch, saved, onSaved }) {
   ));
 
   function toggleSplit(field) {
-    setSplitPaths(prev => {
-      const next = new Set(prev);
-      if (next.has(field.path)) {
-        // Split → shared: copy naor value into shared
-        const naorVal = edits.naor?.[field.path];
-        if (naorVal !== undefined) dispatch({ type: 'set', mode: 'shared', path: field.path, value: naorVal });
-        next.delete(field.path);
-      } else {
-        // Shared → split: seed both naor and shay from shared
-        const sharedVal = edits.shared?.[field.path];
-        if (sharedVal !== undefined) {
-          dispatch({ type: 'set', mode: 'naor', path: field.path, value: sharedVal });
-          dispatch({ type: 'set', mode: 'shay', path: field.path, value: sharedVal });
-        }
-        next.add(field.path);
+    const wasSplit = splitPaths.has(field.path);
+    if (wasSplit) {
+      // Split → shared: copy naor value into shared
+      const naorVal = edits.naor?.[field.path];
+      if (naorVal !== undefined) dispatch({ type: 'set', mode: 'shared', path: field.path, value: naorVal });
+      setSplitPaths(prev => { const next = new Set(prev); next.delete(field.path); return next; });
+    } else {
+      // Shared → split: seed both naor and shay from shared
+      const sharedVal = edits.shared?.[field.path];
+      if (sharedVal !== undefined) {
+        dispatch({ type: 'set', mode: 'naor', path: field.path, value: sharedVal });
+        dispatch({ type: 'set', mode: 'shay', path: field.path, value: sharedVal });
       }
-      return next;
-    });
+      setSplitPaths(prev => { const next = new Set(prev); next.add(field.path); return next; });
+    }
   }
 
   const splitChanged = section.fields.some(f =>
@@ -373,7 +423,13 @@ export function AdminContentEditorPage() {
 
     fetchPageContent(pageKey, 'he')
       .then(rows => {
+        console.log('[AdminEditor] DB rows for', pageKey, rows);
         const merged = initEdits(rows, defaults);
+        console.log('[AdminEditor] merged.shared timeline fields:', {
+          heading: merged.shared['timeline.heading'],
+          teaser:  merged.shared['timeline.teaser'],
+          label:   merged.shared['timeline.label'],
+        });
         dispatch({ type: 'init', edits: merged });
         setSaved(merged);
       })
