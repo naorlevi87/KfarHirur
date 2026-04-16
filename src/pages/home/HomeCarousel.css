@@ -25,6 +25,27 @@
   object-fit: contain;
 }
 
+/* Navigation arrows — small, grey, semi-transparent */
+.hp-carousel .swiper-button-prev,
+.hp-carousel .swiper-button-next {
+  width: 32px;
+  height: 32px;
+  opacity: 0.45;
+  color: #6b7280;
+  transition: opacity 0.2s ease;
+}
+
+.hp-carousel .swiper-button-prev:hover,
+.hp-carousel .swiper-button-next:hover {
+  opacity: 0.75;
+}
+
+.hp-carousel .swiper-button-prev::after,
+.hp-carousel .swiper-button-next::after {
+  font-size: 14px;
+  font-weight: 800;
+}
+
 .hp-carousel .swiper-pagination-bullet {
   background: var(--accent);
   opacity: 0.35;
