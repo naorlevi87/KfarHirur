@@ -73,7 +73,7 @@ function GalleryEditor({ items, setItems }) {
     <>
       <div className="mgm-grid">
         {items.map((url, i) => (
-          <div key={url + i} className="mgm-thumb">
+          <div key={i} className="mgm-thumb">
             <img src={url} alt={`תמונה ${i + 1}`} />
             <div className="mgm-thumb__controls">
               <button className="mgm-thumb__btn" onClick={() => moveUp(i)} disabled={i === 0} aria-label="הזז למעלה">↑</button>
@@ -169,6 +169,13 @@ function VideoEditor({ value, setValue }) {
   const [urlInput, setUrlInput] = useState(value?.type === 'youtube' ? (value.url ?? '') : '');
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
+
+  // Restore YouTube URL input when switching back to youtube tab
+  useEffect(() => {
+    if (tab === 'youtube' && value?.type === 'youtube') {
+      setUrlInput(value.url ?? '');
+    }
+  }, [tab]);
 
   const embedUrl = tab === 'youtube' ? toYouTubeEmbed(urlInput) : null;
 
