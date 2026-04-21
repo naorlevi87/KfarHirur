@@ -2,63 +2,25 @@
 // Admin: edit all user-facing text for a specific page.
 // Sections driven by page schema. Per-section save with dirty tracking.
 
-import { useEffect, useMemo, useReducer, useState } from 'react';
+import { useEffect, useReducer, useRef, useState } from 'react';
 import { Link, useParams, Navigate } from 'react-router-dom';
 import { fetchPageContent, upsertPageContentBatch, deletePageContentRows } from '../../data/pageContent/pageContent.queries.js';
 import { kenZeOvedSchema } from '../../data/pageContent/kenZeOved.schema.js';
 import { homeSchema } from '../../data/pageContent/home.schema.js';
-import { resolveKenZeOvedPageData } from '../../pages/kenZeOved/resolveKenZeOvedPageData.js';
-import { resolveHomePageData } from '../../pages/home/resolveHomePageData.js';
 import { MediaGalleryModal } from './components/MediaGalleryModal.jsx';
 import './AdminContentEditorPage.css';
-
-// Extract only schema-declared field paths from a resolved payload
-function flattenPayload(payload, schema) {
-  const result = {};
-  for (const section of schema.sections) {
-    for (const field of section.fields) {
-      const val = field.path.split('.').reduce((cur, k) => cur?.[k], payload);
-      if (val !== undefined) result[field.path] = val;
-    }
-  }
-  return result;
-}
 
 const SCHEMAS = {
   kenZeOved: kenZeOvedSchema,
   home:      homeSchema,
 };
 
-// Static defaults per page — pre-populates editor from live static content
-const STATIC_DEFAULTS = {
-  kenZeOved: () => {
-    const naor = resolveKenZeOvedPageData('he', 'naor');
-    const shay = resolveKenZeOvedPageData('he', 'shay');
-    return {
-      naor:   flattenPayload(naor, kenZeOvedSchema),
-      shay:   flattenPayload(shay, kenZeOvedSchema),
-      shared: flattenPayload(naor, kenZeOvedSchema),
-    };
-  },
-  home: () => {
-    const naor = resolveHomePageData('he', 'naor');
-    const shay = resolveHomePageData('he', 'shay');
-    return {
-      naor:   flattenPayload(naor, homeSchema),
-      shay:   flattenPayload(shay, homeSchema),
-      shared: flattenPayload(naor, homeSchema),
-    };
-  },
-};
+const EMPTY_EDITS = { naor: {}, shay: {}, shared: {} };
 
 // edits shape: { naor: { [path]: value }, shay: { [path]: value }, shared: { [path]: value } }
-// Starts from static defaults, DB values win on conflict.
-function initEdits(rows, staticDefaults) {
-  const edits = {
-    naor:   { ...staticDefaults.naor },
-    shay:   { ...staticDefaults.shay },
-    shared: { ...staticDefaults.shared },
-  };
+// Populated entirely from DB rows. Fields with no DB row are shown empty.
+function initEdits(rows) {
+  const edits = { naor: {}, shay: {}, shared: {} };
   for (const row of rows) {
     if (edits[row.mode]) {
       edits[row.mode][row.field_path] = row.value;
@@ -255,26 +217,33 @@ function SectionCard({ section, pageKey, edits, dispatch, saved, onSaved }) {
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState(null);
 
-  // Track which field paths are in split (naor/shay) mode.
-  // Default to split only if naor and shay values actually differ.
-  const [splitPaths, setSplitPaths] = useState(() => {
-    const paths = new Set();
-    for (const f of section.fields) {
-      if (f.mode === 'shared') continue;
-      const naorVal = JSON.stringify(edits.naor?.[f.path] ?? '');
-      const shayVal = JSON.stringify(edits.shay?.[f.path] ?? '');
-      if (naorVal !== shayVal) paths.add(f.path);
-    }
-    return paths;
-  });
+  // Rule: DB rows determine split/shared mode. Schema is only the fallback for
+  // fields that have never been saved.
+  //   naor/shay rows present → split
+  //   shared row present     → shared
+  //   nothing                → schema default (mode === 'both' → split)
+  function deriveSplitPaths(e) {
+    return new Set(section.fields.filter(f => {
+      if (e.naor?.[f.path] !== undefined || e.shay?.[f.path] !== undefined) return true;
+      if (e.shared?.[f.path] !== undefined) return false;
+      return f.mode === 'both';
+    }).map(f => f.path));
+  }
 
-  // Track the initial split state to detect mode-toggle as a dirty change
-  const [savedSplitPaths] = useState(() => new Set(
-    section.fields
-      .filter(f => f.mode !== 'shared')
-      .filter(f => JSON.stringify(edits.naor?.[f.path] ?? '') !== JSON.stringify(edits.shay?.[f.path] ?? ''))
-      .map(f => f.path)
-  ));
+  // `saved` reflects what is in DB. Derive split state from it — not from edits,
+  // which can have uncommitted local changes.
+  const [splitPaths, setSplitPaths] = useState(() => deriveSplitPaths(saved));
+  const [savedSplitPaths, setSavedSplitPaths] = useState(() => deriveSplitPaths(saved));
+
+  // Re-sync when DB data first arrives (saved starts as EMPTY_EDITS, then fills in).
+  const prevSavedRef = useRef(saved);
+  useEffect(() => {
+    if (prevSavedRef.current === saved) return;
+    prevSavedRef.current = saved;
+    const inferred = deriveSplitPaths(saved);
+    setSplitPaths(inferred);
+    setSavedSplitPaths(new Set(inferred));
+  }, [saved]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function toggleSplit(field) {
     const wasSplit = splitPaths.has(field.path);
@@ -410,32 +379,21 @@ export function AdminContentEditorPage() {
 
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
-  // useMemo so defaults object is stable across renders for the same pageKey
-  const defaults = useMemo(
-    () => STATIC_DEFAULTS[pageKey]?.() ?? { naor: {}, shay: {}, shared: {} },
-    [pageKey]
-  );
-  const [edits, dispatch] = useReducer(editsReducer, defaults);
-  const [saved, setSaved] = useState(defaults);
+  const [edits, dispatch] = useReducer(editsReducer, EMPTY_EDITS);
+  const [saved, setSaved] = useState(EMPTY_EDITS);
 
   useEffect(() => {
     if (!schema) return;
 
     fetchPageContent(pageKey, 'he')
       .then(rows => {
-        console.log('[AdminEditor] DB rows for', pageKey, rows);
-        const merged = initEdits(rows, defaults);
-        console.log('[AdminEditor] merged.shared timeline fields:', {
-          heading: merged.shared['timeline.heading'],
-          teaser:  merged.shared['timeline.teaser'],
-          label:   merged.shared['timeline.label'],
-        });
-        dispatch({ type: 'init', edits: merged });
-        setSaved(merged);
+        const loaded = initEdits(rows);
+        dispatch({ type: 'init', edits: loaded });
+        setSaved(loaded);
       })
       .catch(err => setLoadError(err.message ?? 'שגיאה בטעינה'))
       .finally(() => setLoading(false));
-  }, [pageKey, schema, defaults]);
+  }, [pageKey, schema]);
 
   function handleSaved(section, currentEdits) {
     setSaved(prev => {

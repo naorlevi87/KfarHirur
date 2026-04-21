@@ -1,48 +1,21 @@
 // src/pages/home/resolveHomePageData.js
-// Resolver + hook for home page. Merges shared + mode branch; overlays DB on top.
+// Hook for home page. Loads all content from DB — no static fallback.
 
 import { useEffect, useState } from 'react';
 import { useAppContext } from '../../app/appState/useAppContext.js';
-import { homeContent as homeHe } from '../../content/site/he/home.content.js';
 import { fetchPageContent } from '../../data/pageContent/pageContent.queries.js';
-import { buildDbOverlay, deepMerge } from '../../data/pageContent/resolvePageContent.js';
-
-const byLocale = { he: homeHe };
-
-function resolveRoot(locale) {
-  return byLocale[locale] ?? byLocale.he;
-}
-
-export function resolveHomePageData(locale, mode) {
-  const root = resolveRoot(locale);
-  const shared = root.shared ?? {};
-  const branch = mode === 'shay' ? root.shay : root.naor;
-
-  return {
-    origin:      { ...shared.origin },
-    community:   branch.community ?? {},
-    joz:         branch.joz ?? {},
-    visit:       shared.visit ?? {},
-    fundraising: { ...shared.fundraising, ...branch.fundraising },
-    join:        { ...shared.join, ...branch.join },
-    timeline:    shared.timeline ?? {},
-    images:      shared.images ?? {},
-  };
-}
+import { buildDbOverlay } from '../../data/pageContent/resolvePageContent.js';
 
 export function useHomePageData() {
   const { locale, mode } = useAppContext();
-  const [dbRows, setDbRows] = useState([]);
+  const [dbRows, setDbRows] = useState(null); // null = loading, [] = loaded
 
   useEffect(() => {
-    fetchPageContent('home', locale)
-      .then(setDbRows)
-      .catch(() => {
-        // DB unavailable — static fallback already in place
-      });
+    setDbRows(null);
+    fetchPageContent('home', locale).then(setDbRows).catch(() => setDbRows([]));
   }, [locale]);
 
-  const staticPayload = resolveHomePageData(locale, mode);
-  const overlay = buildDbOverlay(dbRows, mode);
-  return deepMerge(staticPayload, overlay);
+  const loading = dbRows === null;
+  const data    = loading ? null : buildDbOverlay(dbRows, mode);
+  return { data, loading };
 }

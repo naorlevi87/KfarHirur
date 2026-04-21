@@ -16,7 +16,7 @@ export const siteShellContent = {
     menuLabel: 'תפריט',
     closeLabel: 'סגירה',
     home: 'בית',
-    kenZeOved: 'כן, זה עובד',
+    kenZeOved: 'כן, זה עובד! אבל...',
     timeline: 'ציר זמן',
     joinTeam: 'להצטרף לצוות',
     mainNavAriaLabel: 'ניווט ראשי',

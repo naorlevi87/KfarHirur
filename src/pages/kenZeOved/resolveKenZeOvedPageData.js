@@ -1,65 +1,55 @@
 // src/pages/kenZeOved/resolveKenZeOvedPageData.js
-// Page-local resolver: merges shared + mode branch into a semantic payload.
-// Hook overlays DB content on top of the static file. Pure function stays sync
-// for use outside React (tests, scripts).
+// Hook for kenZeOved page. Loads text content from DB.
+// Non-text config (URLs, numbers) stays hardcoded here — not DB content.
 
 import { useEffect, useState } from 'react';
 import { useAppContext } from '../../app/appState/useAppContext.js';
-import { kenZeOvedContent as kenZeOvedHe } from '../../content/site/he/kenZeOved.content.js';
-import { kenZeOvedContent as kenZeOvedEn } from '../../content/site/en/kenZeOved.content.js';
 import { fetchPageContent } from '../../data/pageContent/pageContent.queries.js';
-import { buildDbOverlay, deepMerge } from '../../data/pageContent/resolvePageContent.js';
+import { buildDbOverlay } from '../../data/pageContent/resolvePageContent.js';
 
-const byLocale = {
-  he: kenZeOvedHe,
-  en: kenZeOvedEn,
+// Static config — not user-editable copy, intentionally kept in code.
+const CONFIG = {
+  donateUrl: 'https://pay.grow.link/668e556e129d64d2d124e380300a1133-MzIyODgxNw',
+  visitUrl:  'https://ontopo.com/he/il/page/jozveloz?source=kfarhirur',
+  progress: {
+    raisedAmount:   0,      // ← update manually when raising
+    goalA:          180000,
+    goalB:          340000,
+    goalC:          520000,
+    currencySymbol: '₪',
+  },
 };
-
-function resolveRoot(locale) {
-  return byLocale[locale] ?? byLocale.he;
-}
-
-function resolveMode(root, mode) {
-  const key = mode === 'shay' ? 'shay' : 'naor';
-  return root[key] ?? root.naor ?? {};
-}
-
-export function resolveKenZeOvedPageData(locale, mode) {
-  const root = resolveRoot(locale);
-  const shared = root.shared ?? {};
-  const branch = resolveMode(root, mode);
-
-  return {
-    hero:         branch.hero ?? {},
-    cta:          {
-      ...branch.cta,
-      donateUrl:      shared.donateUrl,
-      visitUrl:       shared.visitUrl,
-      // aria labels derived from visible text — WCAG 2.5.3 compliance
-      donateAriaLabel: branch.cta?.donateLabel ?? '',
-      visitAriaLabel:  branch.cta?.visitLabel ?? '',
-    },
-    progress:     { ...shared.progress, ...branch.progress },
-    video:        shared.video ?? {},
-    longText:     branch.longText ?? {},
-    transparency: shared.transparency ?? {},
-    share:        { ...shared.share, ...branch.share },
-  };
-}
 
 export function useKenZeOvedPageData() {
   const { locale, mode } = useAppContext();
-  const [dbRows, setDbRows] = useState([]);
+  const [dbRows, setDbRows] = useState(null); // null = loading
 
   useEffect(() => {
-    fetchPageContent('kenZeOved', locale)
-      .then(setDbRows)
-      .catch(() => {
-        // DB unavailable — static fallback already in place, no action needed
-      });
+    setDbRows(null);
+    fetchPageContent('kenZeOved', locale).then(setDbRows).catch(() => setDbRows([]));
   }, [locale]);
 
-  const staticPayload = resolveKenZeOvedPageData(locale, mode);
-  const overlay = buildDbOverlay(dbRows, mode);
-  return deepMerge(staticPayload, overlay);
+  const loading = dbRows === null;
+  if (loading) return { loading: true, data: null };
+
+  const db = buildDbOverlay(dbRows, mode);
+
+  const data = {
+    hero:     db.hero     ?? {},
+    cta: {
+      ...(db.cta ?? {}),
+      donateUrl:       CONFIG.donateUrl,
+      visitUrl:        CONFIG.visitUrl,
+      donateAriaLabel: db.cta?.donateLabel ?? '',
+      visitAriaLabel:  db.cta?.visitLabel  ?? '',
+    },
+    progress:     { ...CONFIG.progress, ...(db.progress ?? {}) },
+    videoShort:   db.videoShort   ?? {},
+    videoLong:    db.videoLong    ?? null,
+    longText:     db.longText     ?? {},
+    transparency: db.transparency ?? {},
+    share:        db.share        ?? {},
+  };
+
+  return { loading: false, data };
 }

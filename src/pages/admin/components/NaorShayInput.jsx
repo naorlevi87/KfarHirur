@@ -1,22 +1,11 @@
 // src/pages/admin/components/NaorShayInput.jsx
 // Reusable input with naor/shay toggle.
 // When isDifferent=false: single input writes to both.
-// When isDifferent=true: two tabs — נאור / שי.
+// When isDifferent=true: two columns side by side — נאור / שי.
 
-import { useState } from 'react';
 import './NaorShayInput.css';
 
 export function NaorShayInput({ label, value, onChange, isDifferent, onToggleDifferent, type = 'text', multiline = false }) {
-  const [activeTab, setActiveTab] = useState('naor');
-
-  function handleSharedChange(e) {
-    onChange({ naor: e.target.value, shay: e.target.value });
-  }
-
-  function handleTabChange(mode, e) {
-    onChange({ ...value, [mode]: e.target.value });
-  }
-
   const InputTag = multiline ? 'textarea' : 'input';
   const inputProps = multiline ? {} : { type };
 
@@ -24,43 +13,37 @@ export function NaorShayInput({ label, value, onChange, isDifferent, onToggleDif
     <div className="nsi">
       <div className="nsi__header">
         <label className="nsi__label">{label}</label>
-        <button
-          type="button"
-          className={`nsi__toggle ${isDifferent ? 'nsi__toggle--on' : ''}`}
-          onClick={onToggleDifferent}
-          title="שונה בין נאור/שי"
+        <select
+          className="nsi__split-select"
+          value={isDifferent ? 'split' : 'shared'}
+          onChange={e => { if ((e.target.value === 'split') !== isDifferent) onToggleDifferent(); }}
+          aria-label="מצב עריכה"
         >
-          {isDifferent ? 'שונה ✓' : 'זהה'}
-        </button>
+          <option value="shared">משותף לשניהם</option>
+          <option value="split">נאור / שי בנפרד</option>
+        </select>
       </div>
 
       {isDifferent ? (
-        <div className="nsi__split">
-          <div className="nsi__tabs">
-            <button
-              type="button"
-              className={`nsi__tab ${activeTab === 'naor' ? 'nsi__tab--active' : ''}`}
-              onClick={() => setActiveTab('naor')}
-            >נאור</button>
-            <button
-              type="button"
-              className={`nsi__tab ${activeTab === 'shay' ? 'nsi__tab--active' : ''}`}
-              onClick={() => setActiveTab('shay')}
-            >שי</button>
-          </div>
-          <InputTag
-            className="nsi__input"
-            {...inputProps}
-            value={value[activeTab] ?? ''}
-            onChange={e => handleTabChange(activeTab, e)}
-          />
+        <div className="nsi__cols">
+          {['naor', 'shay'].map(mode => (
+            <div key={mode}>
+              <div className="nsi__col-label">{mode === 'naor' ? 'נאור' : 'שי'}</div>
+              <InputTag
+                className="nsi__input"
+                {...inputProps}
+                value={value[mode] ?? ''}
+                onChange={e => onChange({ ...value, [mode]: e.target.value })}
+              />
+            </div>
+          ))}
         </div>
       ) : (
         <InputTag
           className="nsi__input"
           {...inputProps}
           value={value.naor ?? ''}
-          onChange={handleSharedChange}
+          onChange={e => onChange({ naor: e.target.value, shay: e.target.value })}
         />
       )}
     </div>

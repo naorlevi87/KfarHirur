@@ -12,9 +12,17 @@
   width: min(92vw, 640px);
   max-height: 88dvh;
   overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  /* Explicit centering — some browsers don't auto-center custom dialogs */
+  margin: auto;
+  position: fixed;
+  inset: 0;
+}
+
+/* Only show as flex when the dialog is actually open */
+.mgm-backdrop[open] {
   display: flex;
   flex-direction: column;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
 }
 
 .mgm-header {

@@ -9,33 +9,19 @@ import { IconFacebook, IconInstagram, IconOntopo } from './SocialIcons.jsx';
 import './HomePage.css';
 
 export function HomePage() {
-  const { origin, community, joz, visit, fundraising, join, timeline, images } = useHomePageData();
+  const { data, loading } = useHomePageData();
+
+  if (loading) return null;
+
+  const { origin, community, joz, visit, fundraising, join, timeline, images } = data;
 
   return (
     <main className="hp" dir="rtl" lang="he">
 
-      {/* 1 — Origins + Zola */}
+      {/* 1 — Joz Veloz + Joz photos */}
       <section className="hp-section">
         <div className="hp-block">
-          <h1 className="hp-heading">{origin.heading}</h1>
-          <p className="hp-body">{origin.body}</p>
-        </div>
-        <HomeCarousel images={images.zola} altPrefix="זולה" />
-      </section>
-
-      {/* 2 — Community + Atlit */}
-      <section className="hp-section">
-        <div className="hp-block">
-          <h2 className="hp-heading">{community.heading}</h2>
-          <p className="hp-body">{community.body}</p>
-        </div>
-        <HomeCarousel images={images.atlit} altPrefix="עתלית" />
-      </section>
-
-      {/* 3 — Joz Veloz + Joz photos */}
-      <section className="hp-section">
-        <div className="hp-block">
-          <h2 className="hp-heading">{joz.heading}</h2>
+          <h1 className="hp-heading">{joz.heading}</h1>
           <p className="hp-body">{joz.body}</p>
           <p className="hp-visit-label">{visit.heading}</p>
           <div className="hp-joz-links">
@@ -56,7 +42,16 @@ export function HomePage() {
         <HomeCarousel images={images.joz} altPrefix="ג׳וז ולוז" />
       </section>
 
-      {/* 4 — Fundraising + video */}
+      {/* 2 — Community + Atlit */}
+      <section className="hp-section">
+        <div className="hp-block">
+          <h2 className="hp-heading">{community.heading}</h2>
+          <p className="hp-body">{community.body}</p>
+        </div>
+        <HomeCarousel images={images.atlit} altPrefix="עתלית" />
+      </section>
+
+      {/* 3 — Fundraising + video */}
       <section className="hp-section">
         <div className="hp-block">
           <h2 className="hp-heading">{fundraising.heading}</h2>
@@ -64,6 +59,16 @@ export function HomePage() {
           <Link to="/ken-ze-oved" className="hp-cta">{fundraising.ctaLabel}</Link>
         </div>
         {fundraising.videoUrl && <FundraisingVideo src={fundraising.videoUrl} />}
+      </section>
+
+      {/* 4 — Origins + Zola + timeline CTA */}
+      <section className="hp-section">
+        <div className="hp-block">
+          <h2 className="hp-heading">{origin.heading}</h2>
+          <p className="hp-body">{origin.body}</p>
+          <Link to="/timeline" className="hp-cta">{timeline.label}</Link>
+        </div>
+        <HomeCarousel images={images.zola} altPrefix="זולה" />
       </section>
 
       {/* 5 — Join team + crew photo */}
@@ -75,18 +80,6 @@ export function HomePage() {
         </div>
         {images.crew && (
           <HomeCarousel images={[images.crew]} altPrefix="צוות ג׳וז ולוז" />
-        )}
-      </section>
-
-      {/* 6 — Timeline + preview */}
-      <section className="hp-section">
-        <div className="hp-block">
-          <h2 className="hp-heading">{timeline.heading}</h2>
-          <p className="hp-body">{timeline.teaser}</p>
-          <Link to="/timeline" className="hp-cta">{timeline.label}</Link>
-        </div>
-        {timeline.previewImage && (
-          <HomeCarousel images={[timeline.previewImage]} altPrefix="ציר הזמן" />
         )}
       </section>
 

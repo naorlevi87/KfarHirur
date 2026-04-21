@@ -3,7 +3,9 @@
 
 .ace-page {
   min-height: 100dvh;
-  background: #f9fafb;
+  /* Override consciousness-mode palette — admin UI is always neutral */
+  background: #f9fafb !important;
+  background-image: none !important;
   color: #111;
 }
 

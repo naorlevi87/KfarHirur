@@ -129,6 +129,15 @@ body {
     linear-gradient(160deg, var(--page-linear-a) 0%, var(--page-linear-b) 50%, var(--page-linear-c) 100%);
 }
 
+/* Admin pages — suppress consciousness-mode gradient on the scroll container */
+.main-layout-content:has(.ace-page),
+.main-layout-content:has(.admin-dashboard),
+.main-layout-content:has(.admin-list-page),
+.main-layout-content:has(.admin-users-page),
+.main-layout-content:has(.admin-item-page) {
+  background: #f9fafb;
+}
+
 .main-layout-content {
   box-sizing: border-box;
   flex: 1;

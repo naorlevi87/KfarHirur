@@ -1,8 +1,5 @@
 // src/data/pageContent/kenZeOved.schema.js
-// Field schema for the kenZeOved page content editor.
-// path = dot-notation matching field_path in DB and payload keys.
-// mode: 'both' = separate naor + shay inputs; 'shared' = single shared input.
-// type: 'input' | 'textarea' | 'paragraphs'
+// Field schema for the kenZeOved page content editor. Section order matches page order.
 
 export const kenZeOvedSchema = {
   pageKey: 'kenZeOved',
@@ -17,6 +14,13 @@ export const kenZeOvedSchema = {
       ],
     },
     {
+      key: 'video_short',
+      label: 'סרטון קצר (autoplay)',
+      fields: [
+        { path: 'videoShort.src', label: 'סרטון קצר', type: 'media-single', mode: 'shared' },
+      ],
+    },
+    {
       key: 'cta',
       label: 'כפתורים',
       fields: [
@@ -28,11 +32,11 @@ export const kenZeOvedSchema = {
       key: 'progress',
       label: 'מד התקדמות',
       fields: [
-        { path: 'progress.goalALabel',  label: 'תווית יעד א׳',    type: 'input', mode: 'both' },
-        { path: 'progress.goalBLabel',  label: 'תווית יעד ב׳',    type: 'input', mode: 'both' },
-        { path: 'progress.goalCLabel',  label: 'תווית יעד ג׳',    type: 'input', mode: 'both' },
-        { path: 'progress.raisedLabel', label: 'גויס עד כה',      type: 'input', mode: 'both' },
-        { path: 'progress.outOfLabel',  label: 'מתוך',            type: 'input', mode: 'both' },
+        { path: 'progress.goalALabel',  label: 'תווית יעד א׳', type: 'input', mode: 'both' },
+        { path: 'progress.goalBLabel',  label: 'תווית יעד ב׳', type: 'input', mode: 'both' },
+        { path: 'progress.goalCLabel',  label: 'תווית יעד ג׳', type: 'input', mode: 'both' },
+        { path: 'progress.raisedLabel', label: 'גויס עד כה',   type: 'input', mode: 'both' },
+        { path: 'progress.outOfLabel',  label: 'מתוך',          type: 'input', mode: 'both' },
       ],
     },
     {
@@ -43,43 +47,28 @@ export const kenZeOvedSchema = {
       ],
     },
     {
+      key: 'video_long',
+      label: 'סרטון ארוך',
+      fields: [
+        { path: 'videoLong', label: 'סרטון', type: 'video', mode: 'shared' },
+      ],
+    },
+    {
       key: 'share',
       label: 'שיתוף',
       fields: [
-        { path: 'share.heading',          label: 'כותרת שיתוף',        type: 'input',    mode: 'both' },
-        { path: 'share.whatsappLabel',    label: 'תווית וואטסאפ',      type: 'input',    mode: 'shared' },
-        { path: 'share.facebookLabel',    label: 'תווית פייסבוק',      type: 'input',    mode: 'shared' },
-        { path: 'share.copyLabel',        label: 'תווית העתקת לינק',   type: 'input',    mode: 'shared' },
-        { path: 'share.whatsappMessage',  label: 'הודעת וואטסאפ',      type: 'textarea', mode: 'shared' },
+        { path: 'share.heading',             label: 'כותרת',                      type: 'input',        mode: 'both' },
+        { path: 'share.whatsappMessage',     label: 'הודעת וואטסאפ',              type: 'textarea',     mode: 'shared' },
+        { path: 'share.facebookMedia',       label: 'תמונה/וידאו לפייסבוק',       type: 'media-single', mode: 'shared' },
+        { path: 'share.instagramStoryMedia', label: 'וידאו/תמונה לסטורי אינסטגרם', type: 'media-single', mode: 'shared' },
       ],
     },
     {
       key: 'transparency',
-      label: 'שקיפות כלכלית',
+      label: 'שקיפות כלכלית (מוסתר)',
       fields: [
-        { path: 'transparency.heading',     label: 'כותרת',      type: 'input',    mode: 'shared' },
-        { path: 'transparency.placeholder', label: 'טקסט זמני',  type: 'textarea', mode: 'shared' },
-      ],
-    },
-    {
-      key: 'video',
-      label: 'וידאו',
-      fields: [
-        { path: 'video.placeholder', label: 'טקסט placeholder', type: 'input', mode: 'shared' },
-      ],
-    },
-    {
-      key: 'video_short',
-      label: 'סרטון קצר (למעלה, autoplay)',
-      fields: [
-        { path: 'videoShort.src', label: 'סרטון קצר', type: 'media-single', mode: 'shared' },
-      ],
-    },
-    {
-      key: 'video_long',
-      label: 'סרטון ארוך (למטה)',
-      fields: [
-        { path: 'videoLong', label: 'סרטון ארוך', type: 'video', mode: 'shared' },
+        { path: 'transparency.heading',     label: 'כותרת',     type: 'input',    mode: 'shared' },
+        { path: 'transparency.placeholder', label: 'טקסט זמני', type: 'textarea', mode: 'shared' },
       ],
     },
   ],

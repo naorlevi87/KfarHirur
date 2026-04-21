@@ -222,6 +222,31 @@
   color: var(--text-muted);
 }
 
+/* ── Video placeholder ──────────────────────────────────── */
+
+.kig-video-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  border: 2px dashed var(--color-border, rgba(0,0,0,0.15));
+  background: var(--color-surface-subtle, rgba(0,0,0,0.03));
+  color: var(--text-muted);
+}
+
+.kig-video-placeholder__icon {
+  font-size: 2rem;
+  opacity: 0.4;
+}
+
+.kig-video-placeholder__label {
+  font-size: 0.9rem;
+}
+
 /* ── Block 4: Long text ─────────────────────────────────── */
 
 .kig-longText {
@@ -261,95 +286,67 @@
   color: var(--text-muted);
 }
 
-/* ── Block 6: Share ─────────────────────────────────────── */
+/* ── Block 8: Share ─────────────────────────────────────── */
+
+.kig-share-card {
+  border-radius: 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  padding: 1.5rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+}
 
 .kig-shareHeading {
-  margin: 0 0 0.85rem;
+  margin: 0;
   font-size: 1rem;
   font-weight: 600;
+  text-align: center;
   color: var(--text-section);
 }
 
 .kig-shareActions {
   display: flex;
   flex-direction: row;
-  gap: 0.6rem;
-  align-items: stretch;
-}
-
-/* Social share buttons — icon + label, equal flex */
-.kig-socialBtn {
-  display: flex;
-  flex: 1;
+  gap: 1rem;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
-  box-sizing: border-box;
-  padding: 0.8rem 0.75rem;
-  font: inherit;
-  font-size: 0.9rem;
-  font-weight: 600;
-  text-align: center;
-  text-decoration: none;
-  border-radius: 999px;
-  transition: opacity 0.15s ease;
 }
 
-.kig-socialBtn:focus-visible {
+.kig-shareBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.kig-shareBtn:hover  { opacity: 0.85; transform: scale(1.08); }
+.kig-shareBtn:active { transform: scale(0.95); }
+
+.kig-shareBtn:focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: 3px;
 }
 
-.kig-socialBtn:hover {
-  opacity: 0.88;
-}
+.kig-shareBtn--whatsapp  { color: #fff; background: #25d366; }
+.kig-shareBtn--facebook  { color: #fff; background: #1877f2; }
+.kig-shareBtn--instagram { color: #fff; background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285aeb 90%); }
+.kig-shareBtn--copy      { color: var(--text-primary); background: var(--page-bg-secondary); border: 1.5px solid var(--surface-border); }
 
-.kig-socialBtn--whatsapp {
-  color: #fff;
-  background: #25d366;
-}
-
-.kig-socialBtn--facebook {
-  color: #fff;
-  background: #1877f2;
-}
-
-.kig-socialIcon {
-  width: 1.1em;
-  height: 1.1em;
+.kig-shareIcon {
+  width: 1.4rem;
+  height: 1.4rem;
   flex-shrink: 0;
   fill: currentColor;
-}
-
-.kig-copyBtn {
-  appearance: none;
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  box-sizing: border-box;
-  padding: 0.8rem 0.75rem;
-  font: inherit;
-  font-size: 0.88rem;
-  font-weight: 500;
-  text-align: center;
-  color: var(--text-primary);
-  cursor: pointer;
-  border: 1.5px solid var(--surface-border);
-  border-radius: 999px;
-  background: var(--surface);
-  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
-}
-
-.kig-copyBtn:hover {
-  border-color: var(--accent);
-  background: var(--page-bg-secondary);
-}
-
-.kig-copyBtn:focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 3px;
 }
 
 /* ── Block 7: Footer link ───────────────────────────────── */
