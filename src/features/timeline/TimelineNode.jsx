@@ -69,6 +69,15 @@ function nodeFillOpacity(pathProgress) {
   return 0.35 + 0.30 * pathProgress;
 }
 
+// Deterministic color index 1–15 from item id.
+// Same node always gets the same color regardless of load order.
+function nodeColorIndex(id) {
+  let h = 0;
+  const s = String(id);
+  for (let i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
+  return (Math.abs(h) % 15) + 1;
+}
+
 export function TimelineNode({ item, worldScale, labelFlip = false, onTap, isEntering = false, pathProgress = 0 }) {
   const { id, x, y, tx = 1, ty = 0, minScale = 0, content } = item;
   const isClose = minScale >= SCALE_CLOSE;
@@ -76,6 +85,7 @@ export function TimelineNode({ item, worldScale, labelFlip = false, onTap, isEnt
   const isSub   = minScale > 0; // any non-main item
 
   const r         = isClose ? CLOSE_R : isMid ? MID_R : MAIN_R;
+  const colorVar  = `var(--node-c-${nodeColorIndex(id)})`;
   const labelSize = isClose ? LABEL_CLOSE : isMid ? LABEL_MID : LABEL_MAIN;
 
   // Outward normal at this node's position on the bezier path
@@ -189,9 +199,9 @@ export function TimelineNode({ item, worldScale, labelFlip = false, onTap, isEnt
         {/* Circle centered at (x,y) in screen px inside the counter-scaled group */}
         <circle
           cx={x} cy={y} r={r}
-          fill="var(--road)"
+          fill={colorVar}
           fillOpacity={nodeFillOpacity(pathProgress)}
-          stroke="var(--road)"
+          stroke={colorVar}
           strokeWidth={isClose ? 1.5 : isMid ? 1.8 : 2.5}
           strokeOpacity={nodeStrokeOpacity(isClose ? 'close' : isMid ? 'mid' : 'main', pathProgress)}
         />
