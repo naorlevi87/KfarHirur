@@ -182,7 +182,7 @@ export function TimelineNode({ item, worldScale, labelFlip = false, onTap, isEnt
         onPointerDown={handlePointerDown}
         style={{ cursor: 'pointer' }}
       >
-        {/* Invisible tap target — larger than the visual blob for easy touch */}
+        {/* Invisible tap target — larger than the visual circle for easy touch */}
         <circle cx={x} cy={y} r={TAP_R} fill="transparent" />
 
         {/* Circle centered at (x,y) in screen px inside the counter-scaled group */}
