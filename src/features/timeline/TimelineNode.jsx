@@ -41,63 +41,31 @@ const MID_R   = 7;
 const CLOSE_R = 6;
 
 // Label font sizes by tier (screen px)
-const LABEL_MAIN  = 16; // minScale=0 — always-visible milestones
-const LABEL_MID   = 14; // mid-zoom items
-const LABEL_CLOSE = 13; // close-zoom items
+const LABEL_MAIN  = 16;
+const LABEL_MID   = 14;
+const LABEL_CLOSE = 13;
 const TAG_SIZE    = 11;
 
-// Horizontal gap from node edge to nearest text edge (screen px)
-const H_GAP = 3;
-
-// Invisible tap target radius (screen px) — large enough for comfortable mobile touch
-const TAP_R = 22;
-
-// How much ny shifts the label vertically from node center (screen px per unit normal)
-// ny=1.0 → label shifts V_SCALE px down; ny=-1.0 → V_SCALE px up
+const H_GAP  = 3;
+const TAP_R  = 22;
 const V_SCALE = 11;
 
-const DRAW_DURATION     = 1800; // ms — must match TimelineRoad
-const NODE_DELAY_OFFSET = 150;  // ms after brush passes node before it appears
-const NODE_APPEAR_DUR   = 200;  // ms
+const DRAW_DURATION     = 1800;
+const NODE_DELAY_OFFSET = 150;
+const NODE_APPEAR_DUR   = 200;
 
-// Generates a deterministic organic blob path around (cx, cy) with radius r.
-// seed is a stable integer derived from item.id — same node always same shape.
-// Returns an SVG path `d` string.
-function blobPath(cx, cy, r, seed) {
-  const POINTS = 8;
-  const WOBBLE = 0.32;
-  const golden = 2.399; // golden angle radians
+// Base stroke opacity by tier
+const TIER_OPACITY = { main: 0.65, mid: 0.42, close: 0.28 };
 
-  const pts = [];
-  for (let i = 0; i < POINTS; i++) {
-    const angle  = (i / POINTS) * Math.PI * 2;
-    const wobble = 1 + WOBBLE * Math.sin(seed + i * golden);
-    const pr     = r * wobble;
-    pts.push([cx + Math.cos(angle) * pr, cy + Math.sin(angle) * pr]);
-  }
-
-  // Smooth closed curve through points using quadratic bezier midpoints
-  const n = pts.length;
-  let d = '';
-  for (let i = 0; i < n; i++) {
-    const curr = pts[i];
-    const next = pts[(i + 1) % n];
-    const nextNext = pts[(i + 2) % n];
-    const mid  = [(curr[0] + next[0]) / 2, (curr[1] + next[1]) / 2];
-    const mid2 = [(next[0] + nextNext[0]) / 2, (next[1] + nextNext[1]) / 2];
-    if (i === 0) {
-      d += `M ${mid[0]} ${mid[1]} `;
-    }
-    d += `Q ${next[0]} ${next[1]} ${mid2[0]} ${mid2[1]} `;
-  }
-  return d + 'Z';
+// Blend tier hierarchy with time position (pathProgress 0=old, 1=new).
+// Older events are slightly more faded; newer events more vivid.
+function nodeStrokeOpacity(tier, pathProgress) {
+  const base = TIER_OPACITY[tier];
+  return base * (0.65 + 0.35 * pathProgress);
 }
 
-// Stable integer seed from item id string
-function idToSeed(id) {
-  let h = 0;
-  for (let i = 0; i < id.length; i++) h = (Math.imul(31, h) + id.charCodeAt(i)) | 0;
-  return Math.abs(h);
+function nodeFillOpacity(pathProgress) {
+  return 0.06 + 0.10 * pathProgress;
 }
 
 export function TimelineNode({ item, worldScale, labelFlip = false, onTap, isEntering = false, pathProgress = 0 }) {
@@ -217,13 +185,14 @@ export function TimelineNode({ item, worldScale, labelFlip = false, onTap, isEnt
         {/* Invisible tap target — larger than the visual blob for easy touch */}
         <circle cx={x} cy={y} r={TAP_R} fill="transparent" />
 
-        {/* Blob centered at (x,y) in screen px inside the counter-scaled group */}
-        <path
-          d={blobPath(x, y, r, idToSeed(String(id)))}
+        {/* Circle centered at (x,y) in screen px inside the counter-scaled group */}
+        <circle
+          cx={x} cy={y} r={r}
           fill="var(--page-bg)"
+          fillOpacity={nodeFillOpacity(pathProgress)}
           stroke="var(--road)"
-          strokeWidth={isSub ? 1.5 : 2.5}
-          strokeOpacity={isSub ? 0.38 : 0.60}
+          strokeWidth={isClose ? 1.5 : isMid ? 1.8 : 2.5}
+          strokeOpacity={nodeStrokeOpacity(isClose ? 'close' : isMid ? 'mid' : 'main', pathProgress)}
         />
 
         {/*
