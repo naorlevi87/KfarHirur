@@ -20,6 +20,9 @@ const DRAW_EASING   = 'cubic-bezier(0.4, 0, 0.2, 1)';
 // Reads as organic width variance, not as breaks.
 const CORE_DASH = '90 0 60 8 80 5 50 10 70 6';
 
+// Computed once at module load — path string is static
+const PATH_D = buildPathString();
+
 export function TimelineRoad({ worldScale, isEntering }) {
   const baseRef = useRef(null);
   const coreRef = useRef(null);
@@ -29,8 +32,6 @@ export function TimelineRoad({ worldScale, isEntering }) {
   const coreWidth = useTransform(worldScale, s => CORE_SCREEN_WIDTH / s);
   const edgeWidth = useTransform(worldScale, s => EDGE_SCREEN_WIDTH / s);
 
-  const d = buildPathString();
-
   useEffect(() => {
     const paths = [baseRef, coreRef, edgeRef]
       .map(r => r.current)
@@ -39,7 +40,7 @@ export function TimelineRoad({ worldScale, isEntering }) {
 
     if (!isEntering) {
       paths.forEach(p => {
-        p.style.strokeDasharray  = 'none';
+        p.style.strokeDasharray  = '';
         p.style.strokeDashoffset = '0';
         p.style.transition       = 'none';
       });
@@ -54,7 +55,7 @@ export function TimelineRoad({ worldScale, isEntering }) {
       p.style.transition       = 'none';
     });
 
-    // Force reflow so the initial hidden state is painted before animating
+    // Force reflow — one call flushes the pending style batch for all three paths
     paths[0].getBoundingClientRect();
 
     paths.forEach(p => {
@@ -68,16 +69,16 @@ export function TimelineRoad({ worldScale, isEntering }) {
       {/* Base — wide, very low opacity, gives body and subtle depth */}
       <motion.path
         ref={baseRef}
-        d={d} fill="none" stroke="var(--road)"
-        style={{ strokeWidth: baseWidth, ...(isEntering && { strokeDasharray: 99999, strokeDashoffset: 99999 }) }}
+        d={PATH_D} fill="none" stroke="var(--road)"
+        style={{ strokeWidth: baseWidth }}
         strokeLinecap="round" opacity={0.10}
       />
 
       {/* Core — main visible stroke, irregular dash creates pressure-variance feel */}
       <motion.path
         ref={coreRef}
-        d={d} fill="none" stroke="var(--road)"
-        style={{ strokeWidth: coreWidth, ...(isEntering && { strokeDasharray: 99999, strokeDashoffset: 99999 }) }}
+        d={PATH_D} fill="none" stroke="var(--road)"
+        style={{ strokeWidth: coreWidth }}
         strokeLinecap="round" opacity={0.48}
         strokeDasharray={CORE_DASH}
       />
@@ -85,8 +86,8 @@ export function TimelineRoad({ worldScale, isEntering }) {
       {/* Edge — thin crisp centerline */}
       <motion.path
         ref={edgeRef}
-        d={d} fill="none" stroke="var(--road)"
-        style={{ strokeWidth: edgeWidth, ...(isEntering && { strokeDasharray: 99999, strokeDashoffset: 99999 }) }}
+        d={PATH_D} fill="none" stroke="var(--road)"
+        style={{ strokeWidth: edgeWidth }}
         strokeLinecap="round" opacity={0.72}
       />
     </g>
