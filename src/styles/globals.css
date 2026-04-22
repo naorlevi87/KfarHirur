@@ -67,6 +67,32 @@ body {
 
   --brand-title: #1f2559;
   --brand-subtitle: #5c6699;
+
+  /* Overlay and shadow tokens — used for backdrops, cards, menus */
+  --overlay-dark-sm:  rgba(0, 0, 0, 0.35);
+  --overlay-dark-md:  rgba(0, 0, 0, 0.45);
+  --overlay-dark-lg:  rgba(0, 0, 0, 0.65);
+  --shadow-sm:        rgba(0, 0, 0, 0.05);
+  --shadow-md:        rgba(0, 0, 0, 0.08);
+  --shadow-lg:        rgba(0, 0, 0, 0.18);
+  --shadow-xl:        rgba(0, 0, 0, 0.24);
+
+  /* ── Node color palette (15 tokens) — Naor mode (cool) ────────────── */
+  --node-c-1:  hsl(228, 45%, 62%);
+  --node-c-2:  hsl(207, 45%, 58%);
+  --node-c-3:  hsl(258, 38%, 62%);
+  --node-c-4:  hsl(188, 38%, 52%);
+  --node-c-5:  hsl(215, 50%, 65%);
+  --node-c-6:  hsl(272, 38%, 60%);
+  --node-c-7:  hsl(195, 42%, 55%);
+  --node-c-8:  hsl(220, 42%, 60%);
+  --node-c-9:  hsl(285, 32%, 62%);
+  --node-c-10: hsl(200, 35%, 52%);
+  --node-c-11: hsl(178, 35%, 58%);
+  --node-c-12: hsl(245, 40%, 62%);
+  --node-c-13: hsl(183, 40%, 55%);
+  --node-c-14: hsl(300, 28%, 60%);
+  --node-c-15: hsl(210, 52%, 60%);
 }
 
 .main-layout[data-consciousness-mode="shay"] {
@@ -110,6 +136,23 @@ body {
 
   --brand-title: #8a3420;
   --brand-subtitle: #a0562e;
+
+  /* ── Node color palette — Shay mode (warm earth) ─────────────────── */
+  --node-c-1:  hsl(14,  55%, 58%);
+  --node-c-2:  hsl(35,  60%, 52%);
+  --node-c-3:  hsl(345, 45%, 58%);
+  --node-c-4:  hsl(25,  40%, 48%);
+  --node-c-5:  hsl(48,  58%, 52%);
+  --node-c-6:  hsl(5,   50%, 52%);
+  --node-c-7:  hsl(28,  65%, 60%);
+  --node-c-8:  hsl(15,  55%, 44%);
+  --node-c-9:  hsl(42,  45%, 62%);
+  --node-c-10: hsl(355, 55%, 62%);
+  --node-c-11: hsl(20,  42%, 52%);
+  --node-c-12: hsl(58,  38%, 52%);
+  --node-c-13: hsl(0,   48%, 58%);
+  --node-c-14: hsl(44,  70%, 48%);
+  --node-c-15: hsl(12,  32%, 62%);
 }
 
 /* Full-viewport background + column layout on root layout */
