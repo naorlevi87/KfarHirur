@@ -32,5 +32,5 @@ export const PREVIEW_OFFSET_X = 90;
 
 // ── Label geometry ────────────────────────────────────────────────────────────
 // Half the road's on-screen outer layer width (px). Used to compute dynamic label gap.
-// Outer layer = BASE_W(4) × 1.44 = 5.76px screen width, half = 3px.
+// Outer layer = BASE_W(4) × 1.44 = 5.76px screen width, half ≈ 3px.
 export const ROAD_GLOW_SCREEN_HALF = 3;

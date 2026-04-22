@@ -140,7 +140,8 @@ export function getPathProgress(dateStr) {
  * Samples n+1 evenly-spaced points along the full bezier path.
  * Returns an array of { x, y, nx, ny, progress } where:
  *   x, y     — world-space position
- *   nx, ny   — left-perpendicular unit normal (points "left" of direction of travel)
+ *   nx, ny   — perpendicular unit normal (-ty, tx). Used symmetrically (+hw / -hw) by callers
+ *             so which visual side is "left" or "right" does not affect the output.
  *   progress — 0 at path start, 1 at path end
  */
 export function sampleSpine(n) {
@@ -165,7 +166,7 @@ export function sampleSpine(n) {
     const tx  = dx / len;
     const ty  = dy / len;
 
-    // Left-perpendicular normal: rotate tangent 90° counter-clockwise
+    // Perpendicular normal: (-ty, tx). Callers offset ±hw symmetrically so sign doesn't matter.
     spine.push({ x, y, nx: -ty, ny: tx, progress });
   }
 
