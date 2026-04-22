@@ -77,34 +77,39 @@ body {
   --shadow-lg:        rgba(0, 0, 0, 0.18);
   --shadow-xl:        rgba(0, 0, 0, 0.24);
 
+  /* Danger — mode-independent (semantic red) */
+  --danger:         #dc2626;
+  --danger-surface: rgba(220, 38, 38, 0.07);
+  --danger-border:  rgba(220, 38, 38, 0.25);
+
   /* ── Node color palette (15 tokens) — Naor mode (cool) ────────────── */
-  --node-c-1:  hsl(228, 45%, 62%);
-  --node-c-2:  hsl(207, 45%, 58%);
-  --node-c-3:  hsl(258, 38%, 62%);
-  --node-c-4:  hsl(188, 38%, 52%);
-  --node-c-5:  hsl(215, 50%, 65%);
-  --node-c-6:  hsl(272, 38%, 60%);
-  --node-c-7:  hsl(195, 42%, 55%);
-  --node-c-8:  hsl(220, 42%, 60%);
-  --node-c-9:  hsl(285, 32%, 62%);
-  --node-c-10: hsl(200, 35%, 52%);
-  --node-c-11: hsl(178, 35%, 58%);
-  --node-c-12: hsl(245, 40%, 62%);
-  --node-c-13: hsl(183, 40%, 55%);
-  --node-c-14: hsl(300, 28%, 60%);
-  --node-c-15: hsl(210, 52%, 60%);
+  --node-c-1:  hsl(228, 88%, 55%);
+  --node-c-2:  hsl(207, 92%, 46%);
+  --node-c-3:  hsl(258, 78%, 55%);
+  --node-c-4:  hsl(188, 88%, 36%);
+  --node-c-5:  hsl(215, 95%, 55%);
+  --node-c-6:  hsl(272, 78%, 50%);
+  --node-c-7:  hsl(195, 90%, 38%);
+  --node-c-8:  hsl(220, 84%, 52%);
+  --node-c-9:  hsl(285, 70%, 50%);
+  --node-c-10: hsl(200, 82%, 40%);
+  --node-c-11: hsl(174, 85%, 32%);
+  --node-c-12: hsl(245, 80%, 54%);
+  --node-c-13: hsl(183, 86%, 34%);
+  --node-c-14: hsl(300, 68%, 46%);
+  --node-c-15: hsl(210, 92%, 48%);
 }
 
 .main-layout[data-consciousness-mode="shay"] {
-  /* shay: warm amber-coral, fire glow, sun-baked earth */
-  --page-bg: #fff3e8;
-  --page-bg-secondary: #ffe8d4;
-  --page-radial-a: rgba(255, 110, 40, 0.30);
-  --page-radial-b: rgba(255, 170, 30, 0.28);
-  --page-radial-c: rgba(230, 60, 20, 0.20);
-  --page-linear-a: #fff3e8;
-  --page-linear-b: #ffe6ce;
-  --page-linear-c: #ffd8b4;
+  /* shay: fire energy — vivid radials, deeper warm base */
+  --page-bg: #ffeedd;
+  --page-bg-secondary: #ffd8b8;
+  --page-radial-a: rgba(255, 80, 10, 0.48);
+  --page-radial-b: rgba(255, 150, 0, 0.42);
+  --page-radial-c: rgba(220, 30, 10, 0.32);
+  --page-linear-a: #ffeedd;
+  --page-linear-b: #ffd0a0;
+  --page-linear-c: #ffb870;
 
   --surface: rgba(255, 255, 255, 0.74);
   --surface-border: rgba(255, 140, 110, 0.28);
@@ -137,22 +142,22 @@ body {
   --brand-title: #8a3420;
   --brand-subtitle: #a0562e;
 
-  /* ── Node color palette — Shay mode (warm earth) ─────────────────── */
-  --node-c-1:  hsl(14,  55%, 58%);
-  --node-c-2:  hsl(35,  60%, 52%);
-  --node-c-3:  hsl(345, 45%, 58%);
-  --node-c-4:  hsl(25,  40%, 48%);
-  --node-c-5:  hsl(48,  58%, 52%);
-  --node-c-6:  hsl(5,   50%, 52%);
-  --node-c-7:  hsl(28,  65%, 60%);
-  --node-c-8:  hsl(15,  55%, 44%);
-  --node-c-9:  hsl(42,  45%, 62%);
-  --node-c-10: hsl(355, 55%, 62%);
-  --node-c-11: hsl(20,  42%, 52%);
-  --node-c-12: hsl(58,  38%, 52%);
-  --node-c-13: hsl(0,   48%, 58%);
-  --node-c-14: hsl(44,  70%, 48%);
-  --node-c-15: hsl(12,  32%, 62%);
+  /* ── Node color palette — Shay mode (fire: red → orange → yellow) ── */
+  --node-c-1:  hsl(8,   100%, 52%);  /* plasma red */
+  --node-c-2:  hsl(32,  100%, 50%);  /* hot orange */
+  --node-c-3:  hsl(0,   100%, 44%);  /* deep red */
+  --node-c-4:  hsl(0,   100%, 38%);  /* deep crimson */
+  --node-c-5:  hsl(0,   100%, 50%);  /* fire red */
+  --node-c-6:  hsl(38,  100%, 48%);  /* amber */
+  --node-c-7:  hsl(20,  100%, 54%);  /* lava orange */
+  --node-c-8:  hsl(5,   100%, 48%);  /* burnt red */
+  --node-c-9:  hsl(5,   100%, 40%);  /* dark fire red */
+  --node-c-10: hsl(15,  100%, 52%);  /* red-orange */
+  --node-c-11: hsl(14,  100%, 46%);  /* fire core */
+  --node-c-12: hsl(12,  100%, 42%);  /* dark orange-red */
+  --node-c-13: hsl(28,  100%, 50%);  /* deep orange */
+  --node-c-14: hsl(350, 100%, 38%);  /* dark rose-red */
+  --node-c-15: hsl(25,  100%, 48%);  /* ember */
 }
 
 /* Full-viewport background + column layout on root layout */
