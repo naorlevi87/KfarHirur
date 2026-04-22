@@ -16,9 +16,6 @@ const EDGE_SCREEN_WIDTH = 1.5; // thin — crisp centerline
 const DRAW_DURATION = 1800; // ms — must match TimelineNode
 const DRAW_EASING   = 'cubic-bezier(0.4, 0, 0.2, 1)';
 
-// Irregular dash on core layer — long segments with short gaps.
-// Reads as organic width variance, not as breaks.
-const CORE_DASH = '90 0 60 8 80 5 50 10 70 6';
 
 // Computed once at module load — path string is static
 const PATH_D = buildPathString();
@@ -74,13 +71,12 @@ export function TimelineRoad({ worldScale, isEntering }) {
         strokeLinecap="round" opacity={0.10}
       />
 
-      {/* Core — main visible stroke, irregular dash creates pressure-variance feel */}
+      {/* Core — main visible stroke */}
       <motion.path
         ref={coreRef}
         d={PATH_D} fill="none" stroke="var(--road)"
         style={{ strokeWidth: coreWidth }}
         strokeLinecap="round" opacity={0.48}
-        strokeDasharray={CORE_DASH}
       />
 
       {/* Edge — thin crisp centerline */}
