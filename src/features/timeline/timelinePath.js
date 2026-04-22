@@ -135,3 +135,39 @@ export function getPathProgress(dateStr) {
   const target     = Math.min(totalEnd, Math.max(totalStart, toMonths(dateStr)));
   return (target - totalStart) / totalSpan;
 }
+
+/**
+ * Samples n+1 evenly-spaced points along the full bezier path.
+ * Returns an array of { x, y, nx, ny, progress } where:
+ *   x, y     — world-space position
+ *   nx, ny   — left-perpendicular unit normal (points "left" of direction of travel)
+ *   progress — 0 at path start, 1 at path end
+ */
+export function sampleSpine(n) {
+  const totalSegs = PATH_SEGMENTS.length;
+  const spine = [];
+
+  for (let i = 0; i <= n; i++) {
+    const progress = i / n;
+
+    // Map progress → segment index + local t
+    const raw    = progress * totalSegs;
+    const segIdx = progress === 1 ? totalSegs - 1 : Math.min(Math.floor(raw), totalSegs - 1);
+    const t      = progress === 1 ? 1 : (raw - Math.floor(raw));
+
+    const [x0, y0, cx1, cy1, cx2, cy2, x1, y1] = PATH_SEGMENTS[segIdx];
+
+    const x  = cubic(t, x0, cx1, cx2, x1);
+    const y  = cubic(t, y0, cy1, cy2, y1);
+    const dx = cubicDeriv(t, x0, cx1, cx2, x1);
+    const dy = cubicDeriv(t, y0, cy1, cy2, y1);
+    const len = Math.sqrt(dx * dx + dy * dy) || 1;
+    const tx  = dx / len;
+    const ty  = dy / len;
+
+    // Left-perpendicular normal: rotate tangent 90° counter-clockwise
+    spine.push({ x, y, nx: -ty, ny: tx, progress });
+  }
+
+  return spine;
+}
