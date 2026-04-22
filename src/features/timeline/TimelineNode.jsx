@@ -54,18 +54,19 @@ const DRAW_DURATION     = 1800;
 const NODE_DELAY_OFFSET = 150;
 const NODE_APPEAR_DUR   = 200;
 
-// Base stroke opacity by tier
-const TIER_OPACITY = { main: 0.65, mid: 0.42, close: 0.28 };
+// Base stroke opacity by tier — high values, nodes feel solid
+const TIER_OPACITY = { main: 0.90, mid: 0.65, close: 0.50 };
 
 // Blend tier hierarchy with time position (pathProgress 0=old, 1=new).
-// Older events are slightly more faded; newer events more vivid.
+// Older events slightly more faded; newer events fully vivid.
 function nodeStrokeOpacity(tier, pathProgress) {
   const base = TIER_OPACITY[tier];
-  return base * (0.65 + 0.35 * pathProgress);
+  return base * (0.75 + 0.25 * pathProgress);
 }
 
+// Fill uses road color — opaque enough to feel solid, varies by time
 function nodeFillOpacity(pathProgress) {
-  return 0.06 + 0.10 * pathProgress;
+  return 0.35 + 0.30 * pathProgress;
 }
 
 export function TimelineNode({ item, worldScale, labelFlip = false, onTap, isEntering = false, pathProgress = 0 }) {
@@ -188,7 +189,7 @@ export function TimelineNode({ item, worldScale, labelFlip = false, onTap, isEnt
         {/* Circle centered at (x,y) in screen px inside the counter-scaled group */}
         <circle
           cx={x} cy={y} r={r}
-          fill="var(--page-bg)"
+          fill="var(--road)"
           fillOpacity={nodeFillOpacity(pathProgress)}
           stroke="var(--road)"
           strokeWidth={isClose ? 1.5 : isMid ? 1.8 : 2.5}
