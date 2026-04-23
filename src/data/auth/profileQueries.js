@@ -37,3 +37,20 @@ export async function uploadAvatar(userId, file) {
   const { data } = supabase.storage.from('avatars').getPublicUrl(path);
   return { url: data.publicUrl, error: null };
 }
+
+// Calls the delete-account Edge Function to remove the user's account and all data.
+// Returns null on success, error string on failure.
+export async function deleteAccount(userId) {
+  const { data: { session } } = await supabase.auth.getSession();
+
+  const res = await supabase.functions.invoke('delete-account', {
+    body: { userId },
+    headers: session?.access_token
+      ? { Authorization: `Bearer ${session.access_token}` }
+      : {},
+  });
+
+  if (res.error) return res.error.message ?? 'Unknown error';
+  if (res.data?.error) return res.data.error;
+  return null;
+}
