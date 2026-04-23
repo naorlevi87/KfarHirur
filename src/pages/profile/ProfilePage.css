@@ -58,7 +58,7 @@
 .profile-avatar__overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0,0,0,0.4);
+  background: var(--overlay-dark-sm);
   color: #fff;
   display: flex;
   align-items: center;
@@ -129,5 +129,114 @@
 
 .profile-form__save:focus-visible {
   outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* ── Account deletion ─────────────────────────────────────────── */
+
+.profile-delete-section {
+  margin-top: 1rem;
+}
+
+.profile-delete-divider {
+  border: none;
+  border-top: 1px solid var(--surface-border);
+  margin: 0 0 1.25rem;
+}
+
+.profile-delete-btn {
+  background: transparent;
+  border: 1.5px solid var(--danger-border);
+  color: var(--danger);
+  padding: 0.65rem 1rem;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.15s ease;
+}
+
+.profile-delete-btn:hover {
+  background: var(--danger-surface);
+}
+
+.profile-delete-btn:focus-visible {
+  outline: 2px solid var(--danger);
+  outline-offset: 2px;
+}
+
+.profile-delete-confirm {
+  background: var(--danger-surface);
+  border: 1px solid var(--danger-border);
+  border-radius: 10px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.profile-delete-confirm__text {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--danger);
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.profile-delete-confirm__error {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--danger);
+}
+
+.profile-delete-confirm__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.profile-delete-confirm__cancel {
+  flex: 1;
+  padding: 0.65rem;
+  border-radius: 8px;
+  border: 1px solid var(--surface-border);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.profile-delete-confirm__cancel:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.profile-delete-confirm__cancel:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.profile-delete-confirm__submit {
+  flex: 2;
+  padding: 0.65rem;
+  border-radius: 8px;
+  border: none;
+  background: var(--danger);
+  color: #fff;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.profile-delete-confirm__submit:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.profile-delete-confirm__submit:focus-visible {
+  outline: 2px solid var(--danger);
   outline-offset: 2px;
 }
