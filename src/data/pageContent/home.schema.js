@@ -25,15 +25,6 @@ export const homeSchema = {
       ],
     },
     {
-      key: 'community',
-      label: 'כפר הירעור',
-      fields: [
-        { path: 'community.heading', label: 'כותרת',         type: 'input',         mode: 'both' },
-        { path: 'community.body',    label: 'גוף טקסט',       type: 'textarea',      mode: 'both' },
-        { path: 'images.atlit',      label: 'תמונות עתלית',   type: 'media-gallery', mode: 'shared' },
-      ],
-    },
-    {
       key: 'fundraising',
       label: 'גיוס המונים',
       fields: [
@@ -50,7 +41,8 @@ export const homeSchema = {
         { path: 'origin.heading',  label: 'כותרת',           type: 'input',         mode: 'shared' },
         { path: 'origin.body',     label: 'טקסט',             type: 'textarea',      mode: 'shared' },
         { path: 'timeline.label',  label: 'תווית כפתור ציר',  type: 'input',         mode: 'shared' },
-        { path: 'images.zola',     label: 'תמונות זולה',      type: 'media-gallery', mode: 'shared' },
+        { path: 'images.atlit',    label: 'תמונות (עתלית)',    type: 'media-gallery', mode: 'shared' },
+        { path: 'images.zola',     label: 'תמונות (זולה)',     type: 'media-gallery', mode: 'shared' },
       ],
     },
     {

@@ -5,9 +5,11 @@
 
 import { useCallback, useState } from 'react';
 import { motion } from 'motion/react';
-import '../../styles/app/KenZeOvedPage.css';
+import './KenZeOvedPage.css';
 import { getText } from '../../utils/content/getText.js';
+import { useAppContext } from '../../app/appState/useAppContext.js';
 import { useKenZeOvedPageData } from './resolveKenZeOvedPageData.js';
+import { resolveKenZeOvedUIContent } from './resolveKenZeOvedUIContent.js';
 import { ProgressBar } from './ProgressBar.jsx';
 import { DonateButton } from './DonateButton.jsx';
 import { VideoEmbed } from './VideoEmbed.jsx';
@@ -26,6 +28,8 @@ const blockVariants = {
 };
 
 export function KenZeOvedPage() {
+  const { locale } = useAppContext();
+  const ui = resolveKenZeOvedUIContent(locale);
   const { data, loading } = useKenZeOvedPageData();
   const [copied, setCopied] = useState(false);
 
@@ -77,7 +81,7 @@ export function KenZeOvedPage() {
         </motion.section>
 
         {/* Block 2 — Short autoplay video */}
-        <motion.section className="kig-shortVideo" variants={blockVariants} aria-label="סרטון קצר">
+        <motion.section className="kig-shortVideo" variants={blockVariants} aria-label={ui.shortVideoLabel}>
           {shortVideoSrc ? (
             <video
               src={shortVideoSrc}
@@ -90,13 +94,13 @@ export function KenZeOvedPage() {
           ) : (
             <div className="kig-video-placeholder" aria-hidden="true">
               <span className="kig-video-placeholder__icon">▶</span>
-              <span className="kig-video-placeholder__label">סרטון קצר — יעלה בקרוב</span>
+              <span className="kig-video-placeholder__label">{ui.videoPlaceholderShort}</span>
             </div>
           )}
         </motion.section>
 
         {/* Block 3 — CTAs + progress */}
-        <motion.section className="kig-cta" variants={blockVariants} aria-label="תמיכה">
+        <motion.section className="kig-cta" variants={blockVariants} aria-label={ui.ctaSectionLabel}>
           <DonateButton
             href={cta.donateUrl}
             label={getText(cta, 'donateLabel')}
@@ -120,13 +124,13 @@ export function KenZeOvedPage() {
         </motion.section>
 
         {/* Block 5 — Long video (YouTube or upload) */}
-        <motion.section className="kig-longVideo" variants={blockVariants} aria-label="סרטון ארוך">
+        <motion.section className="kig-longVideo" variants={blockVariants} aria-label={ui.longVideoLabel}>
           {videoLong?.url ? (
             <VideoEmbed value={videoLong} />
           ) : (
             <div className="kig-video-placeholder" aria-hidden="true">
               <span className="kig-video-placeholder__icon">▶</span>
-              <span className="kig-video-placeholder__label">סרטון ארוך — יעלה בקרוב</span>
+              <span className="kig-video-placeholder__label">{ui.videoPlaceholderLong}</span>
             </div>
           )}
         </motion.section>

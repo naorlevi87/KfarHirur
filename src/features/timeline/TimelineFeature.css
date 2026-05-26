@@ -203,7 +203,7 @@
 .tl-preview-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.35);
+  background: var(--overlay-dark-sm);
   z-index: 9; /* below header (z-10) so header stays visible */
 }
 
@@ -219,7 +219,7 @@
   overflow: hidden !important;
   background: var(--page-bg) !important;
   border: none !important;
-  box-shadow: 0 8px 56px rgba(0, 0, 0, 0.24) !important;
+  box-shadow: 0 8px 56px var(--shadow-xl) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   z-index: 11; /* above header (z-10) */

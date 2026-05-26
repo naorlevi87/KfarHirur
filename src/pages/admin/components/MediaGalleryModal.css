@@ -2,7 +2,7 @@
 /* Native dialog modal for media gallery / single / video editing. */
 
 .mgm-backdrop::backdrop {
-  background: rgba(0, 0, 0, 0.45);
+  background: var(--overlay-dark-md);
 }
 
 .mgm-backdrop {
@@ -12,7 +12,7 @@
   width: min(92vw, 640px);
   max-height: 88dvh;
   overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  box-shadow: 0 8px 32px var(--shadow-lg);
   /* Explicit centering — some browsers don't auto-center custom dialogs */
   margin: auto;
   position: fixed;
@@ -102,7 +102,7 @@
   display: flex;
   justify-content: space-between;
   padding: 0.25rem;
-  background: rgba(0,0,0,0.45);
+  background: var(--overlay-dark-md);
   gap: 0.25rem;
 }
 

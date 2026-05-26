@@ -19,7 +19,7 @@
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--surface-border);
-  --header-shadow: rgba(0, 0, 0, 0.05);
+  --header-shadow: var(--shadow-sm);
   box-shadow: 0 1px 10px var(--header-shadow);
 }
 

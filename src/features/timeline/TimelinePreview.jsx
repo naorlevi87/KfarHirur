@@ -10,7 +10,7 @@ import { useTimelineItem } from '../../data/timeline/useTimelineItem.js';
 const CARD_W = 300;
 const CARD_H = 210;
 
-export function TimelinePreview({ item, expanded, onExpand, onClose }) {
+export function TimelinePreview({ item, expanded, onExpand, onClose, ui = {} }) {
   const { role }    = useAuth();
   const { content } = item;
 
@@ -70,14 +70,14 @@ export function TimelinePreview({ item, expanded, onExpand, onClose }) {
                 <button
                   className="tl-preview__close-expanded"
                   onClick={onClose}
-                  aria-label="חזרה לציר הזמן"
+                  aria-label={ui.closeExpanded}
                 >×</button>
                 <span>{fullItem?.content?.fullDate || content.tag}</span>
                 {(role === 'admin' || role === 'editor') && (
                   <a
                     className="tl-preview__edit-expanded"
                     href={`/admin/timeline/items/${item.slug}`}
-                    aria-label="ערוך פריט"
+                    aria-label={ui.editItem}
                   >✏️</a>
                 )}
               </div>
@@ -103,7 +103,7 @@ export function TimelinePreview({ item, expanded, onExpand, onClose }) {
 
             <div className="tl-preview__actions">
               <button className="tl-preview__open" onClick={onExpand}>
-                קרא עוד...
+                {ui.readMore}
               </button>
               {(role === 'admin' || role === 'editor') && (
                 <a
@@ -117,7 +117,7 @@ export function TimelinePreview({ item, expanded, onExpand, onClose }) {
               )}
             </div>
 
-            <button className="tl-preview__close" onClick={onClose} aria-label="סגור">
+            <button className="tl-preview__close" onClick={onClose} aria-label={ui.closeSmall}>
               ×
             </button>
           </>

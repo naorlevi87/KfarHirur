@@ -20,5 +20,6 @@ export const siteShellContent = {
     timeline: 'Timeline',
     joinTeam: 'Join team',
     mainNavAriaLabel: 'Main navigation',
+    adminDashboard: 'Admin dashboard',
   },
 };

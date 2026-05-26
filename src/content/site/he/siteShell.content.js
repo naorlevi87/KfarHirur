@@ -20,6 +20,7 @@ export const siteShellContent = {
     timeline: 'ציר זמן',
     joinTeam: 'להצטרף לצוות',
     mainNavAriaLabel: 'ניווט ראשי',
+    adminDashboard: 'ממשק ניהול',
   },
   auth: {
     loginButton: 'התחבר',

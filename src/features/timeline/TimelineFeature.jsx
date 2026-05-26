@@ -1,6 +1,6 @@
 // src/features/timeline/TimelineFeature.jsx
 // Root timeline component. Owns pan/zoom state and orchestrates canvas + preview.
-// Zoom is continuous — items filter by item.minScale vs current worldScale.
+// Zoom is continuous — items filter by ITEM_GRADE_CONFIG[item.grade].minScale vs currentScale.
 // Preview center (not node) is panned to viewport center on node tap.
 
 import { useEffect, useState, useCallback } from 'react';
@@ -12,10 +12,10 @@ import {
   PATH_BBOX,
   PREVIEW_OFFSET_Y,
   PREVIEW_OFFSET_X,
-  SCALE_ALWAYS, SCALE_MID, SCALE_CLOSE,
+  ITEM_GRADE_CONFIG,
 } from './timelineData.js';
 
-import { timelineUi } from '../../content/site/he/timeline.content.js';
+import { resolveTimelineUIContent } from './resolveTimelineUIContent.js';
 import { clampPan, assignLabelFlips } from './timelineUtils.js';
 import { getPathProgress } from './timelinePath.js';
 import { useTimelineItems } from '../../data/timeline/useTimelineItems.js';
@@ -49,7 +49,8 @@ function fitPathView(vpW, vpH) {
 }
 
 export function TimelineFeature({ initialSlug = null }) {
-  const { mode } = useAppContext();
+  const { locale, mode } = useAppContext();
+  const ui = resolveTimelineUIContent(locale);
   const navigate  = useNavigate();
   const { state: locationState } = useLocation();
   const { items, loading, error } = useTimelineItems();
@@ -139,8 +140,9 @@ export function TimelineFeature({ initialSlug = null }) {
 
   // Subscribe to worldScale but only re-render when scale crosses a visibility threshold.
   // Prevents 60fps React re-renders during animated zoom.
+  // Thresholds are derived from ITEM_GRADE_CONFIG so they stay in sync automatically.
   useEffect(() => {
-    const THRESHOLDS = [SCALE_ALWAYS, SCALE_MID, SCALE_CLOSE];
+    const THRESHOLDS = ITEM_GRADE_CONFIG.slice(1).map(c => c.minScale);
     let lastScale = worldScale.get();
 
     function crossed(prev, next) {
@@ -190,23 +192,22 @@ export function TimelineFeature({ initialSlug = null }) {
   }
 
   // ── Node tap ────────────────────────────────────────────────────────────────
-  // Zoom only when needed to reveal the next tier.
-  // tier-0 items zoom to SCALE_MID, tier-1 items zoom to SCALE_CLOSE,
-  // tier-2 items (and anything already at the right scale) just pan.
+  // When tapping a node, zoom just enough to reveal the next grade's items.
+  // Grade N items become visible at ITEM_GRADE_CONFIG[N].minScale.
+  // Tapping a grade-G item zooms to the minScale of grade G+1 (if it exists).
+  // Highest grade — just pan.
   function handleNodeTap(item) {
     const vpW      = window.innerWidth;
     const vpH      = window.innerHeight;
     const currentS = worldScale.get();
-    const itemTier = item.minScale ?? 0;
+    const grade    = item.grade ?? 1;
 
-    // The threshold that must be crossed to reveal the tier below this one
-    const nextReveal =
-      itemTier <= SCALE_ALWAYS ? SCALE_MID :
-      itemTier <= SCALE_MID    ? SCALE_CLOSE :
-      null; // tier-2: no deeper tier to reveal
+    // The minScale that must be crossed to reveal the next grade
+    const nextGradeConf = ITEM_GRADE_CONFIG[grade + 1];
+    const nextReveal    = nextGradeConf ? nextGradeConf.minScale : null;
 
     const shouldZoom = nextReveal !== null && currentS < nextReveal;
-    // Zoom to at least nextReveal so the next tier actually appears
+    // Zoom to at least nextReveal so the next grade actually appears
     const newScale = shouldZoom
       ? Math.min(ZOOM_MAX, Math.max(nextReveal, currentS * ZOOM_STEP))
       : currentS;
@@ -247,7 +248,10 @@ export function TimelineFeature({ initialSlug = null }) {
     if (previewId && !expanded) setPreviewId(null);
   }
 
-  const visibleItems = items.filter(item => (item.minScale ?? 0) <= currentScale);
+  const visibleItems = items.filter(item => {
+    const conf = ITEM_GRADE_CONFIG[item.grade ?? 1] ?? ITEM_GRADE_CONFIG[1];
+    return conf.minScale <= currentScale;
+  });
   const labelFlips   = assignLabelFlips(visibleItems, currentScale);
   const previewItem  = previewId ? (items.find(i => i.id === previewId) ?? null) : null;
 
@@ -285,6 +289,7 @@ export function TimelineFeature({ initialSlug = null }) {
             expanded={expanded}
             onExpand={handleExpand}
             onClose={handleClose}
+            ui={ui.preview}
           />
         )}
       </AnimatePresence>
@@ -294,20 +299,20 @@ export function TimelineFeature({ initialSlug = null }) {
           <button
             className="tl-zoom-btn"
             onClick={handleZoomIn}
-            aria-label={timelineUi.zoomIn}
+            aria-label={ui.zoomIn}
             disabled={currentScale >= ZOOM_MAX}
           >+</button>
           <button
             className="tl-zoom-btn"
             onClick={handleZoomOut}
-            aria-label={timelineUi.zoomOut}
+            aria-label={ui.zoomOut}
             disabled={currentScale <= ZOOM_MIN}
           >−</button>
         </div>
       )}
 
       <div className="tl-hint" aria-hidden="true">
-        {timelineUi.hint}
+        {ui.hint}
       </div>
     </div>
   );

@@ -22,7 +22,7 @@
 
 /* Neutral dark scrim — intentionally mode-independent */
 .site-menuBackdrop {
-  --menu-backdrop: rgba(0, 0, 0, 0.35);
+  --menu-backdrop: var(--overlay-dark-sm);
   position: absolute;
   inset: 0;
   background: var(--menu-backdrop);
@@ -44,7 +44,7 @@
   padding: 1rem 1.1rem;
   background: var(--page-bg);
   border-inline-end: 1px solid var(--surface-border);
-  --menu-panel-shadow: rgba(0, 0, 0, 0.08);
+  --menu-panel-shadow: var(--shadow-md);
   box-shadow: 4px 0 24px var(--menu-panel-shadow);
   display: flex;
   flex-direction: column;

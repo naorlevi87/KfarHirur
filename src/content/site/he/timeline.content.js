@@ -5,4 +5,10 @@ export const timelineUi = {
   zoomIn:  'הגדל',
   zoomOut: 'הקטן',
   hint:    'גרור לשוטט · פינץ׳ לזום · לחץ על נקודה',
+  preview: {
+    closeExpanded: 'חזרה לציר הזמן',
+    editItem:      'ערוך פריט',
+    readMore:      'קרא עוד...',
+    closeSmall:    'סגור',
+  },
 };

@@ -7,7 +7,26 @@
 // - Attaches geometry (x, y, tx, ty) passed in from the caller
 
 import { resolveBlock } from './resolveBlock.js';
-import { ZOOM_TIER_SCALE } from '../../features/timeline/timelineData.js';
+import { ITEM_GRADE_CONFIG, GRADE_COUNT } from '../../features/timeline/timelineData.js';
+
+// Resolves the DB zoom_tier column to a 1-based grade (1–GRADE_COUNT).
+//
+// Two eras of data in the DB:
+//   Legacy (old admin): zoom_tier 0 | 1 | 2  — semantic tier, not a grade.
+//   New (updated admin): zoom_tier stored as grade + 100 (101–105) to avoid
+//     any overlap with the old 0–2 range.
+//
+// Legacy mapping: 0 → grade 1 (always visible), 1 → grade 3 (mid), 2 → grade 5 (detail).
+function resolveGrade(raw) {
+  const g = Number(raw);
+  // New-era values written by the updated admin (grade + 100).
+  if (g >= 101 && g <= 100 + GRADE_COUNT) return g - 100;
+  // Legacy: 0, 1, 2 from the old zoom_tier system.
+  if (g === 0) return 1;
+  if (g === 1) return 3;
+  if (g === 2) return GRADE_COUNT;
+  return 1;
+}
 
 // "1 ביוני 2017" or "יוני 2017" if no day
 function formatHebrewDate(dateStr) {
@@ -58,18 +77,18 @@ export function resolveTimelineItem(rawItem, mode, geometry) {
     text:  firstText?.text ?? '',
   };
 
-  // zoom_tier (0|1|2) is a semantic level stored in DB — map to canvas scale here.
-  // Falls back to initial_view for legacy rows that predate zoom_tier.
-  const tier = rawItem.zoom_tier ?? (rawItem.initial_view ? 0 : 1);
-  const rawMinScale = ZOOM_TIER_SCALE[tier] ?? ZOOM_TIER_SCALE[0];
+  // grade (1–GRADE_COUNT) drives both zoom visibility and visual size.
+  // zoom_tier in DB stores the grade value; legacy rows (0|1|2) are mapped up.
+  // Falls back to initial_view for rows that predate zoom_tier entirely.
+  const rawTier = rawItem.zoom_tier ?? (rawItem.initial_view ? 0 : 1);
+  const grade = resolveGrade(rawTier);
 
   return {
     id:          rawItem.id,
     slug:        rawItem.slug,
     date:        rawItem.date,
     eventType:   rawItem.event_type,
-    size:        rawItem.size,
-    minScale:    rawMinScale,
+    grade,
     // geometry attached from timelinePath — null when resolving without canvas position
     x:  geometry?.x  ?? null,
     y:  geometry?.y  ?? null,

@@ -138,7 +138,7 @@ export function HamburgerMenu({ isOpen, onClose, onOpenAuth }) {
                     className="site-menuAdminBtn"
                     onClick={() => { navigate('/admin'); onClose(); }}
                   >
-                    ממשק ניהול
+                    {getText(navigation, 'adminDashboard')}
                   </button>
                 )}
               </div>

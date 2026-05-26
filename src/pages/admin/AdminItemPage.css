@@ -64,6 +64,13 @@
   flex-direction: unset;
 }
 
+.admin-item-page__row--grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  flex-direction: unset;
+}
+
 .admin-item-page__label {
   font-size: 0.8125rem;
   font-weight: 600;
@@ -101,27 +108,22 @@
   width: 100%;
 }
 
+/* ── Header actions (save + feedback) ── */
+.admin-item-page__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
 /* ── Messages ── */
 .admin-item-page__error   { font-size: 0.875rem; color: #ef4444; }
 .admin-item-page__success { font-size: 0.875rem; color: #059669; }
 
-/* ── Actions ── */
-.admin-item-page__actions {
-  display: flex;
-  gap: 0.625rem;
-  padding-top: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.admin-item-page__actions--bottom {
-  justify-content: flex-end;
-  padding: 1.5rem 0 3rem;
-  border-top: 1px solid var(--color-border, #e5e7eb);
-  margin-top: 0.5rem;
-}
-
-.admin-item-page__error--bottom {
-  padding-top: 1rem;
+/* ── Delete section ── */
+.admin-item-page__section--delete {
+  border-bottom: none;
+  padding-bottom: 3rem;
 }
 
 .admin-item-page__save-btn {
@@ -161,18 +163,8 @@
 
 /* ── Mobile ── */
 @media (max-width: 600px) {
-  .admin-item-page__row--grid {
+  .admin-item-page__row--grid,
+  .admin-item-page__row--grid-2 {
     grid-template-columns: 1fr;
-  }
-
-  /* Stick the main save/delete actions to the bottom of the screen */
-  .admin-item-page__actions--bottom {
-    position: sticky;
-    bottom: 0;
-    background: #f9fafb;
-    border-top: 1px solid var(--color-border, #e5e7eb);
-    padding: 0.875rem 1.25rem;
-    margin: 0 -1.25rem;
-    z-index: 10;
   }
 }

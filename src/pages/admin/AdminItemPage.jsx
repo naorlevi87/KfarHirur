@@ -10,15 +10,33 @@ import {
   deleteItem,
 } from '../../data/admin/timelineAdminQueries.js';
 import { EVENT_TYPES } from '../../data/admin/eventTypes.js';
+import { ITEM_GRADE_CONFIG, GRADE_COUNT } from '../../features/timeline/timelineData.js';
+import { useSave } from '../../utils/useSave.js';
 import { NaorShayInput } from './components/NaorShayInput.jsx';
 import { BlockEditor } from './components/BlockEditor.jsx';
 import './AdminItemPage.css';
 
-const SIZE_OPTIONS = [
-  { value: 'small',    label: 'קטן — צומת רגיל' },
-  { value: 'standard', label: 'רגיל — ברירת מחדל' },
-  { value: 'key',      label: 'מרכזי — מודגש' },
-];
+// Date display helpers — form stores yyyy-mm-dd (ISO for DB), UI shows dd/mm/yyyy.
+function isoToDisplay(iso) {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+function displayToIso(display) {
+  const match = display.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!match) return display; // return as-is while still typing
+  const [, d, m, y] = match;
+  return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+}
+
+// Grade labels — built from ITEM_GRADE_CONFIG so the list stays in sync automatically.
+// Index 0 in config is null (unused); grades are 1-based.
+const GRADE_OPTIONS = ITEM_GRADE_CONFIG.slice(1).map((_, i) => {
+  const grade = i + 1;
+  const minScale = ITEM_GRADE_CONFIG[grade].minScale;
+  const visibility = minScale === 0 ? 'תמיד גלוי' : `נראה מזום ${minScale}`;
+  return { value: grade, label: `דרגה ${grade} — ${visibility}` };
+});
 
 const STATUS_OPTIONS = [
   { value: 'draft',     label: 'טיוטה' },
@@ -32,20 +50,13 @@ const VIS_OPTIONS = [
 ];
 
 
-const ZOOM_TIER_OPTIONS = [
-  { value: 0, label: 'תמיד גלוי — מיילסטון ראשי' },
-  { value: 1, label: 'זום בינוני' },
-  { value: 2, label: 'זום קרוב בלבד' },
-];
-
 const emptyForm = () => ({
   slug:       '',
   date:       '',
   event_type: EVENT_TYPES[0].value,
-  size:       'standard',
   status:     'draft',
   visibility: 'both',
-  zoom_tier:  0,
+  grade:      1,
   naor_title: '',
   shay_title: '',
 });
@@ -59,35 +70,48 @@ export function AdminItemPage() {
   const [itemId,   setItemId]   = useState(null);
   const [blocks,   setBlocks]   = useState([]);
   const [loading,  setLoading]  = useState(!isNew);
-  const [saving,   setSaving]   = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [error,    setError]    = useState('');
-  const [saved,    setSaved]    = useState(false);
-
   const [titleDiff, setTitleDiff] = useState(false);
 
+  const save = useSave(form);
+
   useEffect(() => {
-    if (isNew) return;
+    if (isNew) {
+      save.setBaseline(null); // new item — no baseline
+      return;
+    }
     fetchItemBySlug(slug)
       .then(item => {
         setItemId(item.id);
         setBlocks(item.timeline_item_blocks ?? []);
         setTitleDiff((item.naor_title ?? '') !== (item.shay_title ?? ''));
-        setForm({
+
+        // Decode grade from zoom_tier. New rows: zoom_tier = grade + 100.
+        // Legacy rows: 0|1|2 (map to 1, 3, GRADE_COUNT).
+        const rawTier = item.zoom_tier ?? (item.initial_view ? 0 : 1);
+        let grade;
+        if (rawTier >= 101 && rawTier <= 100 + GRADE_COUNT) grade = rawTier - 100;
+        else if (rawTier === 0) grade = 1;
+        else if (rawTier === 1) grade = 3;
+        else if (rawTier === 2) grade = GRADE_COUNT;
+        else grade = 1;
+
+        const loadedForm = {
           slug:       item.slug ?? '',
           date:       item.date?.slice(0, 10) ?? '',
           event_type: item.event_type ?? 'milestone',
-          size:       item.size ?? 'standard',
           status:     item.status ?? 'draft',
           visibility: item.visibility ?? 'both',
-          zoom_tier:  item.zoom_tier ?? (item.initial_view ? 0 : 1),
+          grade,
           naor_title: item.naor_title ?? '',
           shay_title: item.shay_title ?? '',
-        });
+        };
+        setForm(loadedForm);
+        save.setBaseline(loadedForm);
       })
-      .catch(err => setError(err.message))
+      .catch(err => save.clearError()) // surface via useSave's error
       .finally(() => setLoading(false));
-  }, [isNew, slug]);
+  }, [isNew, slug]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function set(field, value) {
     setForm(prev => ({ ...prev, [field]: value }));
@@ -95,33 +119,24 @@ export function AdminItemPage() {
 
   async function handleSave(e) {
     e.preventDefault();
-    setSaving(true);
-    setError('');
-    setSaved(false);
-    try {
-      const payload = {
-        slug:       form.slug.trim(),
-        date:       form.date || null,
-        event_type: form.event_type,
-        size:       form.size,
-        status:     form.status,
-        visibility: form.visibility,
-        zoom_tier:  form.zoom_tier,
-        naor_title: form.naor_title,
-        shay_title: titleDiff ? form.shay_title : form.naor_title,
-      };
-      if (isNew) {
+    const payload = {
+      slug:       form.slug.trim(),
+      date:       form.date || null,
+      event_type: form.event_type,
+      status:     form.status,
+      visibility: form.visibility,
+      zoom_tier:  form.grade + 100, // grade+100 avoids legacy 0|1|2 overlap
+      naor_title: form.naor_title,
+      shay_title: titleDiff ? form.shay_title : form.naor_title,
+    };
+    if (isNew) {
+      // New item: bypass useSave — navigate away on success
+      await save.run(async () => {
         const created = await createItem(payload);
         navigate(`/admin/timeline/items/${created.slug}`, { replace: true });
-      } else {
-        await updateItem(itemId, payload);
-        setSaved(true);
-        setTimeout(() => setSaved(false), 2500);
-      }
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setSaving(false);
+      });
+    } else {
+      await save.run(() => updateItem(itemId, payload));
     }
   }
 
@@ -132,7 +147,6 @@ export function AdminItemPage() {
       await deleteItem(itemId);
       navigate('/admin/timeline', { replace: true });
     } catch (err) {
-      setError(err.message);
       setDeleting(false);
     }
   }
@@ -154,7 +168,6 @@ export function AdminItemPage() {
 
   return (
     <div className="admin-item-page" dir="rtl">
-      {/* Header */}
       <header className="admin-header">
         <div className="admin-header__inner">
           <div className="admin-header__right">
@@ -163,85 +176,26 @@ export function AdminItemPage() {
               {isNew ? 'פריט חדש' : (form.naor_title || form.slug || 'עריכת פריט')}
             </h1>
           </div>
+          <div className="admin-item-page__header-actions">
+            {save.saved  && <span className="admin-item-page__success">נשמר ✓</span>}
+            {save.error  && <span className="admin-item-page__error">{save.error}</span>}
+            <button
+              className="admin-item-page__save-btn"
+              type="submit"
+              form="item-form"
+              disabled={save.saving || !(isNew || save.isDirty)}
+            >
+              {save.saving ? 'שומר...' : isNew ? 'צור פריט' : 'שמור שינויים'}
+            </button>
+          </div>
         </div>
       </header>
 
       <div className="admin-item-page__body">
         <form id="item-form" className="admin-item-page__form" onSubmit={handleSave}>
 
+          {/* כותרת */}
           <section className="admin-item-page__section">
-            <h2 className="admin-item-page__section-title">מטא-נתונים</h2>
-
-            <div className="admin-item-page__row">
-              <label className="admin-item-page__label">Slug <span className="admin-item-page__hint">(מזהה ב-URL, באנגלית)</span></label>
-              <input
-                className="admin-item-page__input"
-                type="text"
-                value={form.slug}
-                onChange={e => set('slug', e.target.value)}
-                dir="ltr"
-                required
-                placeholder="e.g. first-meeting"
-              />
-            </div>
-
-            <div className="admin-item-page__row">
-              <label className="admin-item-page__label">תאריך</label>
-              <input
-                className="admin-item-page__input admin-item-page__input--date"
-                type="date"
-                value={form.date}
-                onChange={e => set('date', e.target.value)}
-                dir="ltr"
-              />
-            </div>
-
-            <div className="admin-item-page__row admin-item-page__row--grid">
-              <div>
-                <label className="admin-item-page__label">סוג אירוע</label>
-                <select className="admin-item-page__select" value={form.event_type} onChange={e => set('event_type', e.target.value)}>
-                  {EVENT_TYPES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="admin-item-page__label">
-                  גודל צומת
-                  <span className="admin-item-page__hint"> (בציר)</span>
-                </label>
-                <select className="admin-item-page__select" value={form.size} onChange={e => set('size', e.target.value)}>
-                  {SIZE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="admin-item-page__label">סטטוס</label>
-                <select className="admin-item-page__select" value={form.status} onChange={e => set('status', e.target.value)}>
-                  {STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="admin-item-page__label">נראות</label>
-                <select className="admin-item-page__select" value={form.visibility} onChange={e => set('visibility', e.target.value)}>
-                  {VIS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="admin-item-page__label">
-                  גילוי בזום
-                </label>
-                <select
-                  className="admin-item-page__select"
-                  value={form.zoom_tier}
-                  onChange={e => set('zoom_tier', Number(e.target.value))}
-                >
-                  {ZOOM_TIER_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select>
-              </div>
-            </div>
-          </section>
-
-          <section className="admin-item-page__section">
-            <h2 className="admin-item-page__section-title">כותרות</h2>
-
             <NaorShayInput
               label="כותרת"
               value={{ naor: form.naor_title, shay: form.shay_title }}
@@ -252,28 +206,90 @@ export function AdminItemPage() {
                 setTitleDiff(d => !d);
               }}
             />
+          </section>
 
+          {/* תאריך */}
+          <section className="admin-item-page__section">
+            <div className="admin-item-page__row">
+              <label className="admin-item-page__label">תאריך</label>
+              <input
+                className="admin-item-page__input admin-item-page__input--date"
+                type="text"
+                value={isoToDisplay(form.date)}
+                onChange={e => set('date', displayToIso(e.target.value))}
+                placeholder="dd/mm/yyyy"
+                dir="ltr"
+              />
+            </div>
+          </section>
+
+          {/* מטא */}
+          <section className="admin-item-page__section">
+            <div className="admin-item-page__row admin-item-page__row--grid-2">
+              <div>
+                <label className="admin-item-page__label">סוג אירוע</label>
+                <select className="admin-item-page__select" value={form.event_type} onChange={e => set('event_type', e.target.value)}>
+                  {EVENT_TYPES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="admin-item-page__label">
+                  דרגת פריט
+                  <span className="admin-item-page__hint"> (עיצוב + זום)</span>
+                </label>
+                <select
+                  className="admin-item-page__select"
+                  value={form.grade}
+                  onChange={e => set('grade', Number(e.target.value))}
+                >
+                  {GRADE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div className="admin-item-page__row admin-item-page__row--grid-2">
+              <div>
+                <label className="admin-item-page__label">סטטוס</label>
+                <select className="admin-item-page__select" value={form.status} onChange={e => set('status', e.target.value)}>
+                  {STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="admin-item-page__label">מוצג ב:</label>
+                <select className="admin-item-page__select" value={form.visibility} onChange={e => set('visibility', e.target.value)}>
+                  {VIS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div className="admin-item-page__row">
+              <label className="admin-item-page__label">כתובת URL <span className="admin-item-page__hint">(באנגלית)</span></label>
+              <input
+                className="admin-item-page__input"
+                type="text"
+                value={form.slug}
+                onChange={e => set('slug', e.target.value)}
+                dir="ltr"
+                required
+                placeholder="e.g. first-meeting"
+              />
+            </div>
           </section>
 
         </form>
 
-        {!isNew && itemId && (
-          <section className="admin-item-page__section admin-item-page__blocks">
-            <BlockEditor itemId={itemId} initialBlocks={blocks} />
-          </section>
-        )}
-        {isNew && (
-          <p className="admin-item-page__blocks-note">שמור את הפריט כדי להוסיף בלוקים.</p>
-        )}
+        {/* תוכן */}
+        <section className="admin-item-page__section">
+          <h2 className="admin-item-page__section-title">תוכן</h2>
+          {!isNew && itemId
+            ? <BlockEditor itemId={itemId} initialBlocks={blocks} />
+            : <p className="admin-item-page__blocks-note">שמור את הפריט כדי להוסיף תוכן.</p>
+          }
+        </section>
 
-        {error && <p className="admin-item-page__error admin-item-page__error--bottom">{error}</p>}
-        {saved  && <p className="admin-item-page__success">נשמר בהצלחה ✓</p>}
-
-        <div className="admin-item-page__actions admin-item-page__actions--bottom">
-          <button className="admin-item-page__save-btn" type="submit" form="item-form" disabled={saving}>
-            {saving ? 'שומר...' : isNew ? 'צור פריט' : 'שמור שינויים'}
-          </button>
-          {!isNew && (
+        {/* מחק */}
+        {!isNew && (
+          <section className="admin-item-page__section admin-item-page__section--delete">
             <button
               className="admin-item-page__delete-btn"
               type="button"
@@ -282,8 +298,8 @@ export function AdminItemPage() {
             >
               {deleting ? '...' : 'מחק פריט'}
             </button>
-          )}
-        </div>
+          </section>
+        )}
       </div>
     </div>
   );

@@ -81,7 +81,8 @@ src/
       HomePage.jsx
     kenZeOved/
       KenZeOvedPage.jsx
-      resolveKenZeOvedPageData.js    — page-local resolver + hook
+      resolveKenZeOvedPageData.js    — hook: fetches editable copy from DB (page_content table), merges with config
+      resolveKenZeOvedUIContent.js   — resolver: static UI strings (aria-labels, placeholders) from content/site/
       ProgressBar.jsx
       DonateButton.jsx
     timeline/
@@ -95,6 +96,7 @@ src/
     profile/
       ProfilePage.jsx              — display name + avatar editing
       ProfilePage.css
+      resolveProfileContent.js     — resolver: UI strings for profile page from content/site/
     admin/
       AdminDashboardPage.jsx         — admin home with nav links
       AdminUsersPage.jsx             — user list + role management
@@ -117,6 +119,7 @@ src/
       TimelineRoad.jsx               — bezier path rendering
       TimelineNode.jsx               — node circle + counter-scaled label
       TimelinePreview.jsx            — tap-to-open preview card (in-place expand, no route change)
+      resolveTimelineUIContent.js    — resolver: UI strings (zoom, hint, preview labels) from content/site/
       timelinePath.js                — bezier math, evaluateAtDate()
       timelineData.js                — all constants (zoom, scale tiers, offsets)
       timelineUtils.js               — geometry helpers (clampPan, outward normal, label sizing)
@@ -130,11 +133,12 @@ src/
   content/
     site/
       he/
-        siteShell.content.js
-        kenZeOved.content.js         — naor + shay branches with real copy differences
-        timeline.content.js          — UI strings (zoom buttons etc.)
+        siteShell.content.js         — header, nav, auth, admin labels
+        timeline.content.js          — UI strings (zoom buttons, preview labels etc.)
+        kenZeOved.content.js         — static UI constants (aria-labels, placeholder labels); editable copy lives in Supabase via page_content table
+        profile.content.js           — UI strings for profile editing page
       en/
-        (mirrors he/)
+        (mirrors he/ — scaffolded for future English support; locale hardcoded to 'he' in App.jsx)
 
   data/
     timeline/
@@ -146,6 +150,11 @@ src/
       useTimelineItem.js             — hook: single item by slug, no geometry
       blockResolvers/
         text.js / image.js / video.js / link.js / cta.js
+    pageContent/
+      pageContent.queries.js         — CRUD for page_content table: fetchPageContent(), upsertPageContent(), upsertPageContentBatch(), deletePageContentRows()
+      resolvePageContent.js          — buildDbOverlay(rows, mode): builds a payload-shaped object from DB rows filtered by mode; deepMerge(target, source): merges DB overlay over static defaults
+      kenZeOved.schema.js            — field path + mode shape for the kenZeOved page
+      home.schema.js                 — field path + mode shape for the home page
     admin/
       timelineAdminQueries.js        — CRUD: fetchAllItems, fetchItemBySlug, create/update/deleteItem, blocks
       eventTypes.js

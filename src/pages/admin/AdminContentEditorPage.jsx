@@ -296,7 +296,7 @@ function SectionCard({ section, pageKey, edits, dispatch, saved, onSaved }) {
       if (toDeleteSplit.length)  await deletePageContentRows({ pageKey, fieldPaths: toDeleteSplit,  modes: ['naor', 'shay'] });
       await upsertPageContentBatch({ pageKey, rows });
       setSaveStatus('ok');
-      onSaved(section, edits);
+      onSaved(section, edits, splitPaths);
       setTimeout(() => setSaveStatus(null), 2500);
     } catch (err) {
       setSaveStatus(err.message ?? 'שגיאה בשמירה');
@@ -395,16 +395,24 @@ export function AdminContentEditorPage() {
       .finally(() => setLoading(false));
   }, [pageKey, schema]);
 
-  function handleSaved(section, currentEdits) {
+  function handleSaved(section, currentEdits, savedSplitPaths) {
     setSaved(prev => {
       const next = { naor: { ...prev.naor }, shay: { ...prev.shay }, shared: { ...prev.shared } };
       for (const field of section.fields) {
-        const modes = field.mode === 'shared' ? ['shared'] : ['naor', 'shay'];
+        // Use actual saved split state, not schema default — so the re-derived
+        // splitPaths in SectionCard stays consistent after save.
+        const modes = savedSplitPaths.has(field.path) ? ['naor', 'shay'] : ['shared'];
         for (const m of modes) {
           if (currentEdits[m]?.[field.path] !== undefined) {
             next[m][field.path] = currentEdits[m][field.path];
+          } else {
+            // Remove stale rows for modes no longer in use
+            delete next[m][field.path];
           }
         }
+        // Clear the opposite set so deriveSplitPaths reads cleanly
+        const opposite = savedSplitPaths.has(field.path) ? ['shared'] : ['naor', 'shay'];
+        for (const m of opposite) delete next[m][field.path];
       }
       return next;
     });

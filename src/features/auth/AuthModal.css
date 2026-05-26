@@ -19,7 +19,7 @@
 .auth-modal-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: var(--overlay-dark-md);
 }
 
 .auth-modal-panel {

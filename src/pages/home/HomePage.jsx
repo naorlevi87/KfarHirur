@@ -13,7 +13,7 @@ export function HomePage() {
 
   if (loading) return null;
 
-  const { origin, community, joz, visit, fundraising, join, timeline, images } = data;
+  const { origin = {}, joz = {}, visit = {}, fundraising = {}, join = {}, timeline = {}, images = {} } = data ?? {};
 
   return (
     <main className="hp" dir="rtl" lang="he">
@@ -42,16 +42,7 @@ export function HomePage() {
         <HomeCarousel images={images.joz} altPrefix="ג׳וז ולוז" />
       </section>
 
-      {/* 2 — Community + Atlit */}
-      <section className="hp-section">
-        <div className="hp-block">
-          <h2 className="hp-heading">{community.heading}</h2>
-          <p className="hp-body">{community.body}</p>
-        </div>
-        <HomeCarousel images={images.atlit} altPrefix="עתלית" />
-      </section>
-
-      {/* 3 — Fundraising + video */}
+      {/* 2 — Fundraising + video */}
       <section className="hp-section">
         <div className="hp-block">
           <h2 className="hp-heading">{fundraising.heading}</h2>
@@ -68,7 +59,7 @@ export function HomePage() {
           <p className="hp-body">{origin.body}</p>
           <Link to="/timeline" className="hp-cta">{timeline.label}</Link>
         </div>
-        <HomeCarousel images={images.zola} altPrefix="זולה" />
+        <HomeCarousel images={[...(Array.isArray(images.atlit) ? images.atlit : []), ...(Array.isArray(images.zola) ? images.zola : [])]} altPrefix="הסיפור שלנו" />
       </section>
 
       {/* 5 — Join team + crew photo */}
