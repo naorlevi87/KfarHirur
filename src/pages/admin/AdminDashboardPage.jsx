@@ -27,6 +27,13 @@ export function AdminDashboardPage() {
               <p className="admin-dashboard__card-desc">ניהול משתמשים, הרשאות ותפקידים</p>
             </Link>
           )}
+          {role === 'admin' && (
+            <a href="/path-tracer.html" target="_blank" rel="noopener" className="admin-dashboard__card">
+              <div className="admin-dashboard__card-icon">✏️</div>
+              <h2 className="admin-dashboard__card-title">עורך ציר — נתיב</h2>
+              <p className="admin-dashboard__card-desc">ייבוא תמונה וציור PATH_SEGMENTS לציר הזמן</p>
+            </a>
+          )}
           <Link to="/admin/timeline" className="admin-dashboard__card">
             <div className="admin-dashboard__card-icon">📅</div>
             <h2 className="admin-dashboard__card-title">ציר זמן</h2>

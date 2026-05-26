@@ -11,17 +11,28 @@ export const ZOOM_MAX     = 2.5;    // most zoomed in
 export const ZOOM_STEP    = 1.35;   // multiplier per +/− button press
 // Bounding box of PATH_SEGMENTS endpoints — used to fit the initial view.
 // Update if PATH_SEGMENTS changes significantly.
-export const PATH_BBOX = { minX: 280, maxX: 2340, minY: 100, maxY: 2080 };
+export const PATH_BBOX = { minX: 180, maxX: 2400, minY: 40, maxY: 2100 };
 
-// ── Item visibility tiers ─────────────────────────────────────────────────────
-// DB stores zoom_tier: 0 | 1 | 2 (semantic level, not a scale value).
-// ZOOM_TIER_SCALE maps tier → the canvas scale at which the item becomes visible.
-// Change thresholds here freely — DB never stores scale values.
-export const SCALE_ALWAYS = 0;      // tier 0 — main milestones, always visible
-export const SCALE_MID    = 0.3;    // tier 1 — sub-items, visible at mid zoom
-export const SCALE_CLOSE  = 0.9;    // tier 2 — detail items, visible only close up
+// ── Item grade config ─────────────────────────────────────────────────────────
+// Grade 1 = most prominent (always visible, largest node).
+// Grade N = most detailed (visible only at higher zoom, smallest node).
+// To add or remove grades: edit this array only. Nothing else needs changing.
+//
+// minScale   — canvas scale at which this grade first becomes visible
+// nodeR      — circle radius (screen px, counter-scaled)
+// labelSize  — title font size (screen px)
+// strokeWidth — circle stroke width
+export const ITEM_GRADE_CONFIG = [
+  null, // index 0 unused — grades are 1-based
+  { minScale: 0,    nodeR: 6.5, labelSize: 13.5, strokeWidth: 2.5 }, // grade 1 — milestone
+  { minScale: 0.15, nodeR: 6.0, labelSize: 13.0, strokeWidth: 2.2 }, // grade 2
+  { minScale: 0.3,  nodeR: 5.5, labelSize: 12.5, strokeWidth: 1.8 }, // grade 3
+  { minScale: 0.6,  nodeR: 5.2, labelSize: 12.2, strokeWidth: 1.6 }, // grade 4
+  { minScale: 0.9,  nodeR: 4.8, labelSize: 12.0, strokeWidth: 1.5 }, // grade 5 — detail
+];
 
-export const ZOOM_TIER_SCALE = [SCALE_ALWAYS, SCALE_MID, SCALE_CLOSE];
+// Number of defined grades — derived so callers don't hardcode it.
+export const GRADE_COUNT = ITEM_GRADE_CONFIG.length - 1;
 
 // ── Preview positioning ───────────────────────────────────────────────────────
 // Screen-px distance from node to preview card center.

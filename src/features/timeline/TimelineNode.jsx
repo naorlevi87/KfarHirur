@@ -33,18 +33,9 @@
 
 import { useEffect, useRef } from 'react';
 import { getOutwardNormal } from './timelineUtils.js';
-import { SCALE_CLOSE } from './timelineData.js';
+import { ITEM_GRADE_CONFIG } from './timelineData.js';
 
-// Node circle sizes by tier (screen px, counter-scaled)
-const MAIN_R  = 8;
-const MID_R   = 7;
-const CLOSE_R = 6;
-
-// Label font sizes by tier (screen px)
-const LABEL_MAIN  = 16;
-const LABEL_MID   = 14;
-const LABEL_CLOSE = 13;
-const TAG_SIZE    = 11;
+const TAG_SIZE = 11;
 
 const H_GAP  = 3;
 const TAP_R  = 22;
@@ -54,39 +45,18 @@ const DRAW_DURATION     = 1800;
 const NODE_DELAY_OFFSET = 150;
 const NODE_APPEAR_DUR   = 200;
 
-// Base stroke opacity by tier — high values, nodes feel solid
-const TIER_OPACITY = { main: 0.90, mid: 0.65, close: 0.50 };
-
-// Blend tier hierarchy with time position (pathProgress 0=old, 1=new).
-// Older events slightly more faded; newer events fully vivid.
-function nodeStrokeOpacity(tier, pathProgress) {
-  const base = TIER_OPACITY[tier];
-  return base * (0.75 + 0.25 * pathProgress);
-}
-
-// Fill uses road color — opaque enough to feel solid, varies by time
-function nodeFillOpacity(pathProgress) {
-  return 0.35 + 0.30 * pathProgress;
-}
-
-// Deterministic color index 1–15 from item id.
-// Same node always gets the same color regardless of load order.
-function nodeColorIndex(id) {
-  let h = 0;
-  const s = String(id);
-  for (let i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
-  return (Math.abs(h) % 15) + 1;
-}
+// All nodes — same opacity regardless of tier or time position
+const NODE_FILL_OPACITY   = 0.82;
+const NODE_STROKE_OPACITY = 0.92;
 
 export function TimelineNode({ item, worldScale, labelFlip = false, onTap, isEntering = false, pathProgress = 0 }) {
-  const { id, x, y, tx = 1, ty = 0, minScale = 0, content } = item;
-  const isClose = minScale >= SCALE_CLOSE;
-  const isMid   = minScale > 0 && !isClose;
-  const isSub   = minScale > 0; // any non-main item
+  const { id, x, y, tx = 1, ty = 0, grade = 1, content } = item;
+  // All visual properties come from the grade config — no hardcoded tier names.
+  const gradeConf = ITEM_GRADE_CONFIG[grade] ?? ITEM_GRADE_CONFIG[1];
+  const { nodeR: r, labelSize, strokeWidth, minScale } = gradeConf;
 
-  const r         = isClose ? CLOSE_R : isMid ? MID_R : MAIN_R;
-  const colorVar  = `var(--node-c-${nodeColorIndex(id)})`;
-  const labelSize = isClose ? LABEL_CLOSE : isMid ? LABEL_MID : LABEL_MAIN;
+  const isSub    = minScale > 0; // any non-grade-1 item
+  const colorVar = 'var(--node-c-1)';
 
   // Outward normal at this node's position on the bezier path
   const { nx, ny } = getOutwardNormal(x, y, tx, ty);
@@ -200,10 +170,10 @@ export function TimelineNode({ item, worldScale, labelFlip = false, onTap, isEnt
         <circle
           cx={x} cy={y} r={r}
           fill={colorVar}
-          fillOpacity={nodeFillOpacity(pathProgress)}
+          fillOpacity={NODE_FILL_OPACITY}
           stroke={colorVar}
-          strokeWidth={isClose ? 1.5 : isMid ? 1.8 : 2.5}
-          strokeOpacity={nodeStrokeOpacity(isClose ? 'close' : isMid ? 'mid' : 'main', pathProgress)}
+          strokeWidth={strokeWidth}
+          strokeOpacity={NODE_STROKE_OPACITY}
         />
 
         {/*
@@ -214,7 +184,7 @@ export function TimelineNode({ item, worldScale, labelFlip = false, onTap, isEnt
           ref={labelRef}
           x={x} y={y}
           fill="var(--text-secondary)"
-          fillOpacity={isSub ? 0.7 : 0.9}
+          fillOpacity={0.88}
           fontSize={labelSize}
           fontWeight={700}
           fontFamily="Alef, sans-serif"

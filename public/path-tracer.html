@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Path Tracer → PATH_SEGMENTS</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #1a1a2e; color: #e0e0ff; font-family: monospace; height: 100dvh; display: flex; flex-direction: column; }
+
+  #toolbar {
+    display: flex; align-items: center; gap: 12px; padding: 10px 16px;
+    background: #12122a; border-bottom: 1px solid #333;
+    flex-shrink: 0; flex-wrap: wrap;
+  }
+  #toolbar h1 { font-size: 13px; color: #888; margin-right: 8px; }
+  button {
+    padding: 6px 14px; border-radius: 6px; border: 1px solid #444;
+    background: #2a2a4a; color: #ccc; cursor: pointer; font-size: 12px;
+    font-family: monospace;
+  }
+  button:hover { background: #3a3a6a; }
+  button.danger { border-color: #c44; color: #f88; }
+  button.primary { background: #4a4aaa; border-color: #6a6acc; color: #fff; }
+  #status { font-size: 11px; color: #888; margin-left: auto; }
+
+  #canvas-wrap {
+    flex: 1; overflow: hidden; position: relative; cursor: crosshair;
+  }
+  canvas { display: block; }
+
+  #output-panel {
+    background: #0d0d1e; border-top: 1px solid #333;
+    padding: 10px 16px; max-height: 180px; overflow-y: auto; flex-shrink: 0;
+  }
+  #output-panel h2 { font-size: 11px; color: #666; margin-bottom: 6px; }
+  pre { font-size: 11px; color: #7affb2; white-space: pre; }
+
+  #instructions {
+    position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,0.7); padding: 10px 18px; border-radius: 8px;
+    font-size: 12px; color: #aaa; text-align: center; pointer-events: none;
+    line-height: 1.7;
+  }
+</style>
+</head>
+<body>
+
+<div id="toolbar">
+  <h1>PATH TRACER</h1>
+  <label style="cursor:pointer; padding:6px 14px; background:#2a2a4a; border:1px solid #444; border-radius:6px; font-size:12px; color:#ccc;">
+    📂 Load Image
+    <input type="file" accept="image/*" id="imgInput" style="display:none">
+  </label>
+  <button id="btnUndo">↩ Undo</button>
+  <button id="btnClear" class="danger">✕ Clear All</button>
+  <button id="btnExport" class="primary">⬇ Export PATH_SEGMENTS</button>
+  <span id="status">Click on the image to place anchor points</span>
+</div>
+
+<div id="canvas-wrap">
+  <canvas id="c"></canvas>
+  <div id="instructions">
+    1. Load your image<br>
+    2. Click along the path to place anchor points<br>
+    3. Drag the <span style="color:#ff9955">orange</span> handles to shape the curves<br>
+    4. Click Export when done
+  </div>
+</div>
+
+<div id="output-panel">
+  <h2>OUTPUT — paste into PATH_SEGMENTS in timelinePath.js</h2>
+  <pre id="output">// Place anchor points on the canvas to generate segments</pre>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const wrap = document.getElementById('canvas-wrap');
+const status = document.getElementById('status');
+const outputEl = document.getElementById('output');
+const instructions = document.getElementById('instructions');
+
+// Canvas dimensions to output (timeline canvas)
+const OUT_W = 3000;
+const OUT_H = 2200;
+
+let img = null;
+let imgScale = 1, imgOffX = 0, imgOffY = 0;
+
+// State
+// anchors: [{x, y, cpIn:{x,y}, cpOut:{x,y}}]  — screen coords
+let anchors = [];
+let dragging = null; // {type:'anchor'|'cpIn'|'cpOut', idx}
+let hovering = null;
+
+// ── Image loading ──────────────────────────────────────────────────────────
+document.getElementById('imgInput').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  const image = new Image();
+  image.onload = () => {
+    img = image;
+    instructions.style.display = 'none';
+    fitImage();
+    render();
+  };
+  image.src = url;
+});
+
+function fitImage() {
+  const cw = wrap.clientWidth;
+  const ch = wrap.clientHeight;
+  canvas.width = cw;
+  canvas.height = ch;
+  const scale = Math.min(cw / img.width, ch / img.height) * 0.95;
+  imgScale = scale;
+  imgOffX = (cw - img.width * scale) / 2;
+  imgOffY = (ch - img.height * scale) / 2;
+}
+
+// ── Resize ─────────────────────────────────────────────────────────────────
+new ResizeObserver(() => {
+  canvas.width = wrap.clientWidth;
+  canvas.height = wrap.clientHeight;
+  if (img) fitImage();
+  render();
+}).observe(wrap);
+
+canvas.width = wrap.clientWidth;
+canvas.height = wrap.clientHeight;
+
+// ── Coord helpers ──────────────────────────────────────────────────────────
+function screenToImage(sx, sy) {
+  return { x: (sx - imgOffX) / imgScale, y: (sy - imgOffY) / imgScale };
+}
+function imageToScreen(ix, iy) {
+  return { x: ix * imgScale + imgOffX, y: iy * imgScale + imgOffY };
+}
+
+// When placing a new anchor, set default control handles
+// tangent direction: from previous anchor to this one
+function defaultCp(anchor, prev, next) {
+  const HANDLE_FRAC = 0.25;
+  let dx = 0, dy = 0;
+  if (prev && next) {
+    dx = next.x - prev.x; dy = next.y - prev.y;
+  } else if (prev) {
+    dx = anchor.x - prev.x; dy = anchor.y - prev.y;
+  } else if (next) {
+    dx = next.x - anchor.x; dy = next.y - anchor.y;
+  }
+  const len = Math.sqrt(dx*dx+dy*dy) || 60;
+  const nx = dx/len, ny = dy/len;
+  const d = len * HANDLE_FRAC;
+  return {
+    cpIn:  { x: anchor.x - nx*d, y: anchor.y - ny*d },
+    cpOut: { x: anchor.x + nx*d, y: anchor.y + ny*d },
+  };
+}
+
+// ── Click to place anchor ──────────────────────────────────────────────────
+canvas.addEventListener('pointerdown', e => {
+  e.preventDefault();
+  const { offsetX: sx, offsetY: sy } = e;
+
+  // Check if clicking near existing handle
+  const hit = hitTest(sx, sy);
+  if (hit) {
+    dragging = hit;
+    canvas.setPointerCapture(e.pointerId);
+    return;
+  }
+
+  // Place new anchor
+  const pos = screenToImage(sx, sy);
+  const prev = anchors[anchors.length - 1];
+  const anchor = { x: pos.x, y: pos.y };
+  const cp = defaultCp(anchor, prev, null);
+  anchor.cpIn  = cp.cpIn;
+  anchor.cpOut = cp.cpOut;
+  anchors.push(anchor);
+
+  // Smooth previous anchor handles if exists
+  if (prev && anchors.length >= 2) {
+    smoothAnchor(anchors.length - 2);
+  }
+
+  updateOutput();
+  render();
+});
+
+canvas.addEventListener('pointermove', e => {
+  const { offsetX: sx, offsetY: sy } = e;
+
+  if (dragging) {
+    const pos = screenToImage(sx, sy);
+    const a = anchors[dragging.idx];
+    if (dragging.type === 'anchor') {
+      const dx = pos.x - a.x, dy = pos.y - a.y;
+      a.x = pos.x; a.y = pos.y;
+      a.cpIn.x += dx;  a.cpIn.y += dy;
+      a.cpOut.x += dx; a.cpOut.y += dy;
+    } else if (dragging.type === 'cpOut') {
+      a.cpOut = pos;
+      // Mirror cpIn
+      a.cpIn = { x: a.x - (pos.x - a.x), y: a.y - (pos.y - a.y) };
+    } else if (dragging.type === 'cpIn') {
+      a.cpIn = pos;
+      a.cpOut = { x: a.x - (pos.x - a.x), y: a.y - (pos.y - a.y) };
+    }
+    updateOutput();
+    render();
+    return;
+  }
+
+  hovering = hitTest(sx, sy);
+  canvas.style.cursor = hovering ? 'move' : 'crosshair';
+  render();
+});
+
+canvas.addEventListener('pointerup', () => { dragging = null; });
+
+// ── Smooth anchor handles using Catmull-Rom tangent ───────────────────────
+function smoothAnchor(i) {
+  const a = anchors[i];
+  const prev = anchors[i - 1];
+  const next = anchors[i + 1];
+  if (!prev || !next) return;
+  const FRAC = 0.28;
+  const dx = next.x - prev.x, dy = next.y - prev.y;
+  const len = Math.sqrt(dx*dx+dy*dy) || 1;
+  const nx = dx/len, ny = dy/len;
+  const d = Math.sqrt((next.x-a.x)**2+(next.y-a.y)**2) * FRAC;
+  a.cpOut = { x: a.x + nx*d, y: a.y + ny*d };
+  a.cpIn  = { x: a.x - nx*d, y: a.y - ny*d };
+}
+
+// ── Hit test ──────────────────────────────────────────────────────────────
+const HIT_R = 10;
+function hitTest(sx, sy) {
+  for (let i = anchors.length - 1; i >= 0; i--) {
+    const a = anchors[i];
+    const sp = imageToScreen(a.x, a.y);
+    if (dist(sx, sy, sp.x, sp.y) < HIT_R) return { type: 'anchor', idx: i };
+
+    if (i > 0) { // cpIn is the "incoming" handle, relevant between i-1 and i
+      const ci = imageToScreen(a.cpIn.x, a.cpIn.y);
+      if (dist(sx, sy, ci.x, ci.y) < HIT_R) return { type: 'cpIn', idx: i };
+    }
+    if (i < anchors.length - 1) {
+      const co = imageToScreen(a.cpOut.x, a.cpOut.y);
+      if (dist(sx, sy, co.x, co.y) < HIT_R) return { type: 'cpOut', idx: i };
+    }
+  }
+  return null;
+}
+
+function dist(ax, ay, bx, by) {
+  return Math.sqrt((ax-bx)**2+(ay-by)**2);
+}
+
+// ── Buttons ────────────────────────────────────────────────────────────────
+document.getElementById('btnUndo').onclick = () => {
+  anchors.pop();
+  updateOutput();
+  render();
+};
+document.getElementById('btnClear').onclick = () => {
+  anchors = [];
+  updateOutput();
+  render();
+};
+document.getElementById('btnExport').onclick = () => {
+  const txt = buildOutput();
+  navigator.clipboard.writeText(txt).then(() => {
+    status.textContent = '✓ Copied to clipboard!';
+    setTimeout(() => status.textContent = `${anchors.length} anchors`, 2000);
+  });
+};
+
+// ── Output generation ──────────────────────────────────────────────────────
+function buildOutput() {
+  if (anchors.length < 2) return '// Need at least 2 anchor points';
+  if (!img) return '// Load an image first';
+
+  const scaleX = OUT_W / img.width;
+  const scaleY = OUT_H / img.height;
+
+  function toCanvas(p) {
+    return [Math.round(p.x * scaleX), Math.round(p.y * scaleY)];
+  }
+
+  const lines = ['export const PATH_SEGMENTS = ['];
+  for (let i = 0; i < anchors.length - 1; i++) {
+    const a0 = anchors[i];
+    const a1 = anchors[i + 1];
+    const [x0, y0] = toCanvas(a0);
+    const [cx1, cy1] = toCanvas(a0.cpOut);
+    const [cx2, cy2] = toCanvas(a1.cpIn);
+    const [x1, y1] = toCanvas(a1);
+    const pad = n => String(n).padStart(4);
+    lines.push(`  [${pad(x0)}, ${pad(y0)}, ${pad(cx1)}, ${pad(cy1)}, ${pad(cx2)}, ${pad(cy2)}, ${pad(x1)}, ${pad(y1)}],  // ${i}`);
+  }
+  lines.push('];');
+  return lines.join('\n');
+}
+
+function updateOutput() {
+  outputEl.textContent = buildOutput();
+  status.textContent = `${anchors.length} anchor${anchors.length !== 1 ? 's' : ''}`;
+}
+
+// ── Render ─────────────────────────────────────────────────────────────────
+function render() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Background
+  ctx.fillStyle = '#1a1a2e';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Image
+  if (img) {
+    ctx.globalAlpha = 0.55;
+    ctx.drawImage(img, imgOffX, imgOffY, img.width * imgScale, img.height * imgScale);
+    ctx.globalAlpha = 1;
+  }
+
+  if (anchors.length === 0) return;
+
+  // Draw bezier path
+  ctx.beginPath();
+  const s0 = imageToScreen(anchors[0].x, anchors[0].y);
+  ctx.moveTo(s0.x, s0.y);
+  for (let i = 1; i < anchors.length; i++) {
+    const a0 = anchors[i - 1], a1 = anchors[i];
+    const co = imageToScreen(a0.cpOut.x, a0.cpOut.y);
+    const ci = imageToScreen(a1.cpIn.x, a1.cpIn.y);
+    const sp = imageToScreen(a1.x, a1.y);
+    ctx.bezierCurveTo(co.x, co.y, ci.x, ci.y, sp.x, sp.y);
+  }
+  ctx.strokeStyle = '#6e6bff';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // Draw handles and anchors
+  for (let i = 0; i < anchors.length; i++) {
+    const a = anchors[i];
+    const sp = imageToScreen(a.x, a.y);
+
+    // cpOut handle (outgoing) — draw for all but last
+    if (i < anchors.length - 1) {
+      const co = imageToScreen(a.cpOut.x, a.cpOut.y);
+      ctx.beginPath();
+      ctx.moveTo(sp.x, sp.y);
+      ctx.lineTo(co.x, co.y);
+      ctx.strokeStyle = 'rgba(255,150,80,0.5)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      drawHandle(co.x, co.y, '#ff9955', hovering?.idx === i && hovering?.type === 'cpOut');
+    }
+
+    // cpIn handle (incoming) — draw for all but first
+    if (i > 0) {
+      const ci = imageToScreen(a.cpIn.x, a.cpIn.y);
+      ctx.beginPath();
+      ctx.moveTo(sp.x, sp.y);
+      ctx.lineTo(ci.x, ci.y);
+      ctx.strokeStyle = 'rgba(255,150,80,0.5)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      drawHandle(ci.x, ci.y, '#ff9955', hovering?.idx === i && hovering?.type === 'cpIn');
+    }
+
+    // Anchor point
+    const isHov = hovering?.idx === i && hovering?.type === 'anchor';
+    ctx.beginPath();
+    ctx.arc(sp.x, sp.y, isHov ? 8 : 6, 0, Math.PI * 2);
+    ctx.fillStyle = i === 0 ? '#44ff88' : i === anchors.length - 1 ? '#ff4466' : '#ffffff';
+    ctx.fill();
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Index label
+    ctx.fillStyle = '#000';
+    ctx.font = 'bold 9px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(i, sp.x, sp.y);
+  }
+}
+
+function drawHandle(x, y, color, hovered) {
+  ctx.beginPath();
+  ctx.arc(x, y, hovered ? 7 : 5, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+}
+
+render();
+</script>
+</body>
+</html>
