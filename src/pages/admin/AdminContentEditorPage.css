@@ -147,8 +147,9 @@
 }
 
 .ace-textarea {
-  resize: vertical;
+  resize: none;
   min-height: 80px;
+  overflow: hidden;
 }
 
 /* Paragraphs field */
@@ -302,10 +303,3 @@
 
 .ace-media-btn:hover { border-color: #9ca3af; }
 
-/* Textarea resize handle is too small to grab on mobile — disable it */
-@media (max-width: 768px) {
-  .ace-textarea {
-    resize: none;
-    min-height: 120px;
-  }
-}

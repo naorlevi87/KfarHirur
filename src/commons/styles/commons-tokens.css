@@ -1,0 +1,17 @@
+/* src/commons/styles/commons-tokens.css */
+/* Commons Engine design tokens — its own palette, NOT tied to the site's Naor/Shay modes. */
+
+.commons-root {
+  --commons-bg:        #14161c;
+  --commons-surface:   #1d2029;
+  --commons-surface-2: #272b37;
+  --commons-text:      #e8e8ee;
+  --commons-text-dim:  #9aa3b2;
+  --commons-accent:    #6c8cff;
+  --commons-border:    #2a2e3a;
+  --commons-radius:    12px;
+
+  min-height: 100dvh;
+  background: var(--commons-bg);
+  color: var(--commons-text);
+}

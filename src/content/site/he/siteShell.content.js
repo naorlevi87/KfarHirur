@@ -21,6 +21,7 @@ export const siteShellContent = {
     joinTeam: 'להצטרף לצוות',
     mainNavAriaLabel: 'ניווט ראשי',
     adminDashboard: 'ממשק ניהול',
+    commons: 'מרחב העבודה',
   },
   auth: {
     loginButton: 'התחבר',

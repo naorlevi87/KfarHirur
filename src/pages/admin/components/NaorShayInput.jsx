@@ -3,10 +3,11 @@
 // When isDifferent=false: single input writes to both.
 // When isDifferent=true: two columns side by side — נאור / שי.
 
+import { AutoGrowTextarea } from './AutoGrowTextarea.jsx';
 import './NaorShayInput.css';
 
 export function NaorShayInput({ label, value, onChange, isDifferent, onToggleDifferent, type = 'text', multiline = false }) {
-  const InputTag = multiline ? 'textarea' : 'input';
+  const InputTag = multiline ? AutoGrowTextarea : 'input';
   const inputProps = multiline ? {} : { type };
 
   return (

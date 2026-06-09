@@ -9,6 +9,7 @@ import { getText } from '../utils/content/getText.js';
 import { useAppContext } from './appState/useAppContext.js';
 import { useAuth } from './appState/AuthContext.jsx';
 import { supabase } from '../data/timeline/supabaseClient.js';
+import { useCommonsMembership } from '../data/commons/useCommonsMembership.js';
 
 const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
@@ -22,6 +23,7 @@ const MENU_ROUTES = [
 export function HamburgerMenu({ isOpen, onClose, onOpenAuth }) {
   const { locale } = useAppContext();
   const { user, role, profile } = useAuth();
+  const isCommonsMember = useCommonsMembership();
   const navigate   = useNavigate();
   const shell      = resolveSiteShellContent(locale);
   const navigation = shell.navigation ?? {};
@@ -132,6 +134,15 @@ export function HamburgerMenu({ isOpen, onClose, onOpenAuth }) {
                   )}
                   <span className="site-menuAvatar__name">{displayName}</span>
                 </button>
+                {isCommonsMember && (
+                  <button
+                    type="button"
+                    className="site-menuAdminBtn"
+                    onClick={() => { navigate('/commons'); onClose(); }}
+                  >
+                    {getText(navigation, 'commons')}
+                  </button>
+                )}
                 {(role === 'admin' || role === 'editor') && (
                   <button
                     type="button"

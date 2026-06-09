@@ -3,7 +3,7 @@
 // All copy from useKenZeOvedPageData. Motion via staggered section entries.
 // Financial transparency section is hidden pending content — set SHOW_TRANSPARENCY = true to re-enable.
 
-import { useCallback, useState } from 'react';
+import { Fragment, useCallback, useState } from 'react';
 import { motion } from 'motion/react';
 import './KenZeOvedPage.css';
 import { getText } from '../../utils/content/getText.js';
@@ -15,6 +15,17 @@ import { DonateButton } from './DonateButton.jsx';
 import { VideoEmbed } from './VideoEmbed.jsx';
 
 const SHOW_TRANSPARENCY = false;
+
+// Single \n inside a paragraph → <br>. Double \n is already a paragraph break (handled by split above).
+function renderLines(text) {
+  const lines = text.split('\n');
+  return lines.map((line, i) => (
+    <Fragment key={i}>
+      {line}
+      {i < lines.length - 1 && <br />}
+    </Fragment>
+  ));
+}
 
 // Stagger parent — reveals children sequentially as page loads
 const containerVariants = {
@@ -43,7 +54,6 @@ export function KenZeOvedPage() {
   if (loading) return null;
 
   const { hero, cta, progress, videoShort, videoLong, longText, transparency, share } = data;
-  const shortVideoSrc = videoShort?.src;
 
   const pageUrl = window.location.href;
   const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(
@@ -75,22 +85,15 @@ export function KenZeOvedPage() {
           </h1>
           <div className="kig-heroCopy">
             {heroParagraphs.map((p, i) => (
-              <p key={i} className="kig-heroP">{p}</p>
+              <p key={i} className="kig-heroP">{renderLines(p)}</p>
             ))}
           </div>
         </motion.section>
 
         {/* Block 2 — Short autoplay video */}
         <motion.section className="kig-shortVideo" variants={blockVariants} aria-label={ui.shortVideoLabel}>
-          {shortVideoSrc ? (
-            <video
-              src={shortVideoSrc}
-              autoPlay
-              muted
-              playsInline
-              loop
-              style={{ width: '100%', borderRadius: '12px', display: 'block' }}
-            />
+          {videoShort?.url ? (
+            <VideoEmbed value={videoShort} autoplay />
           ) : (
             <div className="kig-video-placeholder" aria-hidden="true">
               <span className="kig-video-placeholder__icon">▶</span>
@@ -119,7 +122,7 @@ export function KenZeOvedPage() {
         {/* Block 4 — Long emotional text */}
         <motion.section className="kig-longText" variants={blockVariants}>
           {longParagraphs.map((p, i) => (
-            <p key={i} className="kig-longP">{p}</p>
+            <p key={i} className="kig-longP">{renderLines(p)}</p>
           ))}
         </motion.section>
 

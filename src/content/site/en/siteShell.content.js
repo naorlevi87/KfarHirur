@@ -21,5 +21,6 @@ export const siteShellContent = {
     joinTeam: 'Join team',
     mainNavAriaLabel: 'Main navigation',
     adminDashboard: 'Admin dashboard',
+    commons: 'Commons',
   },
 };

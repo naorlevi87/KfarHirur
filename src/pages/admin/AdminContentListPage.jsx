@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 const PAGES = [
   { key: 'home',      label: 'דף בית',     desc: 'פתיחה, כפר הירעור, ג׳וז ולוז, כפתורי ביקור, גיוס, הצטרפות' },
   { key: 'kenZeOved', label: 'כן זה עובד', desc: 'עמוד הגיוס — כותרות, כפתורים, פסקאות, יעדים' },
+  { key: 'joinTeam',  label: 'הצטרפות לצוות', desc: 'כללי ג׳וז, מטבח, אנשי אירוח — טקסטים והגדרות וואטסאפ' },
 ];
 
 export function AdminContentListPage() {

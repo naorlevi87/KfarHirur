@@ -17,7 +17,7 @@ export const kenZeOvedSchema = {
       key: 'video_short',
       label: 'סרטון קצר (autoplay)',
       fields: [
-        { path: 'videoShort.src', label: 'סרטון קצר', type: 'media-single', mode: 'shared' },
+        { path: 'videoShort', label: 'סרטון קצר', type: 'video', mode: 'shared' },
       ],
     },
     {

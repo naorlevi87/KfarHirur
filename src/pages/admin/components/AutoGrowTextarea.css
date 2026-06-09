@@ -1,0 +1,48 @@
+/* Custom resize grip for textareas — large touch target for mobile. */
+
+.agt {
+  position: relative;
+  width: 100%;
+}
+
+.agt textarea {
+  display: block;
+  width: 100%;
+}
+
+.agt__grip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  cursor: ns-resize;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Invisible larger hit area below the visible grip — 44px total touch target */
+.agt__grip::before {
+  content: '';
+  position: absolute;
+  inset: -11px 0;
+}
+
+.agt__grip-line {
+  width: 32px;
+  height: 2px;
+  border-radius: 2px;
+  background: #c4c8d0;
+  transition: background 0.15s;
+}
+
+.agt__grip:hover .agt__grip-line,
+.agt__grip:active .agt__grip-line {
+  background: #6366f1;
+}

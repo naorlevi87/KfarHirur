@@ -44,7 +44,7 @@ export function useKenZeOvedPageData() {
       visitAriaLabel:  db.cta?.visitLabel  ?? '',
     },
     progress:     { ...CONFIG.progress, ...(db.progress ?? {}) },
-    videoShort:   db.videoShort   ?? {},
+    videoShort:   db.videoShort   ?? null,
     videoLong:    db.videoLong    ?? null,
     longText:     db.longText     ?? {},
     transparency: db.transparency ?? {},

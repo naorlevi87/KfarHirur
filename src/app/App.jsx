@@ -19,6 +19,7 @@ import { AdminItemPage } from '../pages/admin/AdminItemPage.jsx';
 import { AdminUsersPage } from '../pages/admin/AdminUsersPage.jsx';
 import { AdminContentListPage } from '../pages/admin/AdminContentListPage.jsx';
 import { AdminContentEditorPage } from '../pages/admin/AdminContentEditorPage.jsx';
+import { CommonsModule } from '../commons/CommonsModule.jsx';
 
 export function App() {
   const locale = 'he';
@@ -46,6 +47,12 @@ export function App() {
             <Route element={<MainLayout />}>
               <Route path="profile" element={<ProfilePage />} />
             </Route>
+          </Route>
+
+          {/* Commons Engine — any authenticated user; membership gate lives inside CommonsModule.
+              Intentionally NOT wrapped in MainLayout — it has its own shell. */}
+          <Route element={<ProtectedRoute allowedRoles={[]} />}>
+            <Route path="commons/*" element={<CommonsModule />} />
           </Route>
 
           {/* Admin — editor or admin role required */}

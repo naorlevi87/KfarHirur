@@ -232,6 +232,8 @@ One release; built in this internal order. Each increment gets its own implement
 - Desktop layout — separate pass (increment 6).
 - Whether granular permissions are ever needed beyond the 3-level enum — revisit post-launch.
 
+> Post-spec ideas (not part of any release yet) are parked in `docs/work-engine-ideas.md` — e.g. spaced-repetition acknowledgment reminders for new procedures.
+
 ---
 
 ## 14. Non-negotiables (carried from site docs)

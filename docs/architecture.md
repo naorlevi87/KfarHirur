@@ -442,3 +442,15 @@ Admin CSS uses its own token set (`--color-bg`, `--color-accent`, etc.) that doe
 15. **Never store full item objects in state when they must reflect mode changes** — store ID, derive item from live `items` array
 16. **Never commit without user seeing the result in browser first**
 17. `SUPABASE_SERVICE_ROLE_KEY` stays in `.env.local` only — never committed, never exposed to browser
+
+---
+
+## 16. Commons Engine (separate module)
+
+The Community Commons Engine is a self-contained module at `src/commons/`, mounted at `/commons`,
+sharing only auth + the Supabase client + deploy with the site. It has its own `commons` Postgres
+schema, shell, routing, content, and styles, and is built to be extractable later.
+
+- Module docs: `src/commons/COMMONS.md`
+- Design spec: `docs/superpowers/specs/2026-06-09-community-work-engine-design.md`
+- Not under `MainLayout`; no consciousness mode. Access requires active `commons.workspace_members`.

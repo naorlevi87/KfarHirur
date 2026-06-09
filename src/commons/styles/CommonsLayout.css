@@ -1,0 +1,50 @@
+/* src/commons/styles/CommonsLayout.css */
+/* Commons Engine shell: sticky top bar, scrollable content, fixed bottom tab nav. Mobile-first. */
+
+.commons-layout { display: flex; flex-direction: column; min-height: 100dvh; }
+
+.commons-topbar {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px;
+  background: var(--commons-surface);
+  border-bottom: 1px solid var(--commons-border);
+}
+.commons-topbar__name { font-weight: 700; font-size: 16px; }
+
+.commons-content { flex: 1; padding: 16px 16px 84px; }
+
+.commons-tabbar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  display: flex;
+  background: var(--commons-surface);
+  border-top: 1px solid var(--commons-border);
+  padding: 8px 4px;
+}
+.commons-tab {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  background: none; border: 0;
+  color: var(--commons-text-dim);
+  font: inherit; font-size: 11px;
+  padding: 4px; cursor: pointer; text-decoration: none;
+}
+.commons-tab.active { color: var(--commons-accent); font-weight: 700; }
+.commons-tab__icon { font-size: 18px; line-height: 1; }
+.commons-tab:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; border-radius: 8px; }
+
+.commons-center {
+  min-height: 100dvh;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; gap: 10px; padding: 24px;
+}
+.commons-center h1 { font-size: 20px; }
+.commons-center p { color: var(--commons-text-dim); max-width: 32ch; }
+.commons-backlink {
+  margin-top: 8px; background: none; border: 0; cursor: pointer;
+  color: var(--commons-accent); font: inherit; text-decoration: underline;
+}
+.commons-backlink:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; border-radius: 6px; }
+
+.commons-empty { text-align: center; color: var(--commons-text-dim); margin-top: 40px; }
+.commons-empty h2 { color: var(--commons-text); font-size: 18px; margin-bottom: 6px; }

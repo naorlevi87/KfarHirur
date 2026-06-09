@@ -7,12 +7,15 @@ import { Link, useParams, Navigate } from 'react-router-dom';
 import { fetchPageContent, upsertPageContentBatch, deletePageContentRows } from '../../data/pageContent/pageContent.queries.js';
 import { kenZeOvedSchema } from '../../data/pageContent/kenZeOved.schema.js';
 import { homeSchema } from '../../data/pageContent/home.schema.js';
+import { joinTeamSchema } from '../../data/pageContent/joinTeam.schema.js';
 import { MediaGalleryModal } from './components/MediaGalleryModal.jsx';
+import { AutoGrowTextarea } from './components/AutoGrowTextarea.jsx';
 import './AdminContentEditorPage.css';
 
 const SCHEMAS = {
   kenZeOved: kenZeOvedSchema,
   home:      homeSchema,
+  joinTeam:  joinTeamSchema,
 };
 
 const EMPTY_EDITS = { naor: {}, shay: {}, shared: {} };
@@ -98,11 +101,10 @@ function ParagraphsField({ value, onChange }) {
     <div className="ace-paragraphs">
       {paras.map((p, i) => (
         <div key={i} className="ace-para-row">
-          <textarea
+          <AutoGrowTextarea
             className="ace-textarea"
             value={p}
             onChange={e => update(i, e.target.value)}
-            rows={3}
           />
           <div className="ace-para-row__controls">
             <button className="ace-para-btn" onClick={() => moveUp(i)} disabled={i === 0} aria-label="העלה">↑</button>
@@ -166,7 +168,7 @@ function FieldInput({ field, edits, dispatch, split, onToggleSplit }) {
 
   function renderInput(mode, value, onChange) {
     if (field.type === 'paragraphs') return <ParagraphsField value={value} onChange={onChange} />;
-    if (field.type === 'textarea')   return <textarea className="ace-textarea" value={value ?? ''} onChange={e => onChange(e.target.value)} />;
+    if (field.type === 'textarea')   return <AutoGrowTextarea className="ace-textarea" value={value} onChange={e => onChange(e.target.value)} />;
     if (field.type === 'media-gallery' || field.type === 'media-single' || field.type === 'video') {
       return <MediaFieldButton field={field} edits={edits} dispatch={dispatch} mode={mode} />;
     }
