@@ -20,6 +20,15 @@ export const commonsShellContent = {
     title: 'בקרוב כאן',
     body: 'עוד עובדים על זה.',
   },
+  picker: {
+    title: 'איפה עובדים היום?',
+    subtitle: 'בחרו מרחב עבודה כדי להיכנס.',
+    chooseAria: 'בחירת מרחב עבודה',
+  },
+  switcher: {
+    title: 'מעבר בין מרחבים',
+    triggerAria: 'החלפת מרחב עבודה',
+  },
   access: {
     loading: 'רגע, פותחים לך…',
     noAccessTitle: 'אופס, אין לך גישה לפה עדיין',

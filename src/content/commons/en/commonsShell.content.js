@@ -19,6 +19,15 @@ export const commonsShellContent = {
     title: 'Coming soon',
     body: 'Still working on it.',
   },
+  picker: {
+    title: 'Where are we working today?',
+    subtitle: 'Pick a workspace to jump in.',
+    chooseAria: 'Choose a workspace',
+  },
+  switcher: {
+    title: 'Switch workspace',
+    triggerAria: 'Switch workspace',
+  },
   access: {
     loading: 'One sec, letting you in…',
     noAccessTitle: "Oops, you don't have access here yet",

@@ -5,6 +5,19 @@
 
 import { commonsDb } from './commonsClient.js';
 
+// Every active workspace the user belongs to — drives the picker + switcher.
+export async function fetchMyWorkspaces(userId) {
+  const { data, error } = await commonsDb
+    .from('workspace_members')
+    .select('permission_level, workspaces(id, slug, name)')
+    .eq('user_id', userId)
+    .eq('status', 'active');
+  if (error) return [];
+  return (data ?? [])
+    .map(r => (r.workspaces ? { ...r.workspaces, permission_level: r.permission_level } : null))
+    .filter(Boolean);
+}
+
 // The workspace a slug points to, or null.
 export async function fetchWorkspaceBySlug(slug) {
   const { data, error } = await commonsDb
