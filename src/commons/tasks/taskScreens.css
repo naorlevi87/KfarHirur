@@ -1,0 +1,77 @@
+/* src/commons/tasks/taskScreens.css */
+/* Full-screen create/edit form + read-only task view. Mobile-first, RTL, token-driven. */
+
+.commons-screen { display: flex; flex-direction: column; min-height: 100dvh; background: var(--commons-bg); }
+.commons-screen__bar {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px; background: var(--commons-surface); border-bottom: 1px solid var(--commons-border);
+}
+.commons-screen__back {
+  flex: 0 0 auto; width: 36px; height: 36px; border-radius: 10px;
+  background: none; border: 0; color: var(--commons-text); cursor: pointer; display: grid; place-items: center;
+}
+.commons-screen__back:hover { background: var(--commons-surface-2); }
+.commons-screen__back:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
+.commons-screen__title { font-weight: 700; font-size: 16px; }
+.commons-screen__edit {
+  margin-inline-start: auto; background: none; border: 1px solid var(--commons-border);
+  color: var(--commons-accent); font: inherit; font-weight: 600; cursor: pointer;
+  padding: 7px 14px; border-radius: 999px;
+}
+.commons-screen__edit:hover { background: var(--commons-surface-2); }
+.commons-screen__edit:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
+
+.commons-screen__body { flex: 1; padding: 18px 16px 28px; max-width: 560px; width: 100%; margin-inline: auto; display: flex; flex-direction: column; }
+.commons-screen__save { margin-top: 10px; width: 100%; padding: 14px; font-size: 15px; font-weight: 700; }
+.commons-screen__delete {
+  margin: 14px auto 0; background: none; border: 0; color: var(--commons-danger);
+  font: inherit; cursor: pointer; padding: 8px 12px; border-radius: 8px;
+}
+.commons-screen__delete:focus-visible { outline: 2px solid var(--commons-danger); outline-offset: 2px; }
+
+/* read-only task view */
+.commons-view__title { font-size: 24px; font-weight: 800; letter-spacing: -.02em; line-height: 1.25; margin: 4px 0 12px; }
+.commons-view__chips { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 18px; }
+.commons-view__chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 12px; padding: 5px 11px; border-radius: 999px;
+  background: var(--commons-surface-2); color: var(--commons-text-dim);
+}
+.commons-view__chip--recur { color: var(--commons-accent); }
+.commons-view__chip--done { color: var(--commons-on-accent); background: var(--commons-accent); }
+.commons-view__chip--missed { color: var(--commons-on-accent); background: var(--commons-danger); }
+.commons-view__block {
+  background: var(--commons-surface); border: 1px solid var(--commons-border);
+  border-radius: 12px; padding: 14px; margin-bottom: 12px;
+}
+.commons-view__label { font-size: 12px; color: var(--commons-text-dim); margin-bottom: 5px; }
+.commons-view__owner { display: flex; align-items: center; gap: 10px; }
+.commons-view__avatar {
+  width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--commons-surface-2); color: var(--commons-accent); font-weight: 700; font-size: 13px;
+}
+.commons-view__desc { white-space: pre-wrap; line-height: 1.55; color: var(--commons-text); }
+.commons-view__desc.is-empty { color: var(--commons-text-dim); }
+.commons-view__actions { margin-top: auto; padding-top: 18px; }
+.commons-view__actions .commons-btn {
+  width: 100%; padding: 14px; font-size: 15px; font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+}
+.commons-view__actions .commons-btn--ghost {
+  background: var(--commons-surface); color: var(--commons-text); border: 1px solid var(--commons-border);
+}
+
+/* sub-task checklist */
+.commons-subs { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.commons-subRow { display: flex; align-items: center; gap: 10px; }
+.commons-subRow__title {
+  flex: 1; min-width: 0; text-align: start; background: none; border: 0; color: var(--commons-text);
+  font: inherit; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.commons-subRow__title:hover { text-decoration: underline; }
+.commons-subRow__title.is-done { color: var(--commons-text-dim); text-decoration: line-through; }
+.commons-subRow__title:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; border-radius: 4px; }
+.commons-subAdd { display: flex; gap: 8px; margin: 12px 0 4px; }
+.commons-subAdd .commons-field__input { flex: 1; }
+.commons-subAdd .commons-btn { flex: 0 0 auto; display: grid; place-items: center; padding: 0 14px; }

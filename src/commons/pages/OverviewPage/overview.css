@@ -1,0 +1,46 @@
+/* src/commons/pages/OverviewPage/overview.css */
+/* תמונת מצב — snapshot dashboard: stat tiles + per-area progress. Mobile-first. */
+
+.commons-snapshot { position: relative; min-height: 60dvh; }
+.commons-snapshot__title { font-size: 22px; font-weight: 800; letter-spacing: -.02em; margin-bottom: 14px; }
+.commons-snapshot__h { font-size: 12px; color: var(--commons-text-dim); font-weight: 700; margin: 20px 0 10px; }
+.commons-snapshot__empty { color: var(--commons-text-dim); text-align: center; margin-top: 40px; }
+
+.commons-statGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.commons-stat {
+  background: var(--commons-surface); border: 1px solid var(--commons-border); border-radius: 14px;
+  padding: 16px 12px; display: flex; flex-direction: column; gap: 4px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .03), 0 10px 22px -16px rgba(0, 0, 0, .75);
+}
+.commons-stat__n { font-size: 28px; font-weight: 800; letter-spacing: -.03em; line-height: 1; }
+.commons-stat__l { font-size: 11px; color: var(--commons-text-dim); }
+.commons-stat.is-late .commons-stat__n { color: var(--commons-danger); }
+.commons-stat.is-done .commons-stat__n { color: var(--commons-accent); }
+
+.commons-areaList { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.commons-areaStat {
+  width: 100%; display: block; text-align: start; font: inherit; color: var(--commons-text); cursor: pointer;
+  background: var(--commons-surface); border: 1px solid var(--commons-border); border-radius: 12px;
+  padding: 12px 14px;
+  transition: background .25s cubic-bezier(.16,1,.3,1), border-color .25s cubic-bezier(.16,1,.3,1);
+}
+.commons-areaStat:hover { background: var(--commons-surface-2); }
+.commons-areaStat:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
+.commons-areaStat__head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; }
+.commons-areaStat__name { font-weight: 700; font-size: 14px; }
+.commons-areaStat__count { font-size: 12px; color: var(--commons-text-dim); font-variant-numeric: tabular-nums; }
+.commons-areaStat__bar { height: 6px; border-radius: 999px; background: var(--commons-surface-2); overflow: hidden; }
+.commons-areaStat__bar span {
+  display: block; height: 100%; border-radius: 999px; background: var(--commons-accent);
+  transition: width .4s cubic-bezier(.16,1,.3,1);
+}
+
+/* recent-activity feed */
+.commons-feed { list-style: none; display: flex; flex-direction: column; }
+.commons-feedItem { display: flex; align-items: center; gap: 10px; padding: 9px 2px; border-bottom: 1px solid var(--commons-border); }
+.commons-feedItem:last-child { border-bottom: 0; }
+.commons-feedDot { width: 8px; height: 8px; border-radius: 50%; background: var(--commons-text-dim); flex: 0 0 auto; }
+.commons-feedDot.is-done { background: var(--commons-accent); }
+.commons-feedItem__text { flex: 1; min-width: 0; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.commons-feedItem__text b { font-weight: 700; }
+.commons-feedItem__time { flex: 0 0 auto; font-size: 11px; color: var(--commons-text-dim); }

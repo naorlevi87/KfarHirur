@@ -1,6 +1,6 @@
 // src/commons/CommonsLayout.jsx
-// Commons Engine shell: top bar (workspace name → switcher when 2+) + content Outlet +
-// bottom tab nav scoped to the active :workspaceSlug. No consciousness mode. Mobile-first, RTL.
+// Commons shell: top bar (☰ menu + workspace name) + content Outlet + bottom tab nav.
+// The hamburger holds workspace-level actions; the switcher opens from it. Mobile-first, RTL.
 
 import './styles/commons-tokens.css';
 import './styles/CommonsLayout.css';
@@ -8,45 +8,40 @@ import { useState } from 'react';
 import { NavLink, Outlet, useParams } from 'react-router-dom';
 import { useAppContext } from '../app/appState/useAppContext.js';
 import { useWorkspace } from './commonsState/WorkspaceContext.jsx';
-import { useMemberships } from './commonsState/MembershipsContext.jsx';
 import { resolveCommonsShellContent } from './resolveCommonsShellContent.js';
 import { WorkspaceSwitcher } from './WorkspaceSwitcher.jsx';
+import { CommonsMenu } from './CommonsMenu.jsx';
+import { IconMenu, IconMine, IconBoard, IconActivity } from './icons.jsx';
 
 const TABS = [
-  { path: '',          icon: '✓',  key: 'myTasks',  end: true },
-  { path: '/board',    icon: '▦',  key: 'board' },
-  { path: '/overview', icon: '◉',  key: 'overview' },
-  { path: '/alerts',   icon: '🔔', key: 'alerts' },
+  { path: '',          Icon: IconMine,     key: 'myTasks',  end: true },
+  { path: '/board',    Icon: IconBoard,    key: 'board' },
+  { path: '/overview', Icon: IconActivity, key: 'overview' },
 ];
 
 export function CommonsLayout() {
   const { locale } = useAppContext();
   const { workspace } = useWorkspace();
-  const { workspaces } = useMemberships();
   const { workspaceSlug } = useParams();
   const shell = resolveCommonsShellContent(locale);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [switcherOpen, setSwitcherOpen] = useState(false);
-
-  const canSwitch = workspaces.length > 1;
   const name = workspace?.name ?? shell.appName;
 
   return (
     <div className="commons-root commons-layout" dir={locale === 'he' ? 'rtl' : 'ltr'}>
       <header className="commons-topbar">
-        {canSwitch ? (
-          <button
-            type="button"
-            className="commons-topbar__name commons-topbar__name--btn"
-            onClick={() => setSwitcherOpen(true)}
-            aria-haspopup="dialog"
-            aria-label={shell.switcher.triggerAria}
-          >
-            {name}
-            <span className="commons-topbar__chev" aria-hidden="true">⌄</span>
-          </button>
-        ) : (
-          <span className="commons-topbar__name">{name}</span>
-        )}
+        <button
+          type="button"
+          className="commons-topbar__menuBtn"
+          onClick={() => setMenuOpen(true)}
+          aria-haspopup="dialog"
+          aria-label={shell.menu.triggerAria}
+        >
+          <IconMenu />
+        </button>
+        <span className="commons-topbar__name">{name}</span>
+        <span style={{ width: 38 }} aria-hidden="true" />
       </header>
 
       <main className="commons-content">
@@ -54,14 +49,22 @@ export function CommonsLayout() {
       </main>
 
       <nav className="commons-tabbar" aria-label={shell.nav.menuAriaLabel}>
-        {TABS.map(({ path, icon, key, end }) => (
-          <NavLink key={key} to={`/commons/${workspaceSlug}${path}`} end={end} className="commons-tab">
-            <span className="commons-tab__icon" aria-hidden="true">{icon}</span>
-            {shell.nav[key]}
-          </NavLink>
-        ))}
+        {TABS.map((tab) => {
+          const TabIcon = tab.Icon;
+          return (
+            <NavLink key={tab.key} to={`/commons/${workspaceSlug}${tab.path}`} end={tab.end} className="commons-tab">
+              <span className="commons-tab__icon"><TabIcon size={22} /></span>
+              {shell.nav[tab.key]}
+            </NavLink>
+          );
+        })}
       </nav>
 
+      <CommonsMenu
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        onSwitchWorkspace={() => setSwitcherOpen(true)}
+      />
       <WorkspaceSwitcher
         open={switcherOpen}
         currentSlug={workspaceSlug}

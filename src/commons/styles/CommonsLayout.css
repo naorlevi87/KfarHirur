@@ -15,7 +15,7 @@
 .commons-content { flex: 1; padding: 16px 16px 84px; }
 
 .commons-tabbar {
-  position: fixed; bottom: 0; left: 0; right: 0;
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 10;
   display: flex;
   background: var(--commons-surface);
   border-top: 1px solid var(--commons-border);
@@ -101,3 +101,79 @@
 .commons-sheet__grip { width: 40px; height: 4px; border-radius: 2px; background: var(--commons-border); margin: 4px auto 12px; }
 .commons-sheet__title { font-size: 16px; margin-bottom: 12px; text-align: center; }
 @media (prefers-reduced-motion: reduce) { .commons-sheet { animation: none; } }
+
+/* ── Hamburger menu (side drawer, slides from the start edge) ── */
+/* Drawer sits BELOW the top bar and ABOVE the tab bar: z-index 9 keeps it under both (z-index 10),
+   which paint over its top/bottom edges so it occupies only the content region. */
+.commons-drawerRoot { position: fixed; inset: 0; z-index: 9; }
+.commons-drawerBackdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, .5); }
+.commons-drawer {
+  position: absolute; inset-block: 0; inset-inline-start: 0;
+  width: min(82vw, 320px); overflow-y: auto;
+  background: var(--commons-surface); border-inline-end: 1px solid var(--commons-border);
+  padding: 78px 14px calc(70px + env(safe-area-inset-bottom));
+}
+@keyframes commons-drawer-in-rtl { from { transform: translateX(100%); } to { transform: translateX(0); } }
+@keyframes commons-drawer-in-ltr { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+.commons-drawerRoot[dir="rtl"] .commons-drawer { animation: commons-drawer-in-rtl 240ms cubic-bezier(.2, .8, .2, 1); }
+.commons-drawerRoot[dir="ltr"] .commons-drawer { animation: commons-drawer-in-ltr 240ms cubic-bezier(.2, .8, .2, 1); }
+@media (prefers-reduced-motion: reduce) { .commons-drawer { animation: none; } }
+
+.commons-menu { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.commons-menu__logo { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; flex: 0 0 auto; }
+.commons-menu__item--back { color: var(--commons-text-dim); background: none; margin-top: 6px; }
+.commons-menu__item {
+  width: 100%; text-align: start; display: flex; align-items: center; gap: 10px;
+  background: var(--commons-surface-2); color: var(--commons-text);
+  border: 0; border-radius: 10px; padding: 13px 14px; font: inherit; cursor: pointer;
+  transition: background 140ms ease;
+}
+.commons-menu__item:hover { background: var(--commons-border); }
+.commons-menu__item:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
+.commons-menu__item--muted { color: var(--commons-text-dim); background: none; }
+
+/* ── Top-bar hamburger button ── */
+.commons-topbar__menuBtn {
+  flex: 0 0 auto; width: 38px; height: 38px; border-radius: 10px;
+  background: none; border: 0; color: var(--commons-text); font-size: 20px; cursor: pointer;
+  display: grid; place-items: center;
+}
+.commons-topbar__menuBtn:hover { background: var(--commons-surface-2); }
+.commons-topbar__menuBtn:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
+
+/* ── Loading placeholder (replaces the empty-state flash while data resolves) ── */
+.commons-loading {
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  margin-top: 64px; text-align: center; color: var(--commons-text-dim);
+}
+.commons-loading__dots { display: flex; gap: 6px; }
+.commons-loading__dots span {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--commons-accent);
+  animation: commons-bounce 1s ease-in-out infinite;
+}
+.commons-loading__dots span:nth-child(2) { animation-delay: .15s; }
+.commons-loading__dots span:nth-child(3) { animation-delay: .3s; }
+.commons-loading__text { font-size: 14px; }
+@keyframes commons-bounce { 0%, 100% { transform: translateY(0); opacity: .4; } 50% { transform: translateY(-6px); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .commons-loading__dots span { animation: none; } }
+
+/* ── Confirm dialog (centered) ── */
+.commons-confirm {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: min(420px, calc(100vw - 32px));
+  background: var(--commons-surface); border: 1px solid var(--commons-border); border-radius: 16px; padding: 20px;
+}
+.commons-confirm__title { font-size: 17px; font-weight: 800; margin-bottom: 8px; }
+.commons-confirm__body { color: var(--commons-text-dim); line-height: 1.5; margin-bottom: 16px; }
+.commons-confirm__actions { display: flex; gap: 10px; }
+.commons-confirm__actions .commons-btn { flex: 1; }
+
+/* ── Create FAB (bottom-left, above the tab bar) ── */
+.commons-fab {
+  position: fixed; left: 16px; bottom: calc(74px + env(safe-area-inset-bottom)); z-index: 20;
+  width: 56px; height: 56px; border-radius: 50%; border: 0; cursor: pointer;
+  background: var(--commons-accent); color: var(--commons-on-accent);
+  display: grid; place-items: center;
+  box-shadow: 0 12px 24px -10px rgba(108, 140, 255, .55), 0 6px 14px rgba(0, 0, 0, .35);
+}
+.commons-fab:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 3px; }

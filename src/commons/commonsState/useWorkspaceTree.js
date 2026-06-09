@@ -10,6 +10,8 @@ import {
   updateNode,
   setNodeStatus,
   deleteNode,
+  completeSubtree as completeSubtreeQuery,
+  claimNode as claimNodeQuery,
 } from '../../data/commons/nodeQueries.js';
 
 export function useWorkspaceTree(workspaceId) {
@@ -63,10 +65,41 @@ export function useWorkspaceTree(workspaceId) {
     setNodes(prev => prev.map(n => (n.id === node.id ? { ...n, status: next } : n)));
     try {
       await setNodeStatus(node.id, next);
+      await reload();   // resync ancestor statuses the rollup trigger may have changed
     } catch {
       setNodes(prev => prev.map(n => (n.id === node.id ? { ...n, status: node.status } : n)));
     }
+  }, [reload]);
+
+  const completeSubtree = useCallback(async (id) => {
+    await completeSubtreeQuery(id);
+    await reload();
+  }, [reload]);
+
+  const claim = useCallback(async (id) => {
+    const updated = await claimNodeQuery(id);
+    setNodes(prev => prev.map(n => (n.id === id ? updated : n)));
+    return updated;
   }, []);
+
+  // Leaf-descendant progress for a node: { done, total } over tasks with no task-children.
+  const progress = useCallback((id) => {
+    let done = 0, total = 0;
+    const walk = (pid) => {
+      for (const child of byParent.get(pid) ?? []) {
+        if (child.kind !== 'task') continue;
+        const kids = (byParent.get(child.id) ?? []).filter(n => n.kind === 'task');
+        if (kids.length === 0) { total += 1; if (child.status === 'done') done += 1; }
+        else walk(child.id);
+      }
+    };
+    walk(id);
+    return { done, total };
+  }, [byParent]);
+
+  const hasChildren = useCallback(
+    (id) => (byParent.get(id) ?? []).some(n => n.kind === 'task'),
+    [byParent]);
 
   const saveTask = useCallback(async (id, patch) => {
     const updated = await updateNode(id, patch);
@@ -79,5 +112,5 @@ export function useWorkspaceTree(workspaceId) {
     await reload();
   }, [reload]);
 
-  return { nodes, byParent, loading, addNode, toggleDone, saveTask, removeNode, reload };
+  return { nodes, byParent, loading, addNode, toggleDone, saveTask, removeNode, reload, completeSubtree, claim, progress, hasChildren };
 }

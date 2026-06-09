@@ -14,15 +14,22 @@ import { resolveCommonsShellContent } from './resolveCommonsShellContent.js';
 import { CommonsLayout } from './CommonsLayout.jsx';
 import { WorkspacePicker } from './WorkspacePicker.jsx';
 import { NoAccessScreen } from './NoAccessScreen.jsx';
-import { DashboardPage } from './pages/DashboardPage/DashboardPage.jsx';
-import { ComingSoonPage } from './pages/ComingSoonPage/ComingSoonPage.jsx';
+import { MyTasksPage } from './pages/MyTasksPage/MyTasksPage.jsx';
+import { BoardPage } from './pages/BoardPage/BoardPage.jsx';
+import { AreaPage } from './pages/AreaPage/AreaPage.jsx';
+import { OverviewPage } from './pages/OverviewPage/OverviewPage.jsx';
+import { TaskFormPage } from './tasks/TaskFormPage.jsx';
+import { TaskViewPage } from './tasks/TaskViewPage.jsx';
 
-function LoadingScreen() {
+// `name` (the workspace) is shown when known: "בודק מה קורה ב<workspace>". Falls back to the
+// generic line at the memberships gate, where no specific workspace is in context yet.
+function LoadingScreen({ name }) {
   const { locale } = useAppContext();
   const shell = resolveCommonsShellContent(locale);
+  const text = name ? `${shell.loadingInWorkspace}${name}` : shell.access.loading;
   return (
     <div className="commons-root" dir={locale === 'he' ? 'rtl' : 'ltr'}>
-      <div className="commons-center"><p>{shell.access.loading}</p></div>
+      <div className="commons-center"><p>{text}</p></div>
     </div>
   );
 }
@@ -38,17 +45,22 @@ function MembershipsGate() {
 
 // /commons/:workspaceSlug — gate on membership for that specific workspace, then render the shell.
 function WorkspaceGate() {
+  const { workspaceSlug } = useParams();
   const { loading, isMember } = useWorkspace();
-  if (loading) return <LoadingScreen />;
+  const { workspaces } = useMemberships();
+  if (loading) return <LoadingScreen name={workspaces.find(w => w.slug === workspaceSlug)?.name} />;
   if (!isMember) return <Navigate to="/commons" replace />;
   return (
     <Routes>
       <Route element={<CommonsLayout />}>
-        <Route index element={<DashboardPage />} />
-        <Route path="board" element={<ComingSoonPage />} />
-        <Route path="overview" element={<ComingSoonPage />} />
-        <Route path="alerts" element={<ComingSoonPage />} />
+        <Route index element={<MyTasksPage />} />
+        <Route path="board" element={<BoardPage />} />
+        <Route path="board/:containerId" element={<AreaPage />} />
+        <Route path="overview" element={<OverviewPage />} />
       </Route>
+      <Route path="task/new" element={<TaskFormPage mode="create" />} />
+      <Route path="task/:nodeId" element={<TaskViewPage />} />
+      <Route path="task/:nodeId/edit" element={<TaskFormPage mode="edit" />} />
     </Routes>
   );
 }

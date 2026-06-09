@@ -1,0 +1,11 @@
+/* src/commons/pages/AreaPage/area.css */
+.commons-area__head { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+.commons-area__back {
+  flex: 0 0 auto; width: 36px; height: 36px; border-radius: 10px;
+  background: var(--commons-surface); border: 1px solid var(--commons-border);
+  color: var(--commons-text); cursor: pointer; display: grid; place-items: center;
+  transition: background .2s ease;
+}
+.commons-area__back:hover { background: var(--commons-surface-2); }
+.commons-area__back:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
+.commons-area__title { font-size: 22px; font-weight: 800; letter-spacing: -.02em; }

@@ -1,0 +1,87 @@
+/* src/commons/pages/BoardPage/board.css */
+/* Areas board: depth cards with an accent edge + a live open/overdue strip. Mobile-first, 2-up. */
+
+.commons-board { position: relative; min-height: 60dvh; }
+.commons-board__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.commons-areaCard {
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column; gap: 12px;
+  text-align: start; cursor: pointer; font: inherit; color: var(--commons-text);
+  background: var(--commons-surface);
+  border: 1px solid var(--commons-border); border-radius: 18px;
+  padding: 18px 16px; min-height: 112px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .03), 0 10px 22px -16px rgba(0, 0, 0, .75);
+  transition: border-color .3s cubic-bezier(.16,1,.3,1), background .3s cubic-bezier(.16,1,.3,1),
+              box-shadow .3s cubic-bezier(.16,1,.3,1);
+}
+/* accent edge — brightens on hover */
+.commons-areaCard::before {
+  content: ''; position: absolute; inset-inline-start: 0; top: 16px; bottom: 16px; width: 3px;
+  border-radius: 0 3px 3px 0; background: var(--commons-accent); opacity: .5;
+  transition: opacity .3s ease;
+}
+.commons-areaCard:hover {
+  background: var(--commons-surface-2);
+  border-color: color-mix(in srgb, var(--commons-accent) 45%, var(--commons-border));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04), 0 16px 30px -18px rgba(0, 0, 0, .85);
+}
+.commons-areaCard:hover::before { opacity: 1; }
+.commons-areaCard:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
+
+.commons-areaCard__name { font-weight: 700; font-size: 15px; line-height: 1.25; padding-inline-start: 8px; }
+
+.commons-areaCard__strip { display: flex; gap: 5px; padding-inline-start: 8px; align-items: center; }
+.commons-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--commons-accent); opacity: .85; }
+.commons-dot--late { background: var(--commons-danger); opacity: 1; }
+.commons-areaCard__clear {
+  width: 16px; height: 2px; border-radius: 2px; margin-inline-start: 8px;
+  background: var(--commons-text-dim); opacity: .5;
+}
+
+.commons-areaCard__meta {
+  margin-top: auto; display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; padding-inline-start: 8px;
+}
+.commons-areaCard__count { font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
+.commons-areaCard__unit { font-size: 12px; color: var(--commons-text-dim); }
+.commons-areaCard__late {
+  margin-inline-start: auto; font-size: 11px; font-weight: 700;
+  color: var(--commons-danger); background: color-mix(in srgb, var(--commons-danger) 16%, transparent);
+  padding: 2px 8px; border-radius: 999px;
+}
+
+/* the loose "general tasks" card spans the row, set apart with a dashed edge */
+.commons-areaCard--root {
+  grid-column: 1 / -1; flex-direction: row; align-items: center; justify-content: space-between;
+  min-height: 64px; border-style: dashed;
+}
+.commons-areaCard--root::before { display: none; }
+.commons-areaCard--root .commons-areaCard__name,
+.commons-areaCard--root .commons-areaCard__meta { padding-inline-start: 0; }
+.commons-areaCard--root .commons-areaCard__meta { margin-top: 0; }
+
+/* loading skeleton */
+.commons-areaCard--skeleton {
+  pointer-events: none; min-height: 112px; border-color: var(--commons-border);
+  background:
+    linear-gradient(100deg, var(--commons-surface) 30%, var(--commons-surface-2) 50%, var(--commons-surface) 70%);
+  background-size: 200% 100%; animation: commons-shimmer 1.4s ease-in-out infinite;
+}
+.commons-areaCard--skeleton::before { display: none; }
+@keyframes commons-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+/* empty state */
+.commons-board__empty {
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  text-align: center; color: var(--commons-text-dim); margin-top: 56px; padding: 0 24px;
+}
+.commons-board__emptyIcon {
+  width: 64px; height: 64px; border-radius: 20px; display: grid; place-items: center;
+  background: var(--commons-surface); border: 1px solid var(--commons-border); color: var(--commons-accent);
+}
+.commons-board__empty p { max-width: 30ch; line-height: 1.5; }
+
+@media (prefers-reduced-motion: reduce) {
+  .commons-areaCard, .commons-areaCard::before { transition: none; }
+  .commons-areaCard--skeleton { animation: none; }
+}
