@@ -108,5 +108,10 @@ create policy "admins manage member_roles" on commons.member_roles
 -- ── Table grants for PostgREST (RLS still governs row visibility) ──
 grant select, insert, update, delete on all tables in schema commons to authenticated;
 grant select on all tables in schema commons to anon;
+-- service_role bypasses RLS but still needs explicit table grants on a custom schema
+-- (used by server-side scripts: seeding, admin tooling).
+grant all on all tables   in schema commons to service_role;
+grant all on all routines in schema commons to service_role;
 alter default privileges in schema commons grant select, insert, update, delete on tables to authenticated;
 alter default privileges in schema commons grant select on tables to anon;
+alter default privileges in schema commons grant all on tables to service_role;
