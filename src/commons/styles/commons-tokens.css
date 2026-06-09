@@ -8,6 +8,8 @@
   --commons-text:      #e8e8ee;
   --commons-text-dim:  #9aa3b2;
   --commons-accent:    #6c8cff;
+  --commons-on-accent: #ffffff;
+  --commons-danger:    #ff6b6b;
   --commons-border:    #2a2e3a;
   --commons-radius:    12px;
 

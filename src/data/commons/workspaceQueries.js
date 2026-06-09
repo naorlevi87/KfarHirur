@@ -42,6 +42,18 @@ export async function fetchMyMembership(workspaceId, userId) {
   return data ?? null;
 }
 
+// Active members of a workspace (for the task assignee picker).
+export async function fetchRoster(workspaceId) {
+  const { data, error } = await commonsDb
+    .from('workspace_members')
+    .select('id, display_name, permission_level')
+    .eq('workspace_id', workspaceId)
+    .eq('status', 'active')
+    .order('display_name', { ascending: true });
+  if (error) return [];
+  return data ?? [];
+}
+
 // The role names/colors attached to a membership.
 export async function fetchMemberRoles(memberId) {
   const { data, error } = await commonsDb

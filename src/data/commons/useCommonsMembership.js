@@ -10,22 +10,21 @@ let cache = { userId: null, isMember: false };
 
 export function useCommonsMembership() {
   const { user, loading: authLoading } = useAuth();
+  const userId = user?.id ?? null;
   const [isMember, setIsMember] = useState(
-    user && cache.userId === user.id ? cache.isMember : false
+    userId && cache.userId === userId ? cache.isMember : false
   );
 
   useEffect(() => {
-    if (authLoading || !user) { setIsMember(false); return; }
-    if (cache.userId === user.id) { setIsMember(cache.isMember); return; }
-
+    if (authLoading || !userId || cache.userId === userId) return;
     let cancelled = false;
     (async () => {
-      const list = await fetchMyWorkspaces(user.id);
-      cache = { userId: user.id, isMember: list.length > 0 };
+      const list = await fetchMyWorkspaces(userId);
+      cache = { userId, isMember: list.length > 0 };
       if (!cancelled) setIsMember(list.length > 0);
     })();
     return () => { cancelled = true; };
-  }, [user, authLoading]);
+  }, [userId, authLoading]);
 
-  return isMember;
+  return authLoading || !userId ? false : isMember;
 }
