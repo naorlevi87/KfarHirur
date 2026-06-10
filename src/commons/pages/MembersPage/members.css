@@ -1,0 +1,59 @@
+/* src/commons/pages/MembersPage/members.css — member management.
+   One compact line per member (name · permission · pencil); the pencil opens an inline edit panel.
+   Dropdown base styles are global (CommonsLayout.css). */
+
+.commons-members__subtitle { color: var(--commons-text-dim); margin-bottom: 18px; }
+.commons-members__empty { color: var(--commons-text-dim); }
+
+.commons-members__list {
+  list-style: none; margin: 0; padding: 0;
+  background: var(--commons-surface); border: 1px solid var(--commons-border); border-radius: 14px; overflow: hidden;
+}
+.commons-memberRow { border-bottom: 1px solid var(--commons-border); }
+.commons-memberRow:last-child { border-bottom: 0; }
+.commons-memberRow.is-editing { background: var(--commons-surface-2); }
+
+.commons-memberRow__line { display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
+.commons-memberRow__who { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.commons-memberRow__name {
+  font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.commons-memberRow__meta {
+  font-size: 12px; color: var(--commons-text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.commons-memberRow__names { display: flex; gap: 10px; }
+.commons-memberRow__names .commons-field { flex: 1; min-width: 0; }
+
+.commons-levelBadge {
+  flex: 0 0 auto; display: inline-flex; align-items: center; padding: 3px 11px; border-radius: 999px;
+  font-size: 12.5px; font-weight: 700; border: 1px solid var(--commons-border); color: var(--commons-text-dim);
+}
+.commons-levelBadge[data-level="admin"] { background: var(--commons-accent); color: var(--commons-bg); border-color: transparent; }
+.commons-levelBadge[data-level="manager"] { background: var(--commons-surface-2); color: var(--commons-text); border-color: transparent; }
+
+.commons-memberRow__edit {
+  flex: 0 0 auto; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 8px;
+  background: none; border: 0; color: var(--commons-text-dim); cursor: pointer;
+}
+.commons-memberRow__edit:hover { color: var(--commons-text); background: var(--commons-surface-2); }
+.commons-memberRow__edit:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
+.is-editing .commons-memberRow__edit { color: var(--commons-accent); }
+
+/* Inline edit panel revealed by the pencil. */
+.commons-memberRow__panelInner {
+  display: flex; flex-direction: column; gap: 12px; padding: 4px 14px 16px;
+}
+.commons-memberRow__panelActions { display: flex; gap: 8px; align-items: center; margin-top: 2px; }
+.commons-memberRow__btn {
+  display: inline-flex; align-items: center; gap: 6px; background: none; border: 1px solid var(--commons-border);
+  color: var(--commons-text); cursor: pointer; font: inherit; padding: 8px 14px; border-radius: 9px;
+}
+.commons-memberRow__btn:hover { background: var(--commons-surface); }
+.commons-memberRow__btn:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
+.commons-memberRow__btn--danger { color: var(--commons-danger); border-color: transparent; margin-inline-end: auto; }
+.commons-memberRow__btn--danger:hover { background: var(--commons-surface); }
+.commons-memberRow__btn--done { background: var(--commons-accent); color: var(--commons-bg); border-color: transparent; font-weight: 700; }
+
+/* Dropdown placeholder/empty states (shared dropdowns, member context). */
+.commons-skillSelect__btn.is-placeholder .commons-skillSelect__summary { color: var(--commons-text-dim); }
+.commons-skillSelect__hint { padding: 8px 10px; color: var(--commons-text-dim); font-size: 13px; }

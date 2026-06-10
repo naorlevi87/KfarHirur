@@ -6,7 +6,6 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAppContext } from '../app/appState/useAppContext.js';
-import { useAuth } from '../app/appState/AuthContext.jsx';
 import { useWorkspace } from './commonsState/WorkspaceContext.jsx';
 import { useMemberships } from './commonsState/MembershipsContext.jsx';
 import { resolveCommonsShellContent } from './resolveCommonsShellContent.js';
@@ -15,7 +14,6 @@ import kfarLogo from '../assets/images/kfar-hirur-logo-circleOnly.png';
 
 export function CommonsMenu({ open, onClose, onSwitchWorkspace }) {
   const { locale } = useAppContext();
-  const { role } = useAuth();
   const { permissionLevel } = useWorkspace();
   const { workspaces } = useMemberships();
   const { workspaceSlug } = useParams();
@@ -36,10 +34,8 @@ export function CommonsMenu({ open, onClose, onSwitchWorkspace }) {
 
   const canTask = ['admin', 'manager'].includes(permissionLevel);
   const canFolder = permissionLevel === 'admin';
-  const isSiteAdmin = role === 'admin';
   const base = `/commons/${workspaceSlug}`;
   const go = (path) => { onClose(); navigate(`${base}${path}`); };
-  const goAbs = (path) => { onClose(); navigate(path); };
 
   return (
     <div className="commons-drawerRoot" dir={locale === 'he' ? 'rtl' : 'ltr'}>
@@ -48,11 +44,11 @@ export function CommonsMenu({ open, onClose, onSwitchWorkspace }) {
         <ul className="commons-menu">
           {canTask && <li><button type="button" className="commons-menu__item" onClick={() => go('/task/new')}><IconPlus size={20} /> {m.newTask}</button></li>}
           {canFolder && <li><button type="button" className="commons-menu__item" onClick={() => go('/task/new?kind=container')}><IconFolderPlus size={20} /> {m.newFolder}</button></li>}
+          {canFolder && <li><button type="button" className="commons-menu__item" onClick={() => go('/members')}><IconUsers size={20} /> {m.members}</button></li>}
           {canFolder && <li><button type="button" className="commons-menu__item" onClick={() => go('/roles')}><IconGear size={20} /> {m.roles}</button></li>}
           {workspaces.length > 1 && (
             <li><button type="button" className="commons-menu__item" onClick={() => { onClose(); onSwitchWorkspace(); }}><IconSwap size={20} /> {m.switchWorkspace}</button></li>
           )}
-          {isSiteAdmin && <li><button type="button" className="commons-menu__item" onClick={() => goAbs('/admin/users')}><IconUsers size={20} /> {m.members}</button></li>}
           <li><button type="button" className="commons-menu__item commons-menu__item--back" onClick={() => { onClose(); navigate('/'); }}>
             <img className="commons-menu__logo" src={kfarLogo} alt="" /> {m.backToSite}
           </button></li>
