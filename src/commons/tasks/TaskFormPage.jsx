@@ -16,7 +16,7 @@ import { fetchRoles } from '../../data/commons/roleQueries.js';
 import { resolveCommonsShellContent } from '../resolveCommonsShellContent.js';
 import { RecurrenceField } from './RecurrenceField.jsx';
 import { SkillSelect } from './SkillSelect.jsx';
-import { SelectField } from './SelectField.jsx';
+import { SelectField } from '../SelectField.jsx';
 import { normalizeRule, computeFirstNextRun } from './recurrence.js';
 import { IconChevronStart } from '../icons.jsx';
 

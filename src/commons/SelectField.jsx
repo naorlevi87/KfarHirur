@@ -1,7 +1,8 @@
-// src/commons/tasks/SelectField.jsx
-// A single-select dropdown styled to match the skills picker (custom dark menu instead of the
+// src/commons/SelectField.jsx
+// Shared single-select dropdown styled to match the skills picker (custom dark menu instead of the
 // native browser select, which clashes with the dark theme). Functionally a plain select: one pick.
-// Shares the `.commons-skillSelect*` styles. options: [{ value, label }].
+// Styles live in CommonsLayout.css (`.commons-skillSelect*` + `.commons-selectField__radio`).
+// options: [{ value, label }]. Used by the task form and the members screen.
 
 import { useEffect, useRef, useState } from 'react';
 
