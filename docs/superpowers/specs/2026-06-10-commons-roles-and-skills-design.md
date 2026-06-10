@@ -89,7 +89,9 @@ task screens):
 ```
 
 **CommonsMenu** (admin entries, gated by commons `permissionLevel === 'admin'`):
-- `ניהול חברים` → `/members` (replaces the jump to the site `/admin/users`).
+- `ניהול חברים` → opens the in-app `/members` screen instead of the site `/admin/users` (the old
+  entry navigated to the site's `user_roles` admin — a different system; this points it at the
+  workspace's own `workspace_members`).
 - `ניהול כישורים` → `/roles` (new entry).
 
 ### MembersPage (admin)
