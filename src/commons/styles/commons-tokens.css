@@ -17,3 +17,21 @@
   background: var(--commons-bg);
   color: var(--commons-text);
 }
+
+/* Skill (role) swatches — referenced by [data-role-color] on chips and the picker. */
+:root {
+  --commons-role-1: #6c8cff;
+  --commons-role-2: #ff8f6b;
+  --commons-role-3: #56c596;
+  --commons-role-4: #d98cff;
+  --commons-role-5: #ffce5a;
+  --commons-role-6: #5ad0e0;
+  --commons-role-default: var(--commons-surface-2);
+}
+[data-role-color="1"] { background: var(--commons-role-1); }
+[data-role-color="2"] { background: var(--commons-role-2); }
+[data-role-color="3"] { background: var(--commons-role-3); }
+[data-role-color="4"] { background: var(--commons-role-4); }
+[data-role-color="5"] { background: var(--commons-role-5); }
+[data-role-color="6"] { background: var(--commons-role-6); }
+[data-role-color=""] , [data-role-color="null"] { background: var(--commons-role-default); }

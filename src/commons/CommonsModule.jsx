@@ -20,6 +20,7 @@ import { AreaPage } from './pages/AreaPage/AreaPage.jsx';
 import { OverviewPage } from './pages/OverviewPage/OverviewPage.jsx';
 import { TaskFormPage } from './tasks/TaskFormPage.jsx';
 import { TaskViewPage } from './tasks/TaskViewPage.jsx';
+import { RolesPage } from './pages/RolesPage/RolesPage.jsx';
 
 // `name` (the workspace) is shown when known: "בודק מה קורה ב<workspace>". Falls back to the
 // generic line at the memberships gate, where no specific workspace is in context yet.
@@ -61,6 +62,7 @@ function WorkspaceGate() {
       <Route path="task/new" element={<TaskFormPage mode="create" />} />
       <Route path="task/:nodeId" element={<TaskViewPage />} />
       <Route path="task/:nodeId/edit" element={<TaskFormPage mode="edit" />} />
+      <Route path="roles" element={<RolesPage />} />
     </Routes>
   );
 }

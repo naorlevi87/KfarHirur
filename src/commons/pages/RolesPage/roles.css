@@ -1,0 +1,18 @@
+/* src/commons/pages/RolesPage/roles.css — skills catalogue screen. */
+.commons-roles__subtitle { color: var(--commons-text-dim); margin-bottom: 16px; line-height: 1.5; }
+.commons-roles__add { display: flex; gap: 8px; align-items: center; margin-bottom: 18px; flex-wrap: wrap; }
+.commons-roles__add .commons-field__input { flex: 1; min-width: 160px; }
+.commons-roles__swatches, .commons-roleRow__swatches { display: flex; gap: 6px; }
+.commons-swatch { width: 22px; height: 22px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; }
+.commons-swatch.is-on { border-color: var(--commons-text); }
+.commons-swatch:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
+.commons-roles__list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.commons-roles__empty { color: var(--commons-text-dim); }
+.commons-roleRow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  background: var(--commons-surface); border: 1px solid var(--commons-border); border-radius: 12px; padding: 10px 12px; }
+.commons-roleRow__dot { width: 14px; height: 14px; border-radius: 50%; flex: 0 0 auto; }
+.commons-roleRow__name { font-weight: 700; flex: 1; min-width: 80px; }
+.commons-roleRow__btn { background: none; border: 0; color: var(--commons-text-dim); cursor: pointer; font: inherit; padding: 4px 8px; border-radius: 8px; }
+.commons-roleRow__btn:hover { color: var(--commons-text); background: var(--commons-surface-2); }
+.commons-roleRow__btn--danger:hover { color: #ff6b6b; }
+.commons-roleRow__btn:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }

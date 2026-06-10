@@ -10,7 +10,7 @@ import { useAuth } from '../app/appState/AuthContext.jsx';
 import { useWorkspace } from './commonsState/WorkspaceContext.jsx';
 import { useMemberships } from './commonsState/MembershipsContext.jsx';
 import { resolveCommonsShellContent } from './resolveCommonsShellContent.js';
-import { IconPlus, IconFolderPlus, IconSwap, IconUsers } from './icons.jsx';
+import { IconPlus, IconFolderPlus, IconSwap, IconUsers, IconGear } from './icons.jsx';
 import kfarLogo from '../assets/images/kfar-hirur-logo-circleOnly.png';
 
 export function CommonsMenu({ open, onClose, onSwitchWorkspace }) {
@@ -48,6 +48,7 @@ export function CommonsMenu({ open, onClose, onSwitchWorkspace }) {
         <ul className="commons-menu">
           {canTask && <li><button type="button" className="commons-menu__item" onClick={() => go('/task/new')}><IconPlus size={20} /> {m.newTask}</button></li>}
           {canFolder && <li><button type="button" className="commons-menu__item" onClick={() => go('/task/new?kind=container')}><IconFolderPlus size={20} /> {m.newFolder}</button></li>}
+          {canFolder && <li><button type="button" className="commons-menu__item" onClick={() => go('/roles')}><IconGear size={20} /> {m.roles}</button></li>}
           {workspaces.length > 1 && (
             <li><button type="button" className="commons-menu__item" onClick={() => { onClose(); onSwitchWorkspace(); }}><IconSwap size={20} /> {m.switchWorkspace}</button></li>
           )}
