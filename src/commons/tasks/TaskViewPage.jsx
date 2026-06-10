@@ -95,6 +95,7 @@ export function TaskViewPage() {
         <button type="button" className="commons-screen__back" onClick={() => navigate(-1)} aria-label={v.back}>
           <IconChevronStart size={20} />
         </button>
+        <span className="commons-screen__title commons-screen__title--flex">{node.title}</span>
         {canEdit && (
           <button type="button" className="commons-screen__edit" onClick={() => navigate(`/commons/${workspaceSlug}/task/${nodeId}/edit`)}>
             {v.edit}
