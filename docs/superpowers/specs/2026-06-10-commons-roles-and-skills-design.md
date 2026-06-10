@@ -9,8 +9,9 @@
 
 Three connected capabilities, all admin-driven:
 
-1. **Skills gate task-taking.** A task carries a required **skill** (a `commons.roles` row, e.g.
-   "טבח פס", "מלצר", "ברמן" — or *"כל עובד"* = anyone). Each member is defined by the skills they hold
+1. **Skills gate task-taking.** A task carries required **skills** (a multi-select of `commons.roles`
+   rows, e.g. "טבח פס", "מלצר", "ברמן" — or none = *"כל עובד"* = anyone). The set is an **OR** gate: a
+   member is eligible if they hold **any** of the listed skills. Each member is defined by the skills they hold
    (`member_roles`). Only a member whose skills match may take a task and say "I'm doing it today"
    ("עלי"). A manager may still hand-pick a specific owner.
 2. **Commons-native member management.** An admin manages `workspace_members` from inside Commons —
@@ -37,14 +38,16 @@ is **skill** ("כישור"/responsibility tag); "role" stays the table name. Ski
 ### New column on `commons.nodes`
 ```sql
 alter table commons.nodes
-  add column role_id uuid references commons.roles(id) on delete set null;
+  add column role_ids uuid[] not null default '{}';
 ```
-- `role_id` = the task's **required skill** (eligibility gate).
-- `role_id is null` ⇒ **"כל עובד"** — any active member may take it. "כל עובד" is the empty option in
-  the form's skill dropdown, **not** a magic seeded role.
-- `owner_id` (existing) is unchanged — the person actually doing the task. `role_id` and `owner_id`
-  **coexist**: a manager may set `owner_id` directly; if `owner_id` is null, any member holding
-  `role_id` may self-claim.
+- `role_ids` = the task's **required skills** (eligibility gate), a multi-select **OR** set.
+- `role_ids = '{}'` (empty) ⇒ **"כל עובד"** — any active member may take it. "כל עובד" is simply the
+  empty selection in the form's skill multi-select, **not** a magic seeded role.
+- No FK on array elements; a `roles_scrub` trigger removes a deleted skill's id from every node's
+  `role_ids` (replaces a per-row `on delete set null`).
+- `owner_id` (existing) is unchanged — the person actually doing the task. `role_ids` and `owner_id`
+  **coexist**: a manager may set `owner_id` directly; if `owner_id` is null, any member holding **any**
+  of `role_ids` may self-claim.
 
 ### New table — invites
 ```sql
@@ -68,13 +71,13 @@ consented. `role_ids` are applied as `member_roles` on accept.
 The existing `commons.claim_node(node_id)` RPC gains one check. After the current guards
 (node exists · is a task · caller is an active member · `owner_id is null`), add:
 
-> If the node's `role_id is not null`, require the caller's membership to hold that role
-> (`exists … member_roles … role_id = node.role_id`); otherwise raise `missing skill`.
+> If the node's `role_ids` is non-empty, require the caller's membership to hold one of them
+> (`exists … member_roles … role_id = any(node.role_ids)`); otherwise raise `missing skill`.
 
-Then set `owner_id` to the caller's membership as today. `role_id is null` skips the check (anyone).
+Then set `owner_id` to the caller's membership as today. An empty `role_ids` skips the check (anyone).
 
-**UI gating:** the "עלי" affordance shows on an unassigned task only when `node.role_id is null` **or**
-`useWorkspace().roles` includes `node.role_id`. Non-eligible members never see it. RLS/RPC enforces the
+**UI gating:** the "עלי" affordance shows on an unassigned task only when `node.role_ids` is empty **or**
+`useWorkspace().roles` intersects it. Non-eligible members never see it. RLS/RPC enforces the
 same server-side.
 
 ## 3. Screens & navigation
@@ -150,16 +153,17 @@ follows the registration link first (existing site auth), lands back in Commons,
   user's skills). The task form's existing `fetchRoster` is reused for the owner picker; a new
   `fetchRoles(wid)` feeds the skill picker.
 - No change to `useWorkspaceTree`; the task form reads roles directly like it reads the roster.
-- `nodeQueries` `FIELDS` gains `role_id`; `createNode`/`updateNode` pass it through (already generic).
+- `nodeQueries` `FIELDS` gains `role_ids`; `createNode`/`updateNode` pass it through (already generic).
 
-## 6. Task form — skill field
+## 6. Task form — skills field
 
-`TaskFormPage` (task mode) gains a **skill** select after the owner field:
-- options: a "כל עובד" empty option + each workspace role; value persisted to `nodes.role_id`.
-- seeded from `node.role_id` in edit mode; included in the create/edit patches alongside `owner_id`.
-The owner and skill are independent fields (owner optional hand-pick; skill = eligibility).
+`TaskFormPage` (task mode) gains a **skills** multi-select (toggle chips) after the owner field:
+- each workspace skill is a toggle chip; the selected set is persisted to `nodes.role_ids`. Selecting
+  none = "כל עובד" (a hint shows). With no skills defined yet, a "כל עובד" hint shows instead.
+- seeded from `node.role_ids` in edit mode; included in the create/edit patches alongside `owner_id`.
+The owner and skills are independent fields (owner optional hand-pick; skills = eligibility OR-set).
 
-The task **view** shows the required skill as a chip; the "עלי" claim button respects the skill gate
+The task **view** shows each required skill as a chip; the "עלי" claim button respects the skill gate
 (§2). `TaskViewPage` / `TaskTree` claim affordances read `useWorkspace().roles` to decide visibility.
 
 ## 7. Content
@@ -193,8 +197,8 @@ expiry, and editing an invite's level/skills after it is sent (cancel + re-invit
 
 ## Phasing
 
-- **A — Skills core:** `nodes.role_id` migration + skill-gated `claim_node` + `roleQueries` + RolesPage
-  + task-form skill field + claim-button gating. (Skills usable end-to-end once members have skills.)
+- **A — Skills core:** `nodes.role_ids` migration + skill-gated `claim_node` + `roleQueries` + RolesPage
+  + task-form skills multi-select + claim-button gating. (Skills usable end-to-end once members have skills.)
 - **B — Member management:** MembersPage (level / display name / skills / remove) + `memberQueries` +
   menu rewire to `/members`. (This is where skills get assigned to members.)
 - **C — Invite & approval:** `commons.invites` + create/accept/decline/pending RPCs + `send-invite`

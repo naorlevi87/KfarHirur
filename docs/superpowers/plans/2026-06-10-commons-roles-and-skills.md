@@ -842,10 +842,8 @@ export function MembersPage() {
 .commons-memberRow__skills { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .commons-memberRow__skillsLabel { color: var(--commons-text-dim); font-size: 13px; }
 .commons-memberRow__noSkills { color: var(--commons-text-dim); font-size: 13px; }
-.commons-skillChip { border: 1px solid var(--commons-border); background: var(--commons-surface-2);
-  color: var(--commons-text); border-radius: 999px; padding: 5px 12px; cursor: pointer; font: inherit; font-size: 13px; }
-.commons-skillChip.is-on { color: var(--commons-bg); font-weight: 700; border-color: transparent; }
-.commons-skillChip:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
+/* .commons-skillChip / .commons-skillPick / .commons-field__hint are defined canonically in
+   CommonsLayout.css (shared with the task form's skill picker) — do NOT redefine them here. */
 .commons-memberRow__remove { align-self: flex-start; background: none; border: 0; color: var(--commons-text-dim);
   cursor: pointer; font: inherit; padding: 4px 0; }
 .commons-memberRow__remove:hover { color: #ff6b6b; }
