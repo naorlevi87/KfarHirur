@@ -8,13 +8,15 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../../../app/appState/useAppContext.js';
 import { useWorkspace } from '../../commonsState/WorkspaceContext.jsx';
-import { fetchMembers, updateMemberLevel, updateMemberName, removeMember } from '../../../data/commons/memberQueries.js';
+import { fetchMembers, updateMemberLevel, updateMemberName, removeMember,
+         listInvites, cancelInvite, sendInviteEmail } from '../../../data/commons/memberQueries.js';
 import { fetchRoles, fetchMemberRolesMap, setMemberRoles } from '../../../data/commons/roleQueries.js';
 import { resolveCommonsShellContent } from '../../resolveCommonsShellContent.js';
 import { SelectField } from '../../SelectField.jsx';
 import { MultiSelectField } from '../../MultiSelectField.jsx';
+import { InviteDialog } from './InviteDialog.jsx';
 import { CommonsLoading } from '../../CommonsLoading.jsx';
-import { IconChevronStart, IconPencil, IconTrash } from '../../icons.jsx';
+import { IconChevronStart, IconPencil, IconTrash, IconPlus } from '../../icons.jsx';
 
 const LEVELS = ['admin', 'manager', 'member'];
 
@@ -37,8 +39,10 @@ export function MembersPage() {
   const [members, setMembers] = useState([]);
   const [roles, setRoles] = useState([]);
   const [rolesByMember, setRolesByMember] = useState(new Map());
+  const [invites, setInvites] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
+  const [inviting, setInviting] = useState(false);
   const [nameDraft, setNameDraft] = useState({ firstName: '', lastName: '' });
 
   function openEdit(member) {
@@ -50,13 +54,27 @@ export function MembersPage() {
     if (!workspace?.id) return;
     let cancelled = false;
     Promise.all([
-      fetchMembers(workspace.id), fetchRoles(workspace.id), fetchMemberRolesMap(workspace.id),
-    ]).then(([mem, rs, map]) => {
+      fetchMembers(workspace.id), fetchRoles(workspace.id), fetchMemberRolesMap(workspace.id), listInvites(workspace.id),
+    ]).then(([mem, rs, map, inv]) => {
       if (cancelled) return;
-      setMembers(mem); setRoles(rs); setRolesByMember(map); setLoading(false);
+      setMembers(mem); setRoles(rs); setRolesByMember(map); setInvites(inv); setLoading(false);
     });
     return () => { cancelled = true; };
   }, [workspace?.id]);
+
+  async function refreshInvites() { setInvites(await listInvites(workspace.id)); }
+  async function onResendInvite(inv) {
+    try {
+      await sendInviteEmail({
+        workspaceId: workspace.id, email: inv.email, token: inv.token, hasAccount: true,
+        workspaceName: workspace.name, origin: window.location.origin, slug: workspace.slug,
+      });
+    } catch { /* email best-effort; the link still works */ }
+  }
+  async function onCancelInvite(inv) {
+    await cancelInvite(inv.id);
+    setInvites(prev => prev.filter(x => x.id !== inv.id));
+  }
 
   const adminCount = useMemo(() => members.filter(x => x.permission_level === 'admin').length, [members]);
   const levelLabel = { admin: m.levelAdmin, manager: m.levelManager, member: m.levelMember };
@@ -95,7 +113,10 @@ export function MembersPage() {
         <button type="button" className="commons-screen__back" onClick={() => navigate(-1)} aria-label={m.back}>
           <IconChevronStart size={20} />
         </button>
-        <span className="commons-screen__title">{m.title}</span>
+        <span className="commons-screen__title commons-screen__title--flex">{m.title}</span>
+        <button type="button" className="commons-screen__edit" onClick={() => setInviting(true)}>
+          <IconPlus size={16} /> {m.invite}
+        </button>
       </header>
 
       <motion.div className="commons-screen__body"
@@ -113,12 +134,7 @@ export function MembersPage() {
               return (
                 <li key={member.id} className={editing ? 'commons-memberRow is-editing' : 'commons-memberRow'}>
                   <div className="commons-memberRow__line">
-                    <div className="commons-memberRow__who">
-                      <span className="commons-memberRow__name">{fullName(member)}</span>
-                      <span className="commons-memberRow__meta">
-                        {member.email}{member.created_at ? ` · ${m.joined} ${formatJoined(member.created_at, locale)}` : ''}
-                      </span>
-                    </div>
+                    <span className="commons-memberRow__name">{fullName(member)}</span>
                     <span className="commons-levelBadge" data-level={member.permission_level}>
                       {levelLabel[member.permission_level]}
                     </span>
@@ -163,6 +179,9 @@ export function MembersPage() {
                               onChange={(ids) => onSkills(member, ids)} options={skillOptions}
                               placeholder={roles.length ? m.skillsPlaceholder : m.noSkills} />
                           </label>
+                          <div className="commons-memberRow__meta">
+                            {member.email}{member.created_at ? ` · ${m.joined} ${formatJoined(member.created_at, locale)}` : ''}
+                          </div>
                           <div className="commons-memberRow__panelActions">
                             <button type="button" className="commons-memberRow__btn commons-memberRow__btn--danger" onClick={() => onRemove(member)}>
                               <IconTrash size={16} /> {m.remove}
@@ -178,7 +197,32 @@ export function MembersPage() {
             })}
           </ul>
         )}
+
+        {invites.length > 0 && (
+          <section className="commons-pending">
+            <h2 className="commons-pending__title">{m.pendingTitle}</h2>
+            <ul className="commons-pending__list">
+              {invites.map(inv => (
+                <li key={inv.id} className="commons-pendingRow">
+                  <span className="commons-pendingRow__email">{inv.email}</span>
+                  <span className="commons-pendingRow__status">{m.pendingStatus}</span>
+                  <button type="button" className="commons-memberRow__btn" onClick={() => onResendInvite(inv)}>{m.resend}</button>
+                  <button type="button" className="commons-memberRow__btn commons-memberRow__btn--danger" onClick={() => onCancelInvite(inv)}>{m.cancelInvite}</button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
       </motion.div>
+
+      {inviting && (
+        <InviteDialog
+          workspace={workspace} locale={locale}
+          m={{ ...m, levelLabel: m.levelLabel, colSkills: m.colSkills }}
+          levelLabel={levelLabel} skillOptions={skillOptions}
+          onClose={() => setInviting(false)} onCreated={refreshInvites}
+        />
+      )}
     </div>
   );
 }

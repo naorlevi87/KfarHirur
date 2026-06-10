@@ -14,12 +14,11 @@
 .commons-memberRow.is-editing { background: var(--commons-surface-2); }
 
 .commons-memberRow__line { display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
-.commons-memberRow__who { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .commons-memberRow__name {
-  font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  flex: 1; min-width: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .commons-memberRow__meta {
-  font-size: 12px; color: var(--commons-text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 12px; color: var(--commons-text-dim); padding-top: 2px;
 }
 .commons-memberRow__names { display: flex; gap: 10px; }
 .commons-memberRow__names .commons-field { flex: 1; min-width: 0; }
@@ -57,3 +56,40 @@
 /* Dropdown placeholder/empty states (shared dropdowns, member context). */
 .commons-skillSelect__btn.is-placeholder .commons-skillSelect__summary { color: var(--commons-text-dim); }
 .commons-skillSelect__hint { padding: 8px 10px; color: var(--commons-text-dim); font-size: 13px; }
+
+/* Invite header button (icon + label). */
+.commons-screen__edit { display: inline-flex; align-items: center; gap: 6px; }
+
+/* Invite modal card (sits on the shared .commons-sheetRoot / .commons-sheetBackdrop). */
+.commons-inviteCard {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: min(440px, calc(100vw - 32px)); max-height: calc(100dvh - 48px); overflow: auto;
+  background: var(--commons-surface); border: 1px solid var(--commons-border); border-radius: 18px; padding: 20px;
+}
+.commons-inviteCard__title { font-size: 18px; font-weight: 800; margin-bottom: 16px; }
+.commons-inviteCard__close {
+  margin: 14px auto 0; display: block; background: none; border: 0; color: var(--commons-text-dim);
+  font: inherit; cursor: pointer; padding: 6px 12px; border-radius: 8px;
+}
+.commons-inviteCard__close:hover { color: var(--commons-text); }
+.commons-inviteCard__close:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
+.commons-invite { display: flex; flex-direction: column; gap: 12px; }
+.commons-invite__send { width: 100%; padding: 13px; font-weight: 700; }
+.commons-invite__result { display: flex; flex-direction: column; gap: 6px; }
+.commons-invite__linkRow { display: flex; gap: 8px; align-items: center; }
+.commons-invite__url {
+  flex: 1; min-width: 0; background: var(--commons-surface-2); border-radius: 8px;
+  padding: 8px 10px; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.commons-invite__notice { color: var(--commons-accent); font-size: 14px; margin: 0; }
+
+/* Pending invites section. */
+.commons-pending { margin-top: 24px; }
+.commons-pending__title { font-size: 15px; font-weight: 800; margin-bottom: 10px; }
+.commons-pending__list { list-style: none; display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; }
+.commons-pendingRow {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  background: var(--commons-surface); border: 1px solid var(--commons-border); border-radius: 12px; padding: 10px 12px;
+}
+.commons-pendingRow__email { flex: 1; min-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.commons-pendingRow__status { font-size: 12px; color: var(--commons-text-dim); }

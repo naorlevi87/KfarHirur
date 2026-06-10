@@ -6,11 +6,14 @@
 
 import './styles/commons-tokens.css';
 import './styles/CommonsLayout.css';
+import './pages/JoinInvitePage/join.css';
+import { useEffect, useState } from 'react';
 import { Navigate, Route, Routes, useParams } from 'react-router-dom';
 import { useAppContext } from '../app/appState/useAppContext.js';
 import { MembershipsProvider, useMemberships } from './commonsState/MembershipsContext.jsx';
 import { WorkspaceProvider, useWorkspace } from './commonsState/WorkspaceContext.jsx';
 import { resolveCommonsShellContent } from './resolveCommonsShellContent.js';
+import { myPendingInvites } from '../data/commons/memberQueries.js';
 import { CommonsLayout } from './CommonsLayout.jsx';
 import { WorkspacePicker } from './WorkspacePicker.jsx';
 import { NoAccessScreen } from './NoAccessScreen.jsx';
@@ -22,6 +25,7 @@ import { TaskFormPage } from './tasks/TaskFormPage.jsx';
 import { TaskViewPage } from './tasks/TaskViewPage.jsx';
 import { RolesPage } from './pages/RolesPage/RolesPage.jsx';
 import { MembersPage } from './pages/MembersPage/MembersPage.jsx';
+import { JoinInvitePage } from './pages/JoinInvitePage/JoinInvitePage.jsx';
 
 // `name` (the workspace) is shown when known: "בודק מה קורה ב<workspace>". Falls back to the
 // generic line at the memberships gate, where no specific workspace is in context yet.
@@ -36,12 +40,34 @@ function LoadingScreen({ name }) {
   );
 }
 
+// Pending project invitations the signed-in user can accept (surfaced even with no membership yet).
+function PendingInvites({ invites }) {
+  const { locale } = useAppContext();
+  const shell = resolveCommonsShellContent(locale);
+  return (
+    <div className="commons-root commons-center commons-join" dir={locale === 'he' ? 'rtl' : 'ltr'}>
+      <div className="commons-join__card">
+        <h1 className="commons-join__workspace">{shell.join.pendingTitle}</h1>
+        <ul className="commons-join__pending">
+          {invites.map(i => (
+            <li key={i.token}>
+              <a className="commons-btn commons-btn--primary" href={`/commons/${i.workspace_slug}/join/${i.token}`}>{i.workspace_name}</a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
 // /commons — decide where the user lands based on how many workspaces they belong to.
 function MembershipsGate() {
   const { loading, workspaces } = useMemberships();
+  const [invites, setInvites] = useState([]);
+  useEffect(() => { myPendingInvites().then(setInvites); }, []);
   if (loading) return <LoadingScreen />;
-  if (workspaces.length === 0) return <NoAccessScreen />;
-  if (workspaces.length === 1) return <Navigate to={`/commons/${workspaces[0].slug}`} replace />;
+  if (workspaces.length === 0) return invites.length > 0 ? <PendingInvites invites={invites} /> : <NoAccessScreen />;
+  if (workspaces.length === 1 && invites.length === 0) return <Navigate to={`/commons/${workspaces[0].slug}`} replace />;
   return <WorkspacePicker />;
 }
 
@@ -51,20 +77,27 @@ function WorkspaceGate() {
   const { loading, isMember } = useWorkspace();
   const { workspaces } = useMemberships();
   if (loading) return <LoadingScreen name={workspaces.find(w => w.slug === workspaceSlug)?.name} />;
-  if (!isMember) return <Navigate to="/commons" replace />;
   return (
     <Routes>
-      <Route element={<CommonsLayout />}>
-        <Route index element={<MyTasksPage />} />
-        <Route path="board" element={<BoardPage />} />
-        <Route path="board/:containerId" element={<AreaPage />} />
-        <Route path="overview" element={<OverviewPage />} />
-      </Route>
-      <Route path="task/new" element={<TaskFormPage mode="create" />} />
-      <Route path="task/:nodeId" element={<TaskViewPage />} />
-      <Route path="task/:nodeId/edit" element={<TaskFormPage mode="edit" />} />
-      <Route path="roles" element={<RolesPage />} />
-      <Route path="members" element={<MembersPage />} />
+      {/* Reachable by a not-yet-member (invited) user, so the join route comes before the gate. */}
+      <Route path="join/:token" element={<JoinInvitePage />} />
+      {isMember ? (
+        <>
+          <Route element={<CommonsLayout />}>
+            <Route index element={<MyTasksPage />} />
+            <Route path="board" element={<BoardPage />} />
+            <Route path="board/:containerId" element={<AreaPage />} />
+            <Route path="overview" element={<OverviewPage />} />
+          </Route>
+          <Route path="task/new" element={<TaskFormPage mode="create" />} />
+          <Route path="task/:nodeId" element={<TaskViewPage />} />
+          <Route path="task/:nodeId/edit" element={<TaskFormPage mode="edit" />} />
+          <Route path="roles" element={<RolesPage />} />
+          <Route path="members" element={<MembersPage />} />
+        </>
+      ) : (
+        <Route path="*" element={<Navigate to="/commons" replace />} />
+      )}
     </Routes>
   );
 }

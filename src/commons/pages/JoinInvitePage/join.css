@@ -1,0 +1,14 @@
+/* src/commons/pages/JoinInvitePage/join.css — invite acceptance + pending-invite surfacing. */
+.commons-join { padding: 24px; flex-direction: column; gap: 16px; }
+.commons-join__lead { color: var(--commons-text-dim); text-align: center; }
+.commons-join__card {
+  background: var(--commons-surface); border: 1px solid var(--commons-border);
+  border-radius: 18px; padding: 24px; width: min(420px, calc(100vw - 32px)); text-align: center;
+}
+.commons-join__to { color: var(--commons-text-dim); margin-bottom: 6px; }
+.commons-join__workspace { font-size: 24px; font-weight: 800; letter-spacing: -.02em; margin-bottom: 8px; }
+.commons-join__level { color: var(--commons-text-dim); margin-bottom: 20px; line-height: 1.5; }
+.commons-join__actions { display: flex; gap: 10px; }
+.commons-join__actions .commons-btn { flex: 1; padding: 13px; font-weight: 700; }
+.commons-join__pending { list-style: none; display: flex; flex-direction: column; gap: 10px; margin: 12px 0 0; padding: 0; }
+.commons-join__pending .commons-btn { width: 100%; padding: 13px; font-weight: 700; }
