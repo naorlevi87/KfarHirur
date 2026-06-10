@@ -54,11 +54,11 @@ export async function fetchRoster(workspaceId) {
   return data ?? [];
 }
 
-// The role names/colors attached to a membership.
+// The skills (roles) attached to a membership — id needed to match a task's required skill.
 export async function fetchMemberRoles(memberId) {
   const { data, error } = await commonsDb
     .from('member_roles')
-    .select('roles(name, color)')
+    .select('roles(id, name, color)')
     .eq('member_id', memberId);
   if (error) return [];
   return (data ?? []).map(r => r.roles).filter(Boolean);
