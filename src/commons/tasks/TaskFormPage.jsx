@@ -6,14 +6,17 @@
 
 import './taskScreens.css';
 import { motion } from 'motion/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAppContext } from '../../app/appState/useAppContext.js';
 import { useWorkspace } from '../commonsState/WorkspaceContext.jsx';
 import { useWorkspaceTree } from '../commonsState/useWorkspaceTree.js';
 import { fetchRoster } from '../../data/commons/workspaceQueries.js';
+import { fetchRoles } from '../../data/commons/roleQueries.js';
 import { resolveCommonsShellContent } from '../resolveCommonsShellContent.js';
 import { RecurrenceField } from './RecurrenceField.jsx';
+import { SkillSelect } from './SkillSelect.jsx';
+import { SelectField } from './SelectField.jsx';
 import { normalizeRule, computeFirstNextRun } from './recurrence.js';
 import { IconChevronStart } from '../icons.jsx';
 
@@ -72,12 +75,14 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
   const isFolder = kind === 'container';
 
   const [title, setTitle] = useState(node?.title ?? initialTitle ?? '');
-  const [parentId, setParentId] = useState(initialParent);
+  const parentId = initialParent; // fixed by where the task was opened (FAB/area/sub-task); no UI field
   const [description, setDescription] = useState(node?.description ?? '');
   const [ownerId, setOwnerId] = useState(node?.owner_id ?? '');
   const [due, setDue] = useState(toDateInput(node?.due_date));
   const [recurrence, setRecurrence] = useState(node?.recurrence ?? null);
   const [roster, setRoster] = useState([]);
+  const [roleIds, setRoleIds] = useState(node?.role_ids ?? []);
+  const [roles, setRoles] = useState([]);
 
   useEffect(() => {
     if (!workspace?.id) return;
@@ -86,7 +91,23 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
     return () => { cancelled = true; };
   }, [workspace?.id]);
 
-  const containers = tree.nodes.filter(n => n.kind === 'container' && n.id !== nodeId);
+  // A task with no required skills means "anyone" (כל עובד). We represent that in the picker as
+  // all skills checked, so a new task (or an "anyone" task) defaults to every skill selected.
+  const skillInited = useRef(false);
+  useEffect(() => {
+    if (!workspace?.id) return;
+    let cancelled = false;
+    fetchRoles(workspace.id).then(rs => {
+      if (cancelled) return;
+      setRoles(rs);
+      if (!skillInited.current && (node?.role_ids?.length ?? 0) === 0) {
+        setRoleIds(rs.map(r => r.id));
+        skillInited.current = true;
+      }
+    });
+    return () => { cancelled = true; };
+  }, [workspace?.id, node]);
+
   const heading = isFolder
     ? (editing ? f.editFolderTitle : f.newFolderTitle)
     : (editing ? f.editTaskTitle : f.newTaskTitle);
@@ -96,6 +117,9 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
     const name = title.trim();
     if (!name) return;
     const parent = parentId || null;
+    // All-selected or none-selected both mean "anyone" → store an empty set (future-proof: it
+    // stays open even when new skills are later added). A strict subset is the real restriction.
+    const persistRoleIds = (roleIds.length === 0 || roleIds.length === roles.length) ? [] : roleIds;
 
     if (editing) {
       const patch = { title: name, parent_id: parent };
@@ -104,6 +128,7 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
         const ruleChanged = JSON.stringify(rule) !== JSON.stringify(normalizeRule(node.recurrence ?? null));
         patch.description = description.trim() || null;
         patch.owner_id = ownerId || null;
+        patch.role_ids = persistRoleIds;
         patch.recurrence = rule;
         patch.due_date = rule ? null : (due ? new Date(`${due}T08:00:00`).toISOString() : null);
         patch.next_run = !rule ? null : (!ruleChanged && node.next_run ? node.next_run : computeFirstNextRun(rule));
@@ -117,6 +142,7 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
       await tree.saveTask(created.id, {
         description: description.trim() || null,
         owner_id: ownerId || null,
+        role_ids: persistRoleIds,
         recurrence: rule,
         due_date: rule ? null : (due ? new Date(`${due}T08:00:00`).toISOString() : null),
         next_run: rule ? computeFirstNextRun(rule) : null,
@@ -146,14 +172,6 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
           <input className="commons-field__input" value={title} onChange={e => setTitle(e.target.value)} autoFocus />
         </label>
 
-        <label className="commons-field">
-          <span className="commons-field__label">{f.location}</span>
-          <select className="commons-field__input" value={parentId} onChange={e => setParentId(e.target.value)}>
-            <option value="">{f.locationRoot}</option>
-            {containers.map(ct => <option key={ct.id} value={ct.id}>{ct.title}</option>)}
-          </select>
-        </label>
-
         {!isFolder && (
           <>
             <label className="commons-field">
@@ -166,11 +184,22 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
             </label>
             <label className="commons-field">
               <span className="commons-field__label">{f.owner}</span>
-              <select className="commons-field__input" value={ownerId} onChange={e => setOwnerId(e.target.value)}>
-                <option value="">{f.unassigned}</option>
-                {roster.map(mb => <option key={mb.id} value={mb.id}>{mb.display_name ?? '—'}</option>)}
-              </select>
+              <SelectField
+                ariaLabel={f.owner}
+                value={ownerId}
+                onChange={setOwnerId}
+                placeholder={f.unassigned}
+                options={[{ value: '', label: f.unassigned }, ...roster.map(mb => ({ value: mb.id, label: mb.display_name ?? '—' }))]}
+              />
             </label>
+            <div className="commons-field">
+              <span className="commons-field__label">{f.skill}</span>
+              {roles.length === 0 ? (
+                <span className="commons-field__hint">{f.skillAnyone}</span>
+              ) : (
+                <SkillSelect roles={roles} value={roleIds} onChange={setRoleIds} anyoneLabel={f.skillAnyone} />
+              )}
+            </div>
             <div className="commons-field">
               <span className="commons-field__label">{f.scheduling}</span>
               <div className="commons-recur__freqs" role="group" aria-label={f.scheduling}>

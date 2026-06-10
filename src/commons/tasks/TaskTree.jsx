@@ -95,7 +95,7 @@ function NodeRow({ node, depth, ctx }) {
             {[...(owner.display_name ?? '?')][0]}
           </span>
         ) : (
-          !isTemplate && (
+          !isTemplate && (!(node.role_ids?.length) || node.role_ids.some(id => ctx.myRoleIds?.has(id))) && (
             <button type="button" className="commons-claim" aria-label={t.claimAria} onClick={() => ctx.onClaim(node.id)}>
               <img src={raiseHand} alt="" className="commons-claim__icon" /> {t.claim}
             </button>
@@ -106,7 +106,7 @@ function NodeRow({ node, depth, ctx }) {
   );
 }
 
-export function TaskTree({ tree, rootId = 'root', rootKinds, rosterById, t, locale, onOpenTask }) {
+export function TaskTree({ tree, rootId = 'root', rootKinds, rosterById, myRoleIds, t, locale, onOpenTask }) {
   const [expanded, setExpanded] = useState(() => new Set());
   const all = tree.byParent.get(rootId) ?? [];
   const roots = rootKinds ? all.filter(n => rootKinds.includes(n.kind)) : all;
@@ -129,7 +129,7 @@ export function TaskTree({ tree, rootId = 'root', rootKinds, rosterById, t, loca
   }
 
   const ctx = {
-    byParent: tree.byParent, rosterById, t, locale, expanded,
+    byParent: tree.byParent, rosterById, myRoleIds, t, locale, expanded,
     onToggleExpand, onToggleDone: tree.toggleDone, onOpenTask, onClaim: tree.claim,
     hasChildren: tree.hasChildren, progress: tree.progress,
   };

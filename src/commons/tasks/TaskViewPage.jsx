@@ -11,6 +11,7 @@ import { useAppContext } from '../../app/appState/useAppContext.js';
 import { useWorkspace } from '../commonsState/WorkspaceContext.jsx';
 import { useWorkspaceTree } from '../commonsState/useWorkspaceTree.js';
 import { fetchRoster } from '../../data/commons/workspaceQueries.js';
+import { fetchRoles } from '../../data/commons/roleQueries.js';
 import { resolveCommonsShellContent } from '../resolveCommonsShellContent.js';
 import { buildRecurrenceSummary } from './recurrence.js';
 import { ConfirmDialog } from '../ConfirmDialog.jsx';
@@ -25,7 +26,7 @@ function formatDue(due, locale) {
 
 export function TaskViewPage() {
   const { locale } = useAppContext();
-  const { workspace, permissionLevel } = useWorkspace();
+  const { workspace, permissionLevel, roles: myRoles } = useWorkspace();
   const { workspaceSlug, nodeId } = useParams();
   const navigate = useNavigate();
   const shell = resolveCommonsShellContent(locale);
@@ -34,12 +35,19 @@ export function TaskViewPage() {
   const node = tree.nodes.find(n => n.id === nodeId);
 
   const [roster, setRoster] = useState([]);
+  const [roles, setRoles] = useState([]);
   const [adding, setAdding] = useState('');
   const [confirm, setConfirm] = useState(false);
   useEffect(() => {
     if (!workspace?.id) return;
     let cancelled = false;
     fetchRoster(workspace.id).then(r => { if (!cancelled) setRoster(r); });
+    return () => { cancelled = true; };
+  }, [workspace?.id]);
+  useEffect(() => {
+    if (!workspace?.id) return;
+    let cancelled = false;
+    fetchRoles(workspace.id).then(rs => { if (!cancelled) setRoles(rs); });
     return () => { cancelled = true; };
   }, [workspace?.id]);
 
@@ -58,6 +66,8 @@ export function TaskViewPage() {
 
   const owner = node.owner_id ? roster.find(m => m.id === node.owner_id) : null;
   const ownerName = owner?.display_name ?? null;
+  const requiredRoles = (node.role_ids ?? []).map(id => roles.find(r => r.id === id)).filter(Boolean);
+  const canClaim = !(node.role_ids?.length) || (myRoles ?? []).some(r => node.role_ids.includes(r.id));
   const canEdit = node.kind === 'container' ? permissionLevel === 'admin' : ['admin', 'manager'].includes(permissionLevel);
   const done = node.status === 'done';
   const missed = node.status === 'missed';
@@ -111,6 +121,11 @@ export function TaskViewPage() {
           {node.due_date && (
             <span className="commons-view__chip"><IconClock size={14} /> {formatDue(node.due_date, locale)}</span>
           )}
+          {requiredRoles.map(role => (
+            <span key={role.id} className="commons-view__chip commons-view__chip--skill" data-role-color={role.color ?? ''}>
+              {role.name}
+            </span>
+          ))}
         </div>
 
         <div className="commons-view__block">
@@ -118,7 +133,7 @@ export function TaskViewPage() {
           <div className="commons-view__owner">
             <span className="commons-view__avatar">{ownerName ? [...ownerName][0] : '·'}</span>
             <span>{ownerName ?? v.unassigned}</span>
-            {!owner && node.kind === 'task' && (
+            {!owner && node.kind === 'task' && canClaim && (
               <button type="button" className="commons-claim commons-claim--lg" aria-label={shell.tasks.claimAria}
                 onClick={() => tree.claim(node.id)}>
                 <img src={raiseHand} alt="" className="commons-claim__icon" /> {shell.tasks.claim}

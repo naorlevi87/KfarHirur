@@ -19,7 +19,7 @@ import { IconChevronStart } from '../../icons.jsx';
 
 export function AreaPage() {
   const { locale } = useAppContext();
-  const { workspace, permissionLevel } = useWorkspace();
+  const { workspace, permissionLevel, roles: myRoles } = useWorkspace();
   const { workspaceSlug, containerId } = useParams();
   const navigate = useNavigate();
   const shell = resolveCommonsShellContent(locale);
@@ -34,6 +34,7 @@ export function AreaPage() {
     return () => { cancelled = true; };
   }, [workspace?.id]);
   const rosterById = useMemo(() => new Map(roster.map(m => [m.id, m])), [roster]);
+  const myRoleIds = useMemo(() => new Set((myRoles ?? []).map(r => r.id)), [myRoles]);
 
   const isRoot = containerId === 'root';
   const area = isRoot ? null : tree.nodes.find(n => n.id === containerId);
@@ -59,6 +60,7 @@ export function AreaPage() {
             rootId={containerId}
             rootKinds={isRoot ? ['task'] : undefined}
             rosterById={rosterById}
+            myRoleIds={myRoleIds}
             t={shell.tasks}
             locale={locale}
             onOpenTask={(id) => navigate(`/commons/${workspaceSlug}/task/${id}`)}
