@@ -60,9 +60,14 @@
 /* Invite header button (icon + label). */
 .commons-screen__edit { display: inline-flex; align-items: center; gap: 6px; }
 
-/* Invite modal card (sits on the shared .commons-sheetRoot / .commons-sheetBackdrop). */
+/* Invite modal (sits on the shared .commons-sheetRoot / .commons-sheetBackdrop). The centering layer
+   lets pointer events fall through to the backdrop; the card itself owns its (Framer) transform —
+   centering must NOT use transform, or the entrance animation overrides it. */
+.commons-inviteCenter {
+  position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; pointer-events: none;
+}
 .commons-inviteCard {
-  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  pointer-events: auto;
   width: min(440px, calc(100vw - 32px)); max-height: calc(100dvh - 48px); overflow: auto;
   background: var(--commons-surface); border: 1px solid var(--commons-border); border-radius: 18px; padding: 20px;
 }

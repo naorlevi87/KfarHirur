@@ -7,7 +7,9 @@ import { getText } from '../../utils/content/getText.js';
 import { EmailAuthForm } from './EmailAuthForm.jsx';
 import './AuthModal.css';
 
-export function AuthModal({ isOpen, onClose, copy }) {
+// `redirectTo` is where the OAuth round-trip returns. Defaults to the site root; callers like the
+// invite-join screen pass their own URL so the user lands back where they started, not on home.
+export function AuthModal({ isOpen, onClose, copy, redirectTo = window.location.origin }) {
   const panelRef = useRef(null);
 
   useEffect(() => {
@@ -25,14 +27,14 @@ export function AuthModal({ isOpen, onClose, copy }) {
   async function loginWithGoogle() {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo },
     });
   }
 
   async function loginWithFacebook() {
     await supabase.auth.signInWithOAuth({
       provider: 'facebook',
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo },
     });
   }
 

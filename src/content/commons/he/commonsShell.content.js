@@ -97,6 +97,7 @@ export const commonsShellContent = {
     pendingTitle: 'הזמנות ממתינות',
     pendingStatus: 'ממתינה',
     resend: 'שליחה מחדש',
+    resent: 'נשלח ✓',
     cancelInvite: 'ביטול',
     close: 'סגירה',
   },

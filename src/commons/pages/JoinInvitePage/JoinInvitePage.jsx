@@ -51,7 +51,7 @@ export function JoinInvitePage() {
     return (
       <div className="commons-root commons-center commons-join" dir={locale === 'he' ? 'rtl' : 'ltr'}>
         <p className="commons-join__lead">{j.signInFirst}</p>
-        <AuthModal isOpen onClose={() => {}} copy={authCopy} />
+        <AuthModal isOpen onClose={() => {}} copy={authCopy} redirectTo={window.location.href} />
       </div>
     );
   }

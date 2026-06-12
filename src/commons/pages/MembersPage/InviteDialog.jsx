@@ -20,12 +20,9 @@ export function InviteDialog({ workspace, locale, m, levelLabel, skillOptions, o
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => {
-    function onKey(e) { if (e.key === 'Escape') onClose(); }
-    document.addEventListener('keydown', onKey);
-    ref.current?.querySelector('input')?.focus();
-    return () => document.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  // Intentionally NOT closable by backdrop click or Escape — only the explicit close button exits,
+  // so a stray tap (or finding an email to paste) can't discard a half-filled invite.
+  useEffect(() => { ref.current?.querySelector('input')?.focus(); }, []);
 
   async function submit(e) {
     e.preventDefault();
@@ -51,11 +48,12 @@ export function InviteDialog({ workspace, locale, m, levelLabel, skillOptions, o
 
   return (
     <div className="commons-sheetRoot" dir={locale === 'he' ? 'rtl' : 'ltr'}>
-      <div className="commons-sheetBackdrop" role="presentation" aria-hidden="true" onClick={onClose} />
-      <motion.div className="commons-inviteCard" ref={ref} role="dialog" aria-modal="true" aria-label={m.inviteTitle}
-        initial={{ opacity: 0, y: 16, scale: .98 }} animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ type: 'spring', stiffness: 260, damping: 26 }}>
-        <h2 className="commons-inviteCard__title">{m.inviteTitle}</h2>
+      <div className="commons-sheetBackdrop" aria-hidden="true" />
+      <div className="commons-inviteCenter">
+        <motion.div className="commons-inviteCard" ref={ref} role="dialog" aria-modal="true" aria-label={m.inviteTitle}
+          initial={{ opacity: 0, y: 16, scale: .98 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ type: 'spring', stiffness: 260, damping: 26 }}>
+          <h2 className="commons-inviteCard__title">{m.inviteTitle}</h2>
 
         <form className="commons-invite" onSubmit={submit}>
           <label className="commons-field">
@@ -90,8 +88,9 @@ export function InviteDialog({ workspace, locale, m, levelLabel, skillOptions, o
           {notice && <p className="commons-invite__notice" role="status">{notice}</p>}
         </form>
 
-        <button type="button" className="commons-inviteCard__close" onClick={onClose}>{m.close}</button>
-      </motion.div>
+          <button type="button" className="commons-inviteCard__close" onClick={onClose}>{m.close}</button>
+        </motion.div>
+      </div>
     </div>
   );
 }

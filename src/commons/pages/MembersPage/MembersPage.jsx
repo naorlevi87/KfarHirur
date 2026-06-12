@@ -43,6 +43,7 @@ export function MembersPage() {
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
   const [inviting, setInviting] = useState(false);
+  const [resentId, setResentId] = useState(null);
   const [nameDraft, setNameDraft] = useState({ firstName: '', lastName: '' });
 
   function openEdit(member) {
@@ -70,6 +71,8 @@ export function MembersPage() {
         workspaceName: workspace.name, origin: window.location.origin, slug: workspace.slug,
       });
     } catch { /* email best-effort; the link still works */ }
+    setResentId(inv.id);
+    setTimeout(() => setResentId(id => (id === inv.id ? null : id)), 2500);
   }
   async function onCancelInvite(inv) {
     await cancelInvite(inv.id);
@@ -206,7 +209,9 @@ export function MembersPage() {
                 <li key={inv.id} className="commons-pendingRow">
                   <span className="commons-pendingRow__email">{inv.email}</span>
                   <span className="commons-pendingRow__status">{m.pendingStatus}</span>
-                  <button type="button" className="commons-memberRow__btn" onClick={() => onResendInvite(inv)}>{m.resend}</button>
+                  <button type="button" className="commons-memberRow__btn" onClick={() => onResendInvite(inv)} disabled={resentId === inv.id}>
+                    {resentId === inv.id ? m.resent : m.resend}
+                  </button>
                   <button type="button" className="commons-memberRow__btn commons-memberRow__btn--danger" onClick={() => onCancelInvite(inv)}>{m.cancelInvite}</button>
                 </li>
               ))}

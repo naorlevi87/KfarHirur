@@ -96,6 +96,7 @@ export const commonsShellContent = {
     pendingTitle: 'Pending invites',
     pendingStatus: 'pending',
     resend: 'Resend',
+    resent: 'Sent ✓',
     cancelInvite: 'Cancel',
     close: 'Close',
   },
