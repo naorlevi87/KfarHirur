@@ -8,14 +8,19 @@ import { buildDbOverlay } from '../../data/pageContent/resolvePageContent.js';
 
 export function useHomePageData() {
   const { locale, mode } = useAppContext();
-  const [dbRows, setDbRows] = useState(null); // null = loading, [] = loaded
+  // forLocale tags which locale the rows belong to, so loading is derived (no
+  // synchronous reset needed) and a stale in-flight fetch can't overwrite newer data.
+  const [state, setState] = useState({ rows: null, forLocale: null });
 
   useEffect(() => {
-    setDbRows(null);
-    fetchPageContent('home', locale).then(setDbRows).catch(() => setDbRows([]));
+    let active = true;
+    fetchPageContent('home', locale)
+      .then(rows => { if (active) setState({ rows, forLocale: locale }); })
+      .catch(() => { if (active) setState({ rows: [], forLocale: locale }); });
+    return () => { active = false; };
   }, [locale]);
 
-  const loading = dbRows === null;
-  const data    = loading ? null : buildDbOverlay(dbRows, mode);
+  const loading = state.forLocale !== locale;
+  const data    = loading ? null : buildDbOverlay(state.rows, mode);
   return { data, loading };
 }

@@ -33,7 +33,7 @@ export function AutoGrowTextarea({ value, onChange, className, minRows = 3, ...r
     const d = dragRef.current;
     if (!d || d.pointerId !== e.pointerId) return;
     dragRef.current = null;
-    try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {}
+    try { e.currentTarget.releasePointerCapture(e.pointerId); } catch { /* capture already released */ }
   }
 
   return (

@@ -31,6 +31,18 @@ These are the source of truth for architecture and workflow decisions.
 
 Before any creative work — new features, new components, new behavior, or UI changes — invoke the `brainstorming` skill automatically. Do not wait to be asked.
 
+## שיעור נהלי עבודה קצר — Prompt-quality coaching
+
+When a prompt is non-ideal — ambiguous, under-specified, internally contradictory, or so unclear that understanding the real intent required heavy inference — **stop before acting** and run a short "שיעור נהלי עבודה קצר":
+
+1. **Name the gap** — state specifically what was unclear or what made the request expensive to interpret (e.g. "it wasn't clear whether X meant A or B", "the scope wasn't bounded", "there was no acceptance criterion").
+2. **Ask** — ask the minimum clarifying question(s) needed to act correctly.
+3. **Teach** — briefly explain how to phrase it better next time, and show a concrete rewritten version of *their* prompt that would have been unambiguous.
+
+Then proceed once it's clear. Keep the lesson short and constructive — this is coaching, not a lecture.
+
+**When NOT to do this:** the prompt is already clear enough to act correctly; the ambiguity is trivial and a sensible default exists (pick it, state the assumption, move on); or the user has signalled urgency. Do not gate simple, unambiguous requests behind a lesson. The goal is fewer wasted tokens over time, not friction on every turn.
+
 ## Design taste
 
 All visual/UI work in this project is governed by the `design-taste-frontend` skill (`~/.claude/skills/taste-skill/SKILL.md`). Apply it automatically on every conversation — do not wait to be asked.
@@ -84,6 +96,12 @@ npm run build     # Production build
 npm run preview   # Preview production build locally
 npm run lint      # Run ESLint
 ```
+
+## בדיקת ספק / `/spec-audit` — Spec-conformance & consistency audit
+
+When the user types **`/spec-audit`** (optionally with a scope, e.g. `/spec-audit commons`) or says **"בדיקת ספק"** / **"ביקורת ספק"** / **"ביקורת קוד"**, run the audit defined in `.claude/commands/spec-audit.md`. (The older "ביקורת קוד" code-review protocol is folded into this single command — there is no separate code-review command.)
+
+It is a standalone, on-demand audit — distinct from נקיון סוף יום. Where end-of-day syncs *today's* work, `/spec-audit` takes the whole system (or a named scope) and checks: (1) the spec library itself for obsolete/contradicting docs, (2) code-vs-spec conformance, (3) a **full external code review** — bugs/correctness, duplication, workflow correctness, security, accessibility (IS 5568), privacy, and project-standard violations (this folds in the **ביקורת קוד** protocol), (4) doc accuracy. It fixes unambiguous issues inline and reports anything needing a decision. It never deletes a spec doc on its own.
 
 ## נקיון סוף יום — End-of-day cleanup command
 

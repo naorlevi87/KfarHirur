@@ -109,7 +109,7 @@ export function AdminItemPage() {
         setForm(loadedForm);
         save.setBaseline(loadedForm);
       })
-      .catch(err => save.clearError()) // surface via useSave's error
+      .catch(() => save.clearError()) // surface via useSave's error
       .finally(() => setLoading(false));
   }, [isNew, slug]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -146,7 +146,7 @@ export function AdminItemPage() {
     try {
       await deleteItem(itemId);
       navigate('/admin/timeline', { replace: true });
-    } catch (err) {
+    } catch {
       setDeleting(false);
     }
   }

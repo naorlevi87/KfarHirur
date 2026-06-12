@@ -93,6 +93,8 @@ src/
       LoginPage.jsx
     privacy/
       PrivacyPage.jsx              — static privacy policy (Israeli privacy law compliance)
+    terms/
+      TermsPage.jsx                — static terms of service (Israeli law; used by OAuth consent screens)
     profile/
       ProfilePage.jsx              — display name + avatar editing
       ProfilePage.css
@@ -197,6 +199,7 @@ supabase/                            — Supabase config / migrations (if any)
 /join-team                   → JoinTeamPage           (public)
 /login                       → LoginPage              (no MainLayout)
 /privacy                     → PrivacyPage            (no MainLayout — static, required by Israeli privacy law)
+/terms                       → TermsPage              (no MainLayout — static, paired with /privacy for OAuth consent screens)
 /profile                     → ProfilePage            (ProtectedRoute: any authenticated user, under MainLayout)
 /admin                       → AdminDashboardPage     (ProtectedRoute: admin|editor, under MainLayout)
 /admin/users                 → AdminUsersPage         (ProtectedRoute: admin|editor)
@@ -230,6 +233,13 @@ supabase/                            — Supabase config / migrations (if any)
 - Stored as `SUPABASE_SERVICE_ROLE_KEY` in `.env.local`
 - Used only in local scripts (never exposed to browser, never committed to git)
 - Required for DB writes that bypass RLS (seeding, admin scripting)
+
+### Account deletion (privacy compliance)
+Users can permanently delete their account, per the Israeli Privacy Protection Law (חוק הגנת הפרטיות).
+The `delete-account` Edge Function (service role) removes the user's `auth.users`, `user_profiles`, and
+`user_roles` rows, deletes the avatar file under `avatars/{userId}/`, and nullifies
+`page_content.updated_by` (audit rows are kept; the user reference is cleared). FK cascades from
+`auth.users` enforce the row deletions.
 
 ---
 
@@ -399,7 +409,43 @@ Admin CSS uses its own token set (`--color-bg`, `--color-accent`, etc.) that doe
 
 ---
 
-## 13. Layer Ownership
+## 13. OAuth Consent Screen & Legal Identity
+
+**Canonical facts for any OAuth provider setup** (Google Cloud Console, Meta for Developers, Apple, etc.). When onboarding a new provider, copy these values into the provider's consent/app settings — do not invent new values.
+
+### Company identity
+| Field | Value |
+|---|---|
+| App name (display) | `כפר הירור` |
+| Legal entity | `כפר הירעור בע"מ` (ח.פ 515647725) |
+| Registered address | התנופה 7, תל אביב יפו |
+| Primary domain | `kfarhirur.com` |
+| Support email (user-facing) | `office@jozveloz.com` |
+| Developer/owner email | `naorlevi87@gmail.com` |
+
+### Legal URLs (live)
+| URL | Purpose |
+|---|---|
+| `https://kfarhirur.com/privacy` | Privacy policy — required by Israeli privacy law; required by every OAuth consent screen |
+| `https://kfarhirur.com/terms` | Terms of service — required by some OAuth providers and for Google app verification |
+| `https://kfarhirur.com` | Application home page (consent screen "Home page" field) |
+
+### Authorized domains (for OAuth consent screens)
+- `kfarhirur.com`
+
+### OAuth redirect URIs currently in use
+- Supabase callback: `https://kqlfvwlzayinngrgafec.supabase.co/auth/v1/callback`
+- Local dev: `http://localhost:5173` (add per provider when testing locally)
+
+### Rules
+- **Never fork these values into provider-specific copies** — if the company address changes, this section is the single place to update
+- **Changes to `/privacy` or `/terms` content** must keep the URLs stable — providers cache and sometimes re-verify these
+- **When Google/Facebook/etc. asks for a logo** — upload the same site logo everywhere, no per-provider variants
+- Support email shown to end users is always `office@jozveloz.com`, not a personal Gmail
+
+---
+
+## 14. Layer Ownership
 
 | Layer | Owns |
 |---|---|
@@ -410,7 +456,7 @@ Admin CSS uses its own token set (`--color-bg`, `--color-accent`, etc.) that doe
 
 ---
 
-## 14. Styling Rules
+## 15. Styling Rules
 
 - `globals.css` — tokens, layout primitives, tiny shared elements only
 - Large self-contained components: own CSS file in `styles/app/`, imported directly by the component
@@ -423,7 +469,7 @@ Admin CSS uses its own token set (`--color-bg`, `--color-accent`, etc.) that doe
 
 ---
 
-## 15. Non-Negotiable Rules
+## 16. Non-Negotiable Rules
 
 1. Root structure is fixed: `App -> AppProviders -> MainLayout -> CurrentPage`
 2. Exactly **one root layout**
@@ -445,7 +491,7 @@ Admin CSS uses its own token set (`--color-bg`, `--color-accent`, etc.) that doe
 
 ---
 
-## 16. Commons Engine (separate module)
+## 17. Commons Engine (separate module)
 
 The Community Commons Engine is a self-contained module at `src/commons/`, mounted at `/commons`,
 sharing only auth + the Supabase client + deploy with the site. It has its own `commons` Postgres

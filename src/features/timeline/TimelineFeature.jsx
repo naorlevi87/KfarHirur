@@ -82,7 +82,7 @@ export function TimelineFeature({ initialSlug = null }) {
       worldY.set(y);
       worldScale.set(scale);
       setCurrentScale(scale);    // eslint-disable-line react-hooks/set-state-in-effect
-      setIsEntering(false);      // eslint-disable-line react-hooks/set-state-in-effect
+      setIsEntering(false);       
     } else {
       const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       const { scale: fitScale, x: fitX, y: fitY } = fitPathView(vpW, vpH);
@@ -91,8 +91,8 @@ export function TimelineFeature({ initialSlug = null }) {
         worldX.set(fitX);
         worldY.set(fitY);
         worldScale.set(fitScale);
-        setCurrentScale(fitScale); // eslint-disable-line react-hooks/set-state-in-effect
-        setIsEntering(false);      // eslint-disable-line react-hooks/set-state-in-effect
+        setCurrentScale(fitScale);  
+        setIsEntering(false);       
       } else {
         // Entrance: snap to entry scale, then spring into fit view.
         const entryX = (vpW - PATH_BBOX.minX) / 2;
@@ -100,11 +100,11 @@ export function TimelineFeature({ initialSlug = null }) {
         worldX.set(entryX);
         worldY.set(entryY);
         worldScale.set(ENTRY_SCALE);
-        setCurrentScale(ENTRY_SCALE); // eslint-disable-line react-hooks/set-state-in-effect
+        setCurrentScale(ENTRY_SCALE);  
         animate(worldScale, fitScale, SPRING_ENTER);
         animate(worldX,     fitX,     SPRING_ENTER);
         animate(worldY,     fitY,     SPRING_ENTER);
-        setIsEntering(true); // eslint-disable-line react-hooks/set-state-in-effect
+        setIsEntering(true);  
         // Clear entering flag after animation completes so nodes become interactive.
         // 1800 = DRAW_DURATION, 200 = NODE_APPEAR_DUR, 200 = buffer
         setTimeout(() => setIsEntering(false), 1800 + 200 + 200);

@@ -1,0 +1,54 @@
+/* src/pages/terms/TermsPage.css */
+/* תנאי שימוש — דף סטטי קריא, זהה במבנה ל-PrivacyPage. */
+
+.terms-page {
+  padding: 3rem 1.25rem 5rem;
+}
+
+.terms-content {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.terms-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0 0 0.4rem;
+}
+
+.terms-updated {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin: 0 0 2.5rem;
+}
+
+.terms-section {
+  margin-bottom: 2rem;
+}
+
+.terms-section h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 0.6rem;
+}
+
+.terms-section p,
+.terms-section li {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  margin: 0 0 0.5rem;
+}
+
+.terms-section ul {
+  padding-inline-start: 1.4rem;
+  margin: 0 0 0.5rem;
+}
+
+.terms-section a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

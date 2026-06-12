@@ -22,17 +22,21 @@ const CONFIG = {
 
 export function useKenZeOvedPageData() {
   const { locale, mode } = useAppContext();
-  const [dbRows, setDbRows] = useState(null); // null = loading
+  // forLocale tags which locale the rows belong to, so loading is derived (no
+  // synchronous reset needed) and a stale in-flight fetch can't overwrite newer data.
+  const [state, setState] = useState({ rows: null, forLocale: null });
 
   useEffect(() => {
-    setDbRows(null);
-    fetchPageContent('kenZeOved', locale).then(setDbRows).catch(() => setDbRows([]));
+    let active = true;
+    fetchPageContent('kenZeOved', locale)
+      .then(rows => { if (active) setState({ rows, forLocale: locale }); })
+      .catch(() => { if (active) setState({ rows: [], forLocale: locale }); });
+    return () => { active = false; };
   }, [locale]);
 
-  const loading = dbRows === null;
-  if (loading) return { loading: true, data: null };
+  if (state.forLocale !== locale) return { loading: true, data: null };
 
-  const db = buildDbOverlay(dbRows, mode);
+  const db = buildDbOverlay(state.rows, mode);
 
   const data = {
     hero:     db.hero     ?? {},

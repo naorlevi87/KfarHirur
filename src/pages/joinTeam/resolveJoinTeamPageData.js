@@ -33,16 +33,21 @@ function resolveSection(raw) {
 
 export function useJoinTeamPageData() {
   const { locale, mode } = useAppContext();
-  const [dbRows, setDbRows] = useState(null);
+  // forLocale tags which locale the rows belong to, so loading is derived (no
+  // synchronous reset needed) and a stale in-flight fetch can't overwrite newer data.
+  const [state, setState] = useState({ rows: null, forLocale: null });
 
   useEffect(() => {
-    setDbRows(null);
-    fetchPageContent('joinTeam', locale).then(setDbRows).catch(() => setDbRows([]));
+    let active = true;
+    fetchPageContent('joinTeam', locale)
+      .then(rows => { if (active) setState({ rows, forLocale: locale }); })
+      .catch(() => { if (active) setState({ rows: [], forLocale: locale }); });
+    return () => { active = false; };
   }, [locale]);
 
-  if (dbRows === null) return { loading: true, data: null };
+  if (state.forLocale !== locale) return { loading: true, data: null };
 
-  const db = buildDbOverlay(dbRows, mode);
+  const db = buildDbOverlay(state.rows, mode);
 
   return {
     loading: false,

@@ -4,7 +4,7 @@
 // In autoplay mode the native controls are hidden and a custom mute toggle is overlaid,
 // so the timeline / extra buttons under the player are gone but sound is still reachable.
 
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 
 function extractYouTubeId(url) {
   const patterns = [
@@ -61,8 +61,12 @@ export function VideoEmbed({ value, className = '', autoplay = false }) {
   const videoRef = useRef(null);
   const [muted, setMuted] = useState(true);
 
-  // Reset mute state if the source changes
-  useEffect(() => { setMuted(true); }, [value?.url]);
+  // Reset mute state when the source changes (React's render-time reset pattern).
+  const [lastUrl, setLastUrl] = useState(value?.url);
+  if (value?.url !== lastUrl) {
+    setLastUrl(value?.url);
+    setMuted(true);
+  }
 
   if (!value?.url) return null;
 

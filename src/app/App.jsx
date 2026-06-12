@@ -13,6 +13,7 @@ import { TimelinePage } from '../pages/timeline/TimelinePage.jsx';
 import { LoginPage } from '../pages/login/LoginPage.jsx';
 import { ProfilePage } from '../pages/profile/ProfilePage.jsx';
 import { PrivacyPage } from '../pages/privacy/PrivacyPage.jsx';
+import { TermsPage } from '../pages/terms/TermsPage.jsx';
 import { AdminDashboardPage } from '../pages/admin/AdminDashboardPage.jsx';
 import { AdminListPage } from '../pages/admin/AdminListPage.jsx';
 import { AdminItemPage } from '../pages/admin/AdminItemPage.jsx';
@@ -41,6 +42,7 @@ export function App() {
           {/* Auth & static */}
           <Route path="login" element={<LoginPage />} />
           <Route path="privacy" element={<PrivacyPage />} />
+          <Route path="terms" element={<TermsPage />} />
 
           {/* Protected — any authenticated user */}
           <Route element={<ProtectedRoute allowedRoles={[]} />}>

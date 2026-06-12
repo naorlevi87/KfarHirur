@@ -20,6 +20,13 @@ tools/
 # Non-code project files (design, docs, media — not tracked in git)
 /notcode
 
+# Supabase CLI scratch
+supabase/.temp/
+supabase/.branches/
+
+# Env files (secrets) — .env.local already covered by *.local
+.env
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

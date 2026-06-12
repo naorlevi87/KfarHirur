@@ -170,12 +170,13 @@ function VideoEditor({ value, setValue }) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
 
-  // Restore YouTube URL input when switching back to youtube tab
-  useEffect(() => {
-    if (tab === 'youtube' && value?.type === 'youtube') {
+  // Restore the saved YouTube URL when switching back to the youtube tab.
+  function selectTab(t) {
+    setTab(t);
+    if (t === 'youtube' && value?.type === 'youtube') {
       setUrlInput(value.url ?? '');
     }
-  }, [tab]);
+  }
 
   const embedUrl = tab === 'youtube' ? toYouTubeEmbed(urlInput) : null;
 
@@ -212,7 +213,7 @@ function VideoEditor({ value, setValue }) {
           <button
             key={t}
             className={`mgm-video__tab${tab === t ? ' mgm-video__tab--active' : ''}`}
-            onClick={() => setTab(t)}
+            onClick={() => selectTab(t)}
           >
             {t === 'youtube' ? 'YouTube' : 'העלאה ישירה'}
           </button>
@@ -276,15 +277,20 @@ export function MediaGalleryModal({ open, title, type, value, onSave, onClose })
   // Local working copy — discarded on cancel, committed on save
   const [localValue, setLocalValue] = useState(value);
 
-  // Sync local state when modal opens with new value
+  // Seed the working copy at the moment the modal opens (render-time reset, not in an effect).
+  const [wasOpen, setWasOpen] = useState(false);
+  if (open && !wasOpen) {
+    setWasOpen(true);
+    setLocalValue(type === 'gallery' ? (Array.isArray(value) ? [...value] : []) : value ?? (type === 'single' ? '' : null));
+  } else if (!open && wasOpen) {
+    setWasOpen(false);
+  }
+
+  // Imperatively sync the native <dialog> open/closed state to the `open` prop.
   useEffect(() => {
-    if (open) {
-      setLocalValue(type === 'gallery' ? (Array.isArray(value) ? [...value] : []) : value ?? (type === 'single' ? '' : null));
-      dialogRef.current?.showModal();
-    } else {
-      dialogRef.current?.close();
-    }
-  }, [open, value, type]);
+    if (open) dialogRef.current?.showModal();
+    else dialogRef.current?.close();
+  }, [open]);
 
   // Close on backdrop click
   function handleDialogClick(e) {
