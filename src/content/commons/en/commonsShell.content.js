@@ -109,6 +109,7 @@ export const commonsShellContent = {
     signInFirst: 'Sign in or sign up to accept.',
     notFound: 'Invite not found or already handled.',
     pendingTitle: "You're invited",
+    yourWorkspaces: 'Your workspaces',
     loading: 'One sec…',
   },
   fab: { newTaskAria: 'New task' },

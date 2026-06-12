@@ -8,7 +8,7 @@ import './styles/commons-tokens.css';
 import './styles/CommonsLayout.css';
 import './pages/JoinInvitePage/join.css';
 import { useEffect, useState } from 'react';
-import { Navigate, Route, Routes, useParams } from 'react-router-dom';
+import { Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom';
 import { useAppContext } from '../app/appState/useAppContext.js';
 import { MembershipsProvider, useMemberships } from './commonsState/MembershipsContext.jsx';
 import { WorkspaceProvider, useWorkspace } from './commonsState/WorkspaceContext.jsx';
@@ -40,10 +40,13 @@ function LoadingScreen({ name }) {
   );
 }
 
-// Pending project invitations the signed-in user can accept (surfaced even with no membership yet).
-function PendingInvites({ invites }) {
+// Pending project invitations the signed-in user can accept — surfaced at /commons no matter how
+// many workspaces they already belong to, so the flow works even if they never click the email link.
+// Their existing workspaces are listed below so they can still enter one.
+function PendingInvites({ invites, workspaces }) {
   const { locale } = useAppContext();
   const shell = resolveCommonsShellContent(locale);
+  const navigate = useNavigate();
   return (
     <div className="commons-root commons-center commons-join" dir={locale === 'he' ? 'rtl' : 'ltr'}>
       <div className="commons-join__card">
@@ -51,23 +54,40 @@ function PendingInvites({ invites }) {
         <ul className="commons-join__pending">
           {invites.map(i => (
             <li key={i.token}>
-              <a className="commons-btn commons-btn--primary" href={`/commons/${i.workspace_slug}/join/${i.token}`}>{i.workspace_name}</a>
+              <button type="button" className="commons-btn commons-btn--primary"
+                onClick={() => navigate(`/commons/${i.workspace_slug}/join/${i.token}`)}>{i.workspace_name}</button>
             </li>
           ))}
         </ul>
+        {workspaces.length > 0 && (
+          <>
+            <p className="commons-join__divider">{shell.join.yourWorkspaces}</p>
+            <ul className="commons-join__pending">
+              {workspaces.map(ws => (
+                <li key={ws.id}>
+                  <button type="button" className="commons-btn commons-btn--ghost"
+                    onClick={() => navigate(`/commons/${ws.slug}`)}>{ws.name}</button>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
       </div>
     </div>
   );
 }
 
-// /commons — decide where the user lands based on how many workspaces they belong to.
+// /commons — land the user based on memberships + any pending invites. Invites are loaded BEFORE
+// deciding, so a single-workspace auto-enter never fires ahead of a waiting invitation.
 function MembershipsGate() {
   const { loading, workspaces } = useMemberships();
   const [invites, setInvites] = useState([]);
-  useEffect(() => { myPendingInvites().then(setInvites); }, []);
-  if (loading) return <LoadingScreen />;
-  if (workspaces.length === 0) return invites.length > 0 ? <PendingInvites invites={invites} /> : <NoAccessScreen />;
-  if (workspaces.length === 1 && invites.length === 0) return <Navigate to={`/commons/${workspaces[0].slug}`} replace />;
+  const [invitesLoaded, setInvitesLoaded] = useState(false);
+  useEffect(() => { myPendingInvites().then(list => { setInvites(list); setInvitesLoaded(true); }); }, []);
+  if (loading || !invitesLoaded) return <LoadingScreen />;
+  if (invites.length > 0) return <PendingInvites invites={invites} workspaces={workspaces} />;
+  if (workspaces.length === 0) return <NoAccessScreen />;
+  if (workspaces.length === 1) return <Navigate to={`/commons/${workspaces[0].slug}`} replace />;
   return <WorkspacePicker />;
 }
 

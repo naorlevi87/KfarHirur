@@ -12,3 +12,7 @@
 .commons-join__actions .commons-btn { flex: 1; padding: 13px; font-weight: 700; }
 .commons-join__pending { list-style: none; display: flex; flex-direction: column; gap: 10px; margin: 12px 0 0; padding: 0; }
 .commons-join__pending .commons-btn { width: 100%; padding: 13px; font-weight: 700; }
+.commons-join__divider {
+  margin: 18px 0 0; padding-top: 14px; border-top: 1px solid var(--commons-border);
+  color: var(--commons-text-dim); font-size: 13px; text-align: start;
+}

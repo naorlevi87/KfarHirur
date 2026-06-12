@@ -110,6 +110,7 @@ export const commonsShellContent = {
     signInFirst: 'התחברו או הירשמו כדי לאשר את ההצטרפות.',
     notFound: 'ההזמנה לא נמצאה או כבר טופלה.',
     pendingTitle: 'הוזמנת למרחב',
+    yourWorkspaces: 'המרחבים שלך',
     loading: 'רגע…',
   },
   fab: { newTaskAria: 'משימה חדשה' },
