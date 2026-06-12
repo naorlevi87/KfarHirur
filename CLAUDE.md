@@ -24,6 +24,7 @@ Read all files in `docs/` before doing anything else:
 - `docs/architecture.md`
 - `docs/workflow.md`
 - `docs/voice.md` — **required before any copy or text work**
+- `docs/commons-standards.md` — **binding for any Commons UI work** (chrome, list-row grammar, add/edit, destructive actions, formats)
 
 These are the source of truth for architecture and workflow decisions.
 
@@ -60,6 +61,14 @@ Key constraints that align with this project's personality:
 - No hardcoded colors — always `var(--...)` tokens from `globals.css`
 - Animations via `useMotionValue` / Framer Motion — never `useState` for continuous motion
 - Mobile-first baseline; desktop is a separate pass
+
+## Commons interaction standards — `docs/commons-standards.md`
+
+The Commons module (`src/commons/`) has a **living interaction-standards rulebook**: `docs/commons-standards.md`. It is binding, not advisory.
+
+- **Before designing or building any Commons UI** — a new screen, a new list, a new component, or a change to an existing one — read it and conform. It defines the chrome (two-band header), the list-row grammar (collapsed = read, pencil-expand, Save + Cancel), add/FAB placement, destructive-action handling, and format rules.
+- **When a new standard is locked** — any iron rule decided in conversation — record it there: add or amend the rule and append a dated entry to its Decision Log. A standard that isn't written in this file doesn't exist.
+- **To break a rule is a decision** — raise it, decide, and log the exception. Never silently diverge.
 
 ## Mobile-first — non-negotiable
 
@@ -318,6 +327,21 @@ Full documentation: `src/features/timeline/TIMELINE.md` and `docs/kfar-hirur-arc
 Large self-contained components get their own file: `src/styles/app/<ComponentName>.css`, imported directly by the component. Do not put large component blocks in `globals.css`.
 
 Tailwind 4 utilities for layout/spacing. Theme colors are CSS variables — do not hardcode colors, use `var(--...)` from `globals.css`. RTL via `dir` attribute on `.main-layout` (set by `MainLayout.jsx`).
+
+## Protect the user from mistakes — hard rule
+
+Never let a user lose work or take an irreversible action by accident:
+
+- **Unsaved work** — leaving a dirty form (in-app navigation OR browser refresh/close) must prompt to
+  confirm discarding. Never navigate away from unsaved edits silently.
+- **Destructive actions** — deleting anything (task, folder, skill, member, invite) requires an explicit
+  confirmation dialog. Use the branded dialog (e.g. `ConfirmDialog` in Commons), never a bare action or
+  `window.confirm`.
+- **Prefer reversible** — where an action is cheap to undo (complete/reopen, soft-delete + undo), prefer
+  that over a hard block. Confirmation is for the irreversible.
+
+Commons implements this via `NavGuardContext` (unsaved-changes guard + `beforeunload`) and `ConfirmDialog` —
+see `src/commons/COMMONS.md`.
 
 ## Code rules (from project workflow)
 
