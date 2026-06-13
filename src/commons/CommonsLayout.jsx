@@ -1,17 +1,23 @@
 // src/commons/CommonsLayout.jsx
-// Commons shell: top bar (☰ menu + workspace name) + content Outlet + bottom tab nav.
-// The hamburger holds workspace-level actions; the switcher opens from it. Mobile-first, RTL.
+// Commons shell — a TWO-BAND sticky header (docs/commons-standards.md §1.1), owned here, on EVERY screen:
+//   ① app header  — persistent: ☰ + workspace name (screen titles never overwrite it).
+//   ② screen bar  — per screen: back chevron + screen title (reading-start) · one action (reading-end).
+// Below: content Outlet + fixed bottom tab nav. Focused screens declare band ② via useCommonsChrome;
+// tab pages fall back to the active tab's label. All chrome navigations route through the nav guard so
+// a dirty form prompts before it's abandoned. Mobile-first, RTL.
 
 import './styles/commons-tokens.css';
 import './styles/CommonsLayout.css';
 import { useState } from 'react';
-import { NavLink, Outlet, useParams } from 'react-router-dom';
+import { Outlet, useLocation, useParams } from 'react-router-dom';
 import { useAppContext } from '../app/appState/useAppContext.js';
 import { useWorkspace } from './commonsState/WorkspaceContext.jsx';
+import { NavGuardProvider, useNavGuard } from './commonsState/NavGuardContext.jsx';
+import { CommonsChromeProvider, useChrome } from './commonsState/CommonsChromeContext.jsx';
 import { resolveCommonsShellContent } from './resolveCommonsShellContent.js';
 import { WorkspaceSwitcher } from './WorkspaceSwitcher.jsx';
 import { CommonsMenu } from './CommonsMenu.jsx';
-import { IconMenu, IconMine, IconBoard, IconActivity } from './icons.jsx';
+import { IconMenu, IconMine, IconBoard, IconActivity, IconChevronStart } from './icons.jsx';
 
 const TABS = [
   { path: '',          Icon: IconMine,     key: 'myTasks',  end: true },
@@ -20,17 +26,44 @@ const TABS = [
 ];
 
 export function CommonsLayout() {
+  // Providers wrap the shell so both the bar (chrome) and the tabs/menu (guard) can be set by the
+  // screens rendered in the Outlet and read by the bar rendered here.
+  return (
+    <NavGuardProvider>
+      <CommonsChromeProvider>
+        <CommonsLayoutInner />
+      </CommonsChromeProvider>
+    </NavGuardProvider>
+  );
+}
+
+function CommonsLayoutInner() {
   const { locale } = useAppContext();
   const { workspace } = useWorkspace();
   const { workspaceSlug } = useParams();
+  const { guardedNavigate } = useNavGuard();
+  const chrome = useChrome();
+  const { pathname } = useLocation();
   const shell = resolveCommonsShellContent(locale);
   const [menuOpen, setMenuOpen] = useState(false);
   const [switcherOpen, setSwitcherOpen] = useState(false);
-  const name = workspace?.name ?? shell.appName;
+
+  const base = `/commons/${workspaceSlug}`;
+  const workspaceName = workspace?.name || shell.appName;
+
+  function isTabActive(tab) {
+    if (tab.end) return pathname === base || pathname === `${base}/`;
+    return pathname.startsWith(`${base}${tab.path}`);
+  }
+
+  // Band ② title: a focused screen's chrome title, else the active tab's label.
+  const activeTab = TABS.find(isTabActive);
+  const screenTitle = chrome?.title || (activeTab ? shell.nav[activeTab.key] : '');
 
   return (
     <div className="commons-root commons-layout" dir={locale === 'he' ? 'rtl' : 'ltr'}>
-      <header className="commons-topbar">
+      {/* Band ① — app identity, persistent. Sits ABOVE the hamburger drawer (the ☰ stays reachable). */}
+      <header className="commons-appbar">
         <button
           type="button"
           className="commons-topbar__menuBtn"
@@ -40,9 +73,27 @@ export function CommonsLayout() {
         >
           <IconMenu />
         </button>
-        <span className="commons-topbar__name">{name}</span>
-        <span style={{ width: 38 }} aria-hidden="true" />
+        <span className="commons-appbar__name">{workspaceName}</span>
       </header>
+
+      {/* Band ② — current screen: back + title (reading-start) · action (reading-end). The drawer
+          opens OVER this band but UNDER band ①. */}
+      <div className="commons-screenbar">
+        <div className="commons-screenbar__lead">
+          {chrome?.showBack && (
+            <button
+              type="button"
+              className="commons-topbar__back"
+              onClick={() => guardedNavigate(-1)}
+              aria-label={shell.nav.backAria}
+            >
+              <IconChevronStart size={20} />
+            </button>
+          )}
+          <span className="commons-screenbar__title">{screenTitle}</span>
+        </div>
+        {chrome?.action && <div className="commons-screenbar__end">{chrome.action}</div>}
+      </div>
 
       <main className="commons-content">
         <Outlet />
@@ -52,10 +103,16 @@ export function CommonsLayout() {
         {TABS.map((tab) => {
           const TabIcon = tab.Icon;
           return (
-            <NavLink key={tab.key} to={`/commons/${workspaceSlug}${tab.path}`} end={tab.end} className="commons-tab">
+            <button
+              type="button"
+              key={tab.key}
+              className={isTabActive(tab) ? 'commons-tab active' : 'commons-tab'}
+              aria-current={isTabActive(tab) ? 'page' : undefined}
+              onClick={() => guardedNavigate(`${base}${tab.path}`)}
+            >
               <span className="commons-tab__icon"><TabIcon size={22} /></span>
               {shell.nav[tab.key]}
-            </NavLink>
+            </button>
           );
         })}
       </nav>

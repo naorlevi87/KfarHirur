@@ -102,19 +102,19 @@ function WorkspaceGate() {
       {/* Reachable by a not-yet-member (invited) user, so the join route comes before the gate. */}
       <Route path="join/:token" element={<JoinInvitePage />} />
       {isMember ? (
-        <>
-          <Route element={<CommonsLayout />}>
-            <Route index element={<MyTasksPage />} />
-            <Route path="board" element={<BoardPage />} />
-            <Route path="board/:containerId" element={<AreaPage />} />
-            <Route path="overview" element={<OverviewPage />} />
-          </Route>
+        // Every in-workspace screen renders inside CommonsLayout so the header + ☰ + tabs persist.
+        // Focused screens declare their bar via useCommonsChrome and are guarded against losing work.
+        <Route element={<CommonsLayout />}>
+          <Route index element={<MyTasksPage />} />
+          <Route path="board" element={<BoardPage />} />
+          <Route path="board/:containerId" element={<AreaPage />} />
+          <Route path="overview" element={<OverviewPage />} />
           <Route path="task/new" element={<TaskFormPage mode="create" />} />
           <Route path="task/:nodeId" element={<TaskViewPage />} />
           <Route path="task/:nodeId/edit" element={<TaskFormPage mode="edit" />} />
           <Route path="roles" element={<RolesPage />} />
           <Route path="members" element={<MembersPage />} />
-        </>
+        </Route>
       ) : (
         <Route path="*" element={<Navigate to="/commons" replace />} />
       )}

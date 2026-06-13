@@ -3,16 +3,16 @@
 // Reuses WorkspaceList. Mobile-first, RTL, focus-trapped, Escape/backdrop to close.
 
 import { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../app/appState/useAppContext.js';
 import { useMemberships } from './commonsState/MembershipsContext.jsx';
+import { useNavGuard } from './commonsState/NavGuardContext.jsx';
 import { resolveCommonsShellContent } from './resolveCommonsShellContent.js';
 import { WorkspaceList } from './WorkspacePicker.jsx';
 
 export function WorkspaceSwitcher({ open, currentSlug, onClose }) {
   const { locale } = useAppContext();
   const { workspaces } = useMemberships();
-  const navigate = useNavigate();
+  const { guardedNavigate } = useNavGuard();
   const shell = resolveCommonsShellContent(locale);
   const sheetRef = useRef(null);
 
@@ -28,7 +28,7 @@ export function WorkspaceSwitcher({ open, currentSlug, onClose }) {
 
   function pick(ws) {
     onClose();
-    if (ws.slug !== currentSlug) navigate(`/commons/${ws.slug}`);
+    if (ws.slug !== currentSlug) guardedNavigate(`/commons/${ws.slug}`);
   }
 
   return (

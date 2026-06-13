@@ -3,7 +3,7 @@
 // Drives the picker (/commons) and the top-bar switcher. Components read useMemberships(),
 // never Supabase. Scoped above the per-workspace WorkspaceContext.
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../../app/appState/AuthContext.jsx';
 import { fetchMyWorkspaces } from '../../data/commons/workspaceQueries.js';
 
@@ -11,22 +11,33 @@ const MembershipsContext = createContext(null);
 
 export function MembershipsProvider({ children }) {
   const { user, loading: authLoading } = useAuth();
+  const userId = user?.id ?? null;
   const [state, setState] = useState({ loading: true, workspaces: [] });
+  const runRef = useRef(0); // newest run wins — a superseded fetch never applies
+
+  const fetchWorkspaces = useCallback(() => (userId ? fetchMyWorkspaces(userId) : Promise.resolve([])), [userId]);
+
+  // Exposed as refresh() so accepting an invite can pick up the new workspace without a reload.
+  const refresh = useCallback(async () => {
+    const run = ++runRef.current;
+    const workspaces = await fetchWorkspaces();
+    if (run === runRef.current) setState({ loading: false, workspaces });
+  }, [fetchWorkspaces]);
 
   useEffect(() => {
     if (authLoading) return;
     let cancelled = false;
-
-    async function resolve() {
-      const workspaces = user ? await fetchMyWorkspaces(user.id) : [];
-      if (!cancelled) setState({ loading: false, workspaces });
-    }
-
-    resolve();
+    (async () => {
+      const run = ++runRef.current;
+      const workspaces = await fetchWorkspaces();
+      if (!cancelled && run === runRef.current) setState({ loading: false, workspaces });
+    })();
     return () => { cancelled = true; };
-  }, [user, authLoading]);
+  }, [authLoading, fetchWorkspaces]);
 
-  return <MembershipsContext.Provider value={state}>{children}</MembershipsContext.Provider>;
+  const value = useMemo(() => ({ ...state, refresh }), [state, refresh]);
+
+  return <MembershipsContext.Provider value={value}>{children}</MembershipsContext.Provider>;
 }
 
 // eslint-disable-next-line react-refresh/only-export-components

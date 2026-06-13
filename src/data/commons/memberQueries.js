@@ -37,10 +37,12 @@ export async function removeMember(memberId) {
 }
 
 // ── Invites ──────────────────────────────────────────────────────
-// Create (or replace) a pending invite. Returns { token, has_account }.
-export async function createInvite(workspaceId, email, level, roleIds) {
+// Create (or replace) a pending invite. The invitee's name is captured here so a new member
+// arrives with a real name (not the email prefix). Returns { token, has_account }.
+export async function createInvite(workspaceId, email, level, roleIds, firstName, lastName) {
   const { data, error } = await commonsDb.rpc('create_invite', {
     p_workspace_id: workspaceId, p_email: email.trim(), p_level: level, p_role_ids: roleIds ?? [],
+    p_first_name: firstName?.trim() ?? '', p_last_name: lastName?.trim() ?? '',
   });
   if (error) throw error;
   return data;
@@ -49,7 +51,7 @@ export async function createInvite(workspaceId, email, level, roleIds) {
 export async function listInvites(workspaceId) {
   const { data, error } = await commonsDb
     .from('invites')
-    .select('id, email, permission_level, status, token, created_at')
+    .select('id, email, first_name, last_name, permission_level, status, token, created_at')
     .eq('workspace_id', workspaceId)
     .eq('status', 'pending')
     .order('created_at', { ascending: false });

@@ -5,9 +5,9 @@
 import './members.css';
 import { motion, AnimatePresence } from 'motion/react';
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../../../app/appState/useAppContext.js';
 import { useWorkspace } from '../../commonsState/WorkspaceContext.jsx';
+import { useCommonsChrome } from '../../commonsState/CommonsChromeContext.jsx';
 import { fetchMembers, updateMemberLevel, updateMemberName, removeMember,
          listInvites, cancelInvite, sendInviteEmail } from '../../../data/commons/memberQueries.js';
 import { fetchRoles, fetchMemberRolesMap, setMemberRoles } from '../../../data/commons/roleQueries.js';
@@ -15,8 +15,9 @@ import { resolveCommonsShellContent } from '../../resolveCommonsShellContent.js'
 import { SelectField } from '../../SelectField.jsx';
 import { MultiSelectField } from '../../MultiSelectField.jsx';
 import { InviteDialog } from './InviteDialog.jsx';
+import { ConfirmDialog } from '../../ConfirmDialog.jsx';
 import { CommonsLoading } from '../../CommonsLoading.jsx';
-import { IconChevronStart, IconPencil, IconTrash, IconPlus } from '../../icons.jsx';
+import { IconPencil, IconTrash, IconPlus } from '../../icons.jsx';
 
 const LEVELS = ['admin', 'manager', 'member'];
 
@@ -32,9 +33,9 @@ function formatJoined(date, locale) {
 export function MembersPage() {
   const { locale } = useAppContext();
   const { workspace, permissionLevel } = useWorkspace();
-  const navigate = useNavigate();
   const shell = resolveCommonsShellContent(locale);
   const m = shell.members;
+  const isAdmin = permissionLevel === 'admin';
 
   const [members, setMembers] = useState([]);
   const [roles, setRoles] = useState([]);
@@ -45,6 +46,16 @@ export function MembersPage() {
   const [inviting, setInviting] = useState(false);
   const [resentId, setResentId] = useState(null);
   const [nameDraft, setNameDraft] = useState({ firstName: '', lastName: '' });
+  const [removeTarget, setRemoveTarget] = useState(null);   // member pending removal confirmation
+  const [cancelTarget, setCancelTarget] = useState(null);   // invite pending cancel confirmation
+
+  // "Invite" lives in the shell's top bar. Gated to admins (non-admins get a null body below).
+  const inviteAction = useMemo(() => (isAdmin ? (
+    <button type="button" className="commons-topbar__action" onClick={() => setInviting(true)}>
+      <IconPlus size={16} /> {m.invite}
+    </button>
+  ) : null), [isAdmin, m.invite]);
+  useCommonsChrome({ title: m.title, showBack: true, action: inviteAction });
 
   function openEdit(member) {
     setNameDraft({ firstName: member.display_name ?? '', lastName: member.last_name ?? '' });
@@ -74,7 +85,9 @@ export function MembersPage() {
     setResentId(inv.id);
     setTimeout(() => setResentId(id => (id === inv.id ? null : id)), 2500);
   }
-  async function onCancelInvite(inv) {
+  async function doCancelInvite() {
+    const inv = cancelTarget;
+    setCancelTarget(null);
     await cancelInvite(inv.id);
     setInvites(prev => prev.filter(x => x.id !== inv.id));
   }
@@ -83,7 +96,7 @@ export function MembersPage() {
   const levelLabel = { admin: m.levelAdmin, manager: m.levelManager, member: m.levelMember };
   const skillOptions = useMemo(() => roles.map(r => ({ value: r.id, label: r.name, color: r.color })), [roles]);
 
-  if (permissionLevel !== 'admin') return null;
+  if (!isAdmin) return null;
 
   async function onLevel(member, level) {
     if (member.permission_level === 'admin' && level !== 'admin' && adminCount <= 1) { alert(m.lastAdmin); return; }
@@ -102,26 +115,20 @@ export function MembersPage() {
     setRolesByMember(prev => { const c = new Map(prev); c.set(member.id, nextRoles); return c; });
     await setMemberRoles(member.id, nextIds);
   }
-  async function onRemove(member) {
+  function askRemove(member) {
     if (member.permission_level === 'admin' && adminCount <= 1) { alert(m.lastAdmin); return; }
-    if (!window.confirm(m.removeConfirm)) return;
+    setRemoveTarget(member);
+  }
+  async function doRemove() {
+    const member = removeTarget;
+    setRemoveTarget(null);
     await removeMember(member.id);
     setMembers(prev => prev.filter(x => x.id !== member.id));
     setEditingId(null);
   }
 
   return (
-    <div className="commons-root commons-screen" dir={locale === 'he' ? 'rtl' : 'ltr'}>
-      <header className="commons-screen__bar">
-        <button type="button" className="commons-screen__back" onClick={() => navigate(-1)} aria-label={m.back}>
-          <IconChevronStart size={20} />
-        </button>
-        <span className="commons-screen__title commons-screen__title--flex">{m.title}</span>
-        <button type="button" className="commons-screen__edit" onClick={() => setInviting(true)}>
-          <IconPlus size={16} /> {m.invite}
-        </button>
-      </header>
-
+    <div className="commons-screen">
       <motion.div className="commons-screen__body"
         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 140, damping: 20 }}>
@@ -186,7 +193,7 @@ export function MembersPage() {
                             {member.email}{member.created_at ? ` · ${m.joined} ${formatJoined(member.created_at, locale)}` : ''}
                           </div>
                           <div className="commons-memberRow__panelActions">
-                            <button type="button" className="commons-memberRow__btn commons-memberRow__btn--danger" onClick={() => onRemove(member)}>
+                            <button type="button" className="commons-memberRow__btn commons-memberRow__btn--danger" onClick={() => askRemove(member)}>
                               <IconTrash size={16} /> {m.remove}
                             </button>
                             <button type="button" className="commons-memberRow__btn commons-memberRow__btn--done" onClick={() => setEditingId(null)}>{m.done}</button>
@@ -207,12 +214,15 @@ export function MembersPage() {
             <ul className="commons-pending__list">
               {invites.map(inv => (
                 <li key={inv.id} className="commons-pendingRow">
-                  <span className="commons-pendingRow__email">{inv.email}</span>
+                  <span className="commons-pendingRow__email">
+                    {[inv.first_name, inv.last_name].filter(Boolean).join(' ') || inv.email}
+                    {(inv.first_name || inv.last_name) && ` · ${inv.email}`}
+                  </span>
                   <span className="commons-pendingRow__status">{m.pendingStatus}</span>
                   <button type="button" className="commons-memberRow__btn" onClick={() => onResendInvite(inv)} disabled={resentId === inv.id}>
                     {resentId === inv.id ? m.resent : m.resend}
                   </button>
-                  <button type="button" className="commons-memberRow__btn commons-memberRow__btn--danger" onClick={() => onCancelInvite(inv)}>{m.cancelInvite}</button>
+                  <button type="button" className="commons-memberRow__btn commons-memberRow__btn--danger" onClick={() => setCancelTarget(inv)}>{m.cancelInvite}</button>
                 </li>
               ))}
             </ul>
@@ -226,6 +236,21 @@ export function MembersPage() {
           m={{ ...m, levelLabel: m.levelLabel, colSkills: m.colSkills }}
           levelLabel={levelLabel} skillOptions={skillOptions}
           onClose={() => setInviting(false)} onCreated={refreshInvites}
+        />
+      )}
+
+      {removeTarget && (
+        <ConfirmDialog
+          title={m.removeTitle} body={m.removeBody}
+          confirmLabel={m.remove} cancelLabel={m.cancel}
+          onConfirm={doRemove} onCancel={() => setRemoveTarget(null)}
+        />
+      )}
+      {cancelTarget && (
+        <ConfirmDialog
+          title={m.cancelInviteTitle} body={m.cancelInviteBody}
+          confirmLabel={m.cancelInvite} cancelLabel={m.cancel}
+          onConfirm={doCancelInvite} onCancel={() => setCancelTarget(null)}
         />
       )}
     </div>

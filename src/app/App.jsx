@@ -6,6 +6,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { AppProviders } from './AppProviders.jsx';
 import { MainLayout } from './MainLayout.jsx';
 import { ProtectedRoute } from './ProtectedRoute.jsx';
+import { PostAuthRedirect } from './PostAuthRedirect.jsx';
 import { HomePage } from '../pages/home/HomePage.jsx';
 import { JoinTeamPage } from '../pages/joinTeam/JoinTeamPage.jsx';
 import { KenZeOvedPage } from '../pages/kenZeOved/KenZeOvedPage.jsx';
@@ -29,6 +30,7 @@ export function App() {
   return (
     <AppProviders locale={locale} mode={mode} setMode={setMode}>
       <BrowserRouter>
+        <PostAuthRedirect />
         <Routes>
           {/* Public site */}
           <Route element={<MainLayout />}>

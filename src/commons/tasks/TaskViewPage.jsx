@@ -10,13 +10,14 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAppContext } from '../../app/appState/useAppContext.js';
 import { useWorkspace } from '../commonsState/WorkspaceContext.jsx';
 import { useWorkspaceTree } from '../commonsState/useWorkspaceTree.js';
+import { useCommonsChrome } from '../commonsState/CommonsChromeContext.jsx';
 import { fetchRoster } from '../../data/commons/workspaceQueries.js';
 import { fetchRoles } from '../../data/commons/roleQueries.js';
 import { resolveCommonsShellContent } from '../resolveCommonsShellContent.js';
 import { buildRecurrenceSummary } from './recurrence.js';
 import { ConfirmDialog } from '../ConfirmDialog.jsx';
 import { CommonsLoading } from '../CommonsLoading.jsx';
-import { IconChevronStart, IconCheck, IconRepeat, IconClock, IconPlus } from '../icons.jsx';
+import { IconCheck, IconRepeat, IconClock, IconPlus } from '../icons.jsx';
 import raiseHand from '../../assets/images/raise-hand.svg';
 
 function formatDue(due, locale) {
@@ -51,15 +52,22 @@ export function TaskViewPage() {
     return () => { cancelled = true; };
   }, [workspace?.id]);
 
+  // Edit lives in the shell's top bar (chrome action). Null-safe so the hooks run before the
+  // not-yet-loaded early return below.
+  const canEdit = node
+    ? (node.kind === 'container' ? permissionLevel === 'admin' : ['admin', 'manager'].includes(permissionLevel))
+    : false;
+  // React Compiler memoizes this element; no manual useMemo (which it can't preserve here).
+  const editAction = canEdit ? (
+    <button type="button" className="commons-topbar__action"
+      onClick={() => navigate(`/commons/${workspaceSlug}/task/${nodeId}/edit`)}>{v.edit}</button>
+  ) : null;
+  useCommonsChrome({ title: node?.title ?? '', showBack: true, action: editAction });
+
   if (!node) {
     return (
-      <div className="commons-root commons-screen" dir={locale === 'he' ? 'rtl' : 'ltr'}>
-        <header className="commons-screen__bar">
-          <button type="button" className="commons-screen__back" onClick={() => navigate(-1)} aria-label={v.back}>
-            <IconChevronStart size={20} />
-          </button>
-        </header>
-        {tree.loading && <CommonsLoading />}
+      <div className="commons-screen">
+        <div className="commons-screen__body">{tree.loading && <CommonsLoading />}</div>
       </div>
     );
   }
@@ -68,7 +76,6 @@ export function TaskViewPage() {
   const ownerName = owner?.display_name ?? null;
   const requiredRoles = (node.role_ids ?? []).map(id => roles.find(r => r.id === id)).filter(Boolean);
   const canClaim = !(node.role_ids?.length) || (myRoles ?? []).some(r => node.role_ids.includes(r.id));
-  const canEdit = node.kind === 'container' ? permissionLevel === 'admin' : ['admin', 'manager'].includes(permissionLevel);
   const done = node.status === 'done';
   const missed = node.status === 'missed';
 
@@ -90,19 +97,7 @@ export function TaskViewPage() {
   }
 
   return (
-    <div className="commons-root commons-screen" dir={locale === 'he' ? 'rtl' : 'ltr'}>
-      <header className="commons-screen__bar">
-        <button type="button" className="commons-screen__back" onClick={() => navigate(-1)} aria-label={v.back}>
-          <IconChevronStart size={20} />
-        </button>
-        <span className="commons-screen__title commons-screen__title--flex">{node.title}</span>
-        {canEdit && (
-          <button type="button" className="commons-screen__edit" onClick={() => navigate(`/commons/${workspaceSlug}/task/${nodeId}/edit`)}>
-            {v.edit}
-          </button>
-        )}
-      </header>
-
+    <div className="commons-screen">
       <motion.div
         className="commons-screen__body"
         initial={{ opacity: 0, y: 10 }}

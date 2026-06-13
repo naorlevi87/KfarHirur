@@ -48,6 +48,9 @@ export const IconUsers = (p) => (
 export const IconGear = (p) => (
   <Svg {...p}><circle cx="12" cy="12" r="3" /><path d="M12 3v2.5M12 18.5V21M21 12h-2.5M5.5 12H3M18 6l-1.8 1.8M7.8 16.2 6 18M18 18l-1.8-1.8M7.8 7.8 6 6" /></Svg>
 );
+export const IconUser = (p) => (
+  <Svg {...p}><circle cx="12" cy="8" r="3.5" /><path d="M5.5 20a6.5 6.5 0 0 1 13 0" /></Svg>
+);
 export const IconSwap = (p) => <Svg {...p}><path d="M7 8h12l-3-3M17 16H5l3 3" /></Svg>;
 export const IconPencil = (p) => <Svg {...p}><path d="M4 20h4L18 10l-4-4L4 16v4z" /><path d="M13.5 6.5l4 4" /></Svg>;
 export const IconTrash = (p) => <Svg {...p}><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13" /></Svg>;

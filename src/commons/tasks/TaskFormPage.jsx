@@ -1,8 +1,9 @@
 // src/commons/tasks/TaskFormPage.jsx
-// Full-screen create/edit form for a task or folder. Task mode: title, location (parent), description,
-// owner, due, recurrence. Folder mode: title + location only. In edit mode the loader waits for the
-// node so the inner form can seed its state directly (no hydration effect). Persists via
-// useWorkspaceTree, then returns. Reached from the FAB / menu (create) and the task view's עריכה.
+// Create/edit form for a task or folder, rendered inside the persistent shell (the top bar is its
+// chrome — declared via useCommonsChrome — not a per-screen bar). Task mode: title, location (parent),
+// description, owner, due, recurrence. Folder mode: title + location only. In edit mode the loader
+// waits for the node so the inner form seeds its state directly. The form tracks a `dirty` flag and
+// registers it with the nav guard so leaving with unsaved changes prompts; delete is confirmed.
 
 import './taskScreens.css';
 import { motion } from 'motion/react';
@@ -11,14 +12,17 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAppContext } from '../../app/appState/useAppContext.js';
 import { useWorkspace } from '../commonsState/WorkspaceContext.jsx';
 import { useWorkspaceTree } from '../commonsState/useWorkspaceTree.js';
+import { useCommonsChrome } from '../commonsState/CommonsChromeContext.jsx';
+import { useUnsavedGuard } from '../commonsState/NavGuardContext.jsx';
 import { fetchRoster } from '../../data/commons/workspaceQueries.js';
 import { fetchRoles } from '../../data/commons/roleQueries.js';
 import { resolveCommonsShellContent } from '../resolveCommonsShellContent.js';
 import { RecurrenceField } from './RecurrenceField.jsx';
 import { SkillSelect } from './SkillSelect.jsx';
 import { SelectField } from '../SelectField.jsx';
+import { ConfirmDialog } from '../ConfirmDialog.jsx';
+import { CommonsLoading } from '../CommonsLoading.jsx';
 import { normalizeRule, computeFirstNextRun } from './recurrence.js';
-import { IconChevronStart } from '../icons.jsx';
 
 function toDateInput(due) {
   if (!due) return '';
@@ -26,36 +30,23 @@ function toDateInput(due) {
   return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 }
 
-function ScreenBar({ title, onBack, backLabel }) {
-  return (
-    <header className="commons-screen__bar">
-      <button type="button" className="commons-screen__back" onClick={onBack} aria-label={backLabel}>
-        <IconChevronStart size={20} />
-      </button>
-      {title && <span className="commons-screen__title">{title}</span>}
-    </header>
-  );
+// Brief loading state while an edited node resolves — still shows the back chevron via chrome.
+function FormLoading() {
+  useCommonsChrome({ title: '', showBack: true });
+  return <div className="commons-screen"><div className="commons-screen__body"><CommonsLoading /></div></div>;
 }
 
 // Loader: in edit mode, hold until the node resolves, then mount the form seeded from it.
 export function TaskFormPage({ mode }) {
-  const { locale } = useAppContext();
   const { workspace } = useWorkspace();
   const { nodeId } = useParams();
   const [params] = useSearchParams();
-  const navigate = useNavigate();
   const tree = useWorkspaceTree(workspace?.id);
 
   const editing = mode === 'edit';
   const node = editing ? tree.nodes.find(n => n.id === nodeId) : null;
 
-  if (editing && !node) {
-    return (
-      <div className="commons-root commons-screen" dir={locale === 'he' ? 'rtl' : 'ltr'}>
-        <ScreenBar onBack={() => navigate(-1)} backLabel="" />
-      </div>
-    );
-  }
+  if (editing && !node) return <FormLoading />;
 
   const kind = editing ? node.kind : (params.get('kind') === 'container' ? 'container' : 'task');
   const initialParent = editing ? (node.parent_id ?? '') : (params.get('parent') ?? '');
@@ -83,6 +74,15 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
   const [roster, setRoster] = useState([]);
   const [roleIds, setRoleIds] = useState(node?.role_ids ?? []);
   const [roles, setRoles] = useState([]);
+  const [dirty, setDirty] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const mark = () => setDirty(true); // any user edit arms the unsaved-changes guard
+
+  const heading = isFolder
+    ? (editing ? f.editFolderTitle : f.newFolderTitle)
+    : (editing ? f.editTaskTitle : f.newTaskTitle);
+  useCommonsChrome({ title: heading, showBack: true });
+  useUnsavedGuard(dirty);
 
   useEffect(() => {
     if (!workspace?.id) return;
@@ -101,16 +101,12 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
       if (cancelled) return;
       setRoles(rs);
       if (!skillInited.current && (node?.role_ids?.length ?? 0) === 0) {
-        setRoleIds(rs.map(r => r.id));
+        setRoleIds(rs.map(r => r.id)); // programmatic default — does NOT mark dirty
         skillInited.current = true;
       }
     });
     return () => { cancelled = true; };
   }, [workspace?.id, node]);
-
-  const heading = isFolder
-    ? (editing ? f.editFolderTitle : f.newFolderTitle)
-    : (editing ? f.editTaskTitle : f.newTaskTitle);
 
   async function submit(e) {
     e.preventDefault();
@@ -148,18 +144,19 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
         next_run: rule ? computeFirstNextRun(rule) : null,
       });
     }
+    setDirty(false); // saved — leaving now is safe
     navigate(-1);
   }
 
-  async function remove() {
+  async function doRemove() {
+    setConfirmDelete(false);
+    setDirty(false);
     await tree.removeNode(nodeId);
     navigate(`/commons/${workspaceSlug}/board`);
   }
 
   return (
-    <div className="commons-root commons-screen" dir={locale === 'he' ? 'rtl' : 'ltr'}>
-      <ScreenBar title={heading} onBack={() => navigate(-1)} backLabel={f.back} />
-
+    <div className="commons-screen">
       <motion.form
         className="commons-screen__body"
         onSubmit={submit}
@@ -169,7 +166,7 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
       >
         <label className="commons-field">
           <span className="commons-field__label">{f.titleLabel}</span>
-          <input className="commons-field__input" value={title} onChange={e => setTitle(e.target.value)} autoFocus />
+          <input className="commons-field__input" value={title} onChange={e => { setTitle(e.target.value); mark(); }} autoFocus />
         </label>
 
         {!isFolder && (
@@ -179,7 +176,7 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
               <textarea
                 className="commons-field__input commons-field__area" rows={3}
                 value={description} placeholder={f.descriptionPlaceholder}
-                onChange={e => setDescription(e.target.value)}
+                onChange={e => { setDescription(e.target.value); mark(); }}
               />
             </label>
             <label className="commons-field">
@@ -187,7 +184,7 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
               <SelectField
                 ariaLabel={f.owner}
                 value={ownerId}
-                onChange={setOwnerId}
+                onChange={(v) => { setOwnerId(v); mark(); }}
                 placeholder={f.unassigned}
                 options={[{ value: '', label: f.unassigned }, ...roster.map(mb => ({ value: mb.id, label: mb.display_name ?? '—' }))]}
               />
@@ -197,25 +194,25 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
               {roles.length === 0 ? (
                 <span className="commons-field__hint">{f.skillAnyone}</span>
               ) : (
-                <SkillSelect roles={roles} value={roleIds} onChange={setRoleIds} anyoneLabel={f.skillAnyone} />
+                <SkillSelect roles={roles} value={roleIds} onChange={(v) => { setRoleIds(v); mark(); }} anyoneLabel={f.skillAnyone} />
               )}
             </div>
             <div className="commons-field">
               <span className="commons-field__label">{f.scheduling}</span>
               <div className="commons-recur__freqs" role="group" aria-label={f.scheduling}>
                 <button type="button" className={recurrence ? '' : 'is-active'} aria-pressed={!recurrence}
-                  onClick={() => setRecurrence(null)}>{f.once}</button>
+                  onClick={() => { setRecurrence(null); mark(); }}>{f.once}</button>
                 <button type="button" className={recurrence ? 'is-active' : ''} aria-pressed={!!recurrence}
-                  onClick={() => setRecurrence(recurrence ?? { freq: 'daily', interval: 1, time: '20:00' })}>{f.repeats}</button>
+                  onClick={() => { setRecurrence(recurrence ?? { freq: 'daily', interval: 1, time: '20:00' }); mark(); }}>{f.repeats}</button>
               </div>
             </div>
 
             {recurrence ? (
-              <RecurrenceField value={recurrence} rc={shell.tasks.recurrence} onChange={setRecurrence} />
+              <RecurrenceField value={recurrence} rc={shell.tasks.recurrence} onChange={(v) => { setRecurrence(v); mark(); }} />
             ) : (
               <label className="commons-field">
                 <span className="commons-field__label">{f.due}</span>
-                <input type="date" className="commons-field__input" value={due} onChange={e => setDue(e.target.value)} />
+                <input type="date" className="commons-field__input" value={due} onChange={e => { setDue(e.target.value); mark(); }} />
               </label>
             )}
           </>
@@ -225,9 +222,20 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
           {editing ? f.save : f.create}
         </button>
         {editing && (
-          <button type="button" className="commons-screen__delete" onClick={remove}>{f.delete}</button>
+          <button type="button" className="commons-screen__delete" onClick={() => setConfirmDelete(true)}>{f.delete}</button>
         )}
       </motion.form>
+
+      {confirmDelete && (
+        <ConfirmDialog
+          title={f.deleteTitle}
+          body={f.deleteBody}
+          confirmLabel={f.delete}
+          cancelLabel={f.cancel}
+          onConfirm={doRemove}
+          onCancel={() => setConfirmDelete(false)}
+        />
+      )}
     </div>
   );
 }

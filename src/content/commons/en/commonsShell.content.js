@@ -10,6 +10,13 @@ export const commonsShellContent = {
     board: 'All tasks',
     overview: 'Status',
     menuAriaLabel: 'Commons navigation',
+    backAria: 'Back',
+  },
+  guard: {
+    unsavedTitle: 'Leave without saving?',
+    unsavedBody: "You have unsaved changes. If you leave now they'll be lost.",
+    stay: 'Stay',
+    leave: 'Leave without saving',
   },
   snapshot: {
     open: 'Open',
@@ -46,6 +53,7 @@ export const commonsShellContent = {
     switchWorkspace: 'Switch workspace',
     members: 'Members',
     roles: 'Abilities',
+    settings: 'User settings',
     backToSite: 'Back to Kfar Hirur',
   },
   rolesScreen: {
@@ -59,6 +67,9 @@ export const commonsShellContent = {
     delete: 'Delete',
     empty: 'No abilities yet. Add the first one.',
     back: 'Back',
+    cancel: 'Cancel',
+    deleteTitle: 'Delete this ability?',
+    deleteBody: 'It will be removed from all tasks and teammates.',
   },
   members: {
     title: 'Team',
@@ -80,6 +91,11 @@ export const commonsShellContent = {
     done: 'Done',
     remove: 'Remove',
     removeConfirm: 'Remove this member from the workspace?',
+    removeTitle: 'Remove from workspace?',
+    removeBody: 'They will lose access to this workspace.',
+    cancel: 'Cancel',
+    cancelInviteTitle: 'Cancel this invite?',
+    cancelInviteBody: 'The pending invite will be deleted.',
     lastAdmin: 'At least one admin must remain.',
     empty: 'No members yet.',
     back: 'Back',
@@ -153,6 +169,9 @@ export const commonsShellContent = {
     save: 'Save',
     back: 'Back',
     delete: 'Delete',
+    cancel: 'Cancel',
+    deleteTitle: 'Delete?',
+    deleteBody: "This can't be undone.",
   },
   view: {
     back: 'Back',

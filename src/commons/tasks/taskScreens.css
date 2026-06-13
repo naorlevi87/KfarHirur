@@ -1,35 +1,6 @@
 /* src/commons/tasks/taskScreens.css */
-/* Full-screen create/edit form + read-only task view. Mobile-first, RTL, token-driven. */
-
-.commons-screen { display: flex; flex-direction: column; min-height: 100dvh; background: var(--commons-bg); }
-.commons-screen__bar {
-  position: sticky; top: 0; z-index: 10;
-  display: flex; align-items: center; gap: 8px;
-  padding: 12px; background: var(--commons-surface); border-bottom: 1px solid var(--commons-border);
-}
-.commons-screen__back {
-  flex: 0 0 auto; width: 36px; height: 36px; border-radius: 10px;
-  background: none; border: 0; color: var(--commons-text); cursor: pointer; display: grid; place-items: center;
-}
-.commons-screen__back:hover { background: var(--commons-surface-2); }
-.commons-screen__back:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
-.commons-screen__title { font-weight: 700; font-size: 16px; }
-.commons-screen__title--flex { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.commons-screen__edit {
-  margin-inline-start: auto; background: none; border: 1px solid var(--commons-border);
-  color: var(--commons-accent); font: inherit; font-weight: 600; cursor: pointer;
-  padding: 7px 14px; border-radius: 999px;
-}
-.commons-screen__edit:hover { background: var(--commons-surface-2); }
-.commons-screen__edit:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
-
-.commons-screen__body { flex: 1; padding: 18px 16px 28px; max-width: 560px; width: 100%; margin-inline: auto; display: flex; flex-direction: column; }
-.commons-screen__save { margin-top: 10px; width: 100%; padding: 14px; font-size: 15px; font-weight: 700; }
-.commons-screen__delete {
-  margin: 14px auto 0; background: none; border: 0; color: var(--commons-danger);
-  font: inherit; cursor: pointer; padding: 8px 12px; border-radius: 8px;
-}
-.commons-screen__delete:focus-visible { outline: 2px solid var(--commons-danger); outline-offset: 2px; }
+/* Read-only task view specifics (the create/edit form reuses the shared .commons-screen* shell
+   defined in CommonsLayout.css). Mobile-first, RTL, token-driven. */
 
 /* read-only task view */
 .commons-view__title { font-size: 24px; font-weight: 800; letter-spacing: -.02em; line-height: 1.25; margin: 4px 0 12px; }

@@ -21,8 +21,10 @@ Next: תמונת מצב snapshot, התראות, member management (admin links j
 - `/commons/:workspaceSlug` — shell (bottom tabs):
   - index → **שלי** (`MyTasksPage`) · `board` → **לוח** (`BoardPage`) · `board/:containerId` → area drill-in (`AreaPage`)
   - `overview` `alerts` → `ComingSoonPage` placeholders.
-- `/commons/:workspaceSlug/task/new` · `task/:nodeId` · `task/:nodeId/edit` — full-screen create / view / edit
-  (render outside `CommonsLayout` — own back bar, no tabs).
+- `/commons/:workspaceSlug/task/new` · `task/:nodeId` · `task/:nodeId/edit` · `roles` · `members` —
+  these render **inside** `CommonsLayout` like every other in-workspace screen, so the header + ☰ + tabs
+  are always present. They declare their top-bar chrome (back chevron, title, optional action) via
+  `useCommonsChrome` instead of rendering their own bar.
 - A slug the user isn't a member of (or unknown) → redirect to `/commons`.
 - The hamburger menu's admin links jump to the **site** admin (`/admin`, `/admin/users`), gated by the site auth role.
 
@@ -34,9 +36,15 @@ responsibility tags, separate from `permission_level` (admin/manager/member).
 - `CommonsModule.jsx` — root: MembershipsProvider + selection logic + `/commons/*` routing (no MainLayout).
 - `commonsState/` — `MembershipsContext` (all workspaces; `useMemberships()`), `WorkspaceContext`
   (one workspace + membership + `permissionLevel`; `useWorkspace()`), `useWorkspaceTree` (the node tree + CRUD).
-- `CommonsLayout.jsx` — shell: top bar (☰ menu + static workspace name) + Outlet + bottom tab nav.
-- `CommonsMenu.jsx` — hamburger bottom sheet: new task (manager/admin), new folder (admin), switch workspace,
-  and site-admin links (`/admin*`, gated by the site auth role). `Fab.jsx` — create FAB on לוח/area (manager/admin).
+  Both membership contexts expose `refresh()` (used after accepting an invite). `CommonsChromeContext`
+  (adaptive top-bar contents via `useCommonsChrome`) and `NavGuardContext` (`guardedNavigate` +
+  `useUnsavedGuard`) live here too.
+- `CommonsLayout.jsx` — shell: two-band sticky header (band ① ☰ + workspace name · band ② back/title +
+  action — `docs/commons-standards.md` §1.1) + Outlet + bottom tab nav. Hosts the chrome + nav-guard
+  providers; every in-workspace screen renders inside it.
+- `CommonsMenu.jsx` — hamburger side drawer: new task (manager/admin), new folder + member/role management (admin),
+  switch workspace, and a bottom-pinned personal group — **user settings** (→ the site `/profile`: name, avatar,
+  account deletion) and **back to Kfar Hirur**. `Fab.jsx` — create FAB on לוח/area (manager/admin).
 - `icons.jsx` — inline SVG icon set (replaces emoji glyphs across the shell).
 - `pages/` — `MyTasksPage` (שלי), `BoardPage` (לוח areas board), `AreaPage` (one area), `ComingSoonPage`.
 - `tasks/` — `TaskTree` (a subtree, via `rootId`), `TaskFormPage` (create/edit, task or folder),
@@ -66,5 +74,16 @@ responsibility tags, separate from `permission_level` (admin/manager/member).
   the checklist hub.
 - Operational day = 08:00 → 08:00 (`src/commons/opDay.js`): all today/overdue/missed/rollover math, never midnight.
 
+## Protecting the user from mistakes
+The header + ☰ + tabs are always present, so leaving a screen is always one tap away — which makes
+guarding unsaved work mandatory (see CLAUDE.md hard rule):
+- **Unsaved-changes guard** — `TaskFormPage` tracks a `dirty` flag and registers it via `useUnsavedGuard`.
+  Every chrome navigation (tabs, ☰ menu, back chevron, switcher, back-to-site) goes through
+  `guardedNavigate`, which shows a "leave without saving?" `ConfirmDialog` when dirty. `beforeunload`
+  covers browser refresh / tab-close. Save/Delete clear `dirty` and navigate directly.
+- **Destructive actions** — task/folder delete, skill delete, member removal, and invite cancel all
+  confirm via `ConfirmDialog`. Completion stays one-tap (reopen is the undo).
+
 ## Rules (inherited from the site)
 Data-source opacity, no hardcoded strings, resolver pattern, mobile-first, file-header comments.
+Protect the user from mistakes (unsaved-changes guard + destructive-action confirmation).

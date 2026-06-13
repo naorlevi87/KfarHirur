@@ -1,18 +1,63 @@
 /* src/commons/styles/CommonsLayout.css */
 /* Commons Engine shell: sticky top bar, scrollable content, fixed bottom tab nav. Mobile-first. */
 
-.commons-layout { display: flex; flex-direction: column; min-height: 100dvh; }
+.commons-layout { display: flex; flex-direction: column; min-height: 100dvh; --appbar-h: 48px; }
 
-.commons-topbar {
-  position: sticky; top: 0; z-index: 10;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 16px;
+/* Two-band header (docs/commons-standards.md §1.1) — two SEPARATE sticky bands so the hamburger drawer
+   can sit ABOVE band ② but UNDER band ① (z: band② 8 < drawer 9 < band① 11). */
+/* Band ① — app identity: ☰ + workspace name (persistent, never overwritten by a screen title). */
+.commons-appbar {
+  position: sticky; top: 0; z-index: 11;
+  height: var(--appbar-h); box-sizing: border-box;
+  display: flex; align-items: center; gap: 8px; padding: 0 14px;
   background: var(--commons-surface);
   border-bottom: 1px solid var(--commons-border);
 }
-.commons-topbar__name { font-weight: 700; font-size: 16px; }
+.commons-appbar__name {
+  flex: 1 1 auto; min-width: 0; font-weight: 800; font-size: 17px; letter-spacing: -.01em;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* Band ② — current screen. A faint shade + the band-① divider separate it from the app header. */
+.commons-screenbar {
+  position: sticky; top: var(--appbar-h); z-index: 8;
+  display: flex; align-items: center; gap: 6px; padding: 7px 12px; min-height: 30px;
+  background: var(--commons-surface-2);
+  border-bottom: 1px solid var(--commons-border);
+}
+.commons-screenbar__lead { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 4px; }
+.commons-screenbar__title {
+  min-width: 0; font-weight: 700; font-size: 14.5px; color: var(--commons-text-dim);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.commons-screenbar__end { flex: 0 0 auto; display: flex; align-items: center; }
+.commons-topbar__back {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: none; border: 0; color: var(--commons-text); cursor: pointer; display: grid; place-items: center;
+}
+.commons-topbar__back:hover { background: var(--commons-surface-2); }
+.commons-topbar__back:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
+/* Back points to the reading-start: → right in RTL (the glyph is drawn left-pointing). §1.2 */
+[dir="rtl"] .commons-topbar__back svg { transform: scaleX(-1); }
+.commons-topbar__action {
+  background: none; border: 1px solid var(--commons-border);
+  color: var(--commons-accent); font: inherit; font-weight: 600; cursor: pointer;
+  padding: 7px 14px; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px;
+}
+.commons-topbar__action:hover { background: var(--commons-surface-2); }
+.commons-topbar__action:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
 
-.commons-content { flex: 1; padding: 16px 16px 84px; }
+.commons-content { flex: 1; display: flex; flex-direction: column; padding: 16px 16px 84px; }
+
+/* Focused screens (task form/view, members, roles) render inside the shell — they fill the content
+   area and own their body padding/centering. The top bar (above) is their chrome; no per-screen bar. */
+.commons-screen { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.commons-screen__body { flex: 1; padding: 2px 0 28px; max-width: 560px; width: 100%; margin-inline: auto; display: flex; flex-direction: column; }
+.commons-screen__save { margin-top: 10px; width: 100%; padding: 14px; font-size: 15px; font-weight: 700; }
+.commons-screen__delete {
+  margin: 14px auto 0; background: none; border: 0; color: var(--commons-danger);
+  font: inherit; cursor: pointer; padding: 8px 12px; border-radius: 8px;
+}
+.commons-screen__delete:focus-visible { outline: 2px solid var(--commons-danger); outline-offset: 2px; }
 
 .commons-tabbar {
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 10;
@@ -103,15 +148,16 @@
 @media (prefers-reduced-motion: reduce) { .commons-sheet { animation: none; } }
 
 /* ── Hamburger menu (side drawer, slides from the start edge) ── */
-/* Drawer sits BELOW the top bar and ABOVE the tab bar: z-index 9 keeps it under both (z-index 10),
-   which paint over its top/bottom edges so it occupies only the content region. */
-.commons-drawerRoot { position: fixed; inset: 0; z-index: 9; }
+/* Drawer opens BELOW band ① (the app header) and ABOVE band ② / content: it starts at the app-header
+   bottom (top: --appbar-h) and its z-index (9) sits above band ② (8) but under band ① (11) and the
+   tab bar (10) — so ☰ + workspace name stay visible and reachable while the drawer is open. */
+.commons-drawerRoot { position: fixed; top: var(--appbar-h); inset-inline: 0; bottom: 0; z-index: 9; }
 .commons-drawerBackdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, .5); }
 .commons-drawer {
   position: absolute; inset-block: 0; inset-inline-start: 0;
   width: min(82vw, 320px); overflow-y: auto;
   background: var(--commons-surface); border-inline-end: 1px solid var(--commons-border);
-  padding: 78px 14px calc(70px + env(safe-area-inset-bottom));
+  padding: 16px 14px calc(70px + env(safe-area-inset-bottom));
 }
 @keyframes commons-drawer-in-rtl { from { transform: translateX(100%); } to { transform: translateX(0); } }
 @keyframes commons-drawer-in-ltr { from { transform: translateX(-100%); } to { transform: translateX(0); } }
@@ -119,9 +165,11 @@
 .commons-drawerRoot[dir="ltr"] .commons-drawer { animation: commons-drawer-in-ltr 240ms cubic-bezier(.2, .8, .2, 1); }
 @media (prefers-reduced-motion: reduce) { .commons-drawer { animation: none; } }
 
-.commons-menu { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.commons-menu { list-style: none; display: flex; flex-direction: column; gap: 6px; min-height: 100%; }
 .commons-menu__logo { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; flex: 0 0 auto; }
-.commons-menu__item--back { color: var(--commons-text-dim); background: none; margin-top: 6px; }
+/* Personal/exit group floats to the drawer floor, separated by a divider. */
+.commons-menu__bottom { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--commons-border); }
+.commons-menu__item--back { color: var(--commons-text-dim); background: none; }
 .commons-menu__item {
   width: 100%; text-align: start; display: flex; align-items: center; gap: 10px;
   background: var(--commons-surface-2); color: var(--commons-text);

@@ -4,7 +4,7 @@
 // Resolves independently of MembershipsContext so deep links to /commons/:slug work on their own.
 // Components never see Supabase or RLS.
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../app/appState/AuthContext.jsx';
 import {
   fetchWorkspaceBySlug,
@@ -18,6 +18,25 @@ export function WorkspaceProvider({ slug, children }) {
   const { user, loading: authLoading } = useAuth();
   const userId = user?.id ?? null;
   const [state, setState] = useState({ loading: true, workspace: null, membership: null, roles: [] });
+  const runRef = useRef(0); // newest run wins — a superseded fetch (slug change / refresh) never applies
+
+  // Pure fetch (no setState) so it can be shared by the mount effect and refresh() without tripping
+  // the no-setState-in-effect rule.
+  const fetchState = useCallback(async () => {
+    if (!userId || !slug) return { loading: false, workspace: null, membership: null, roles: [] };
+    const workspace  = await fetchWorkspaceBySlug(slug);
+    const membership = workspace ? await fetchMyMembership(workspace.id, userId) : null;
+    const roles      = membership ? await fetchMemberRoles(membership.id) : [];
+    return { loading: false, workspace, membership, roles };
+  }, [userId, slug]);
+
+  // Exposed so accepting an invite can re-fetch the now-active membership without a page reload —
+  // the provider for this slug resolved while the user wasn't yet a member.
+  const refresh = useCallback(async () => {
+    const run = ++runRef.current;
+    const next = await fetchState();
+    if (run === runRef.current) setState(next);
+  }, [fetchState]);
 
   // Key off the user *id*, not the user object: Supabase hands back a fresh user object on every
   // token refresh (e.g. when the tab regains focus). Depending on it would re-flip to "loading" and
@@ -25,22 +44,13 @@ export function WorkspaceProvider({ slug, children }) {
   useEffect(() => {
     if (authLoading) return;
     let cancelled = false;
-
-    async function resolve() {
-      if (!cancelled) setState(s => ({ ...s, loading: true }));
-      if (!userId || !slug) {
-        if (!cancelled) setState({ loading: false, workspace: null, membership: null, roles: [] });
-        return;
-      }
-      const workspace  = await fetchWorkspaceBySlug(slug);
-      const membership = workspace ? await fetchMyMembership(workspace.id, userId) : null;
-      const roles      = membership ? await fetchMemberRoles(membership.id) : [];
-      if (!cancelled) setState({ loading: false, workspace, membership, roles });
-    }
-
-    resolve();
+    (async () => {
+      const run = ++runRef.current;
+      const next = await fetchState();
+      if (!cancelled && run === runRef.current) setState(next);
+    })();
     return () => { cancelled = true; };
-  }, [userId, authLoading, slug]);
+  }, [authLoading, fetchState]);
 
   const value = {
     loading: state.loading,
@@ -49,6 +59,7 @@ export function WorkspaceProvider({ slug, children }) {
     roles: state.roles,
     isMember: !!state.membership,
     permissionLevel: state.membership?.permission_level ?? null,
+    refresh,
   };
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;

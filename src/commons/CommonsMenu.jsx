@@ -2,14 +2,17 @@
 // Workspace-level action menu — a side drawer opened from the top-bar ☰ (slides from the start edge).
 // Entries gate by permission: new task → manager/admin, new folder + member management → admin.
 // "Switch workspace" is delegated to the parent so it can open the existing WorkspaceSwitcher.
+// A bottom group (pinned to the drawer floor) holds the personal/exit actions: user settings
+// (→ the site /profile screen: name, avatar, account deletion) and back-to-site.
 
 import { useEffect, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useAppContext } from '../app/appState/useAppContext.js';
 import { useWorkspace } from './commonsState/WorkspaceContext.jsx';
 import { useMemberships } from './commonsState/MembershipsContext.jsx';
+import { useNavGuard } from './commonsState/NavGuardContext.jsx';
 import { resolveCommonsShellContent } from './resolveCommonsShellContent.js';
-import { IconPlus, IconFolderPlus, IconSwap, IconUsers, IconGear } from './icons.jsx';
+import { IconPlus, IconFolderPlus, IconSwap, IconUsers, IconGear, IconUser } from './icons.jsx';
 import kfarLogo from '../assets/images/kfar-hirur-logo-circleOnly.png';
 
 export function CommonsMenu({ open, onClose, onSwitchWorkspace }) {
@@ -17,7 +20,7 @@ export function CommonsMenu({ open, onClose, onSwitchWorkspace }) {
   const { permissionLevel } = useWorkspace();
   const { workspaces } = useMemberships();
   const { workspaceSlug } = useParams();
-  const navigate = useNavigate();
+  const { guardedNavigate } = useNavGuard();
   const shell = resolveCommonsShellContent(locale);
   const m = shell.menu;
   const ref = useRef(null);
@@ -35,7 +38,7 @@ export function CommonsMenu({ open, onClose, onSwitchWorkspace }) {
   const canTask = ['admin', 'manager'].includes(permissionLevel);
   const canFolder = permissionLevel === 'admin';
   const base = `/commons/${workspaceSlug}`;
-  const go = (path) => { onClose(); navigate(`${base}${path}`); };
+  const go = (path) => { onClose(); guardedNavigate(`${base}${path}`); };
 
   return (
     <div className="commons-drawerRoot" dir={locale === 'he' ? 'rtl' : 'ltr'}>
@@ -49,7 +52,8 @@ export function CommonsMenu({ open, onClose, onSwitchWorkspace }) {
           {workspaces.length > 1 && (
             <li><button type="button" className="commons-menu__item" onClick={() => { onClose(); onSwitchWorkspace(); }}><IconSwap size={20} /> {m.switchWorkspace}</button></li>
           )}
-          <li><button type="button" className="commons-menu__item commons-menu__item--back" onClick={() => { onClose(); navigate('/'); }}>
+          <li className="commons-menu__bottom"><button type="button" className="commons-menu__item" onClick={() => { onClose(); guardedNavigate('/profile'); }}><IconUser size={20} /> {m.settings}</button></li>
+          <li><button type="button" className="commons-menu__item commons-menu__item--back" onClick={() => { onClose(); guardedNavigate('/'); }}>
             <img className="commons-menu__logo" src={kfarLogo} alt="" /> {m.backToSite}
           </button></li>
         </ul>

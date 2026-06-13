@@ -5,20 +5,20 @@
 import './roles.css';
 import { motion } from 'motion/react';
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../../../app/appState/useAppContext.js';
 import { useWorkspace } from '../../commonsState/WorkspaceContext.jsx';
+import { useCommonsChrome } from '../../commonsState/CommonsChromeContext.jsx';
 import { fetchRoles, createRole, updateRole, deleteRole } from '../../../data/commons/roleQueries.js';
 import { resolveCommonsShellContent } from '../../resolveCommonsShellContent.js';
+import { ConfirmDialog } from '../../ConfirmDialog.jsx';
 import { CommonsLoading } from '../../CommonsLoading.jsx';
-import { IconChevronStart, IconPlus } from '../../icons.jsx';
+import { IconPlus } from '../../icons.jsx';
 
 const SWATCHES = ['1', '2', '3', '4', '5', '6'];
 
 export function RolesPage() {
   const { locale } = useAppContext();
   const { workspace, permissionLevel } = useWorkspace();
-  const navigate = useNavigate();
   const shell = resolveCommonsShellContent(locale);
   const r = shell.rolesScreen;
 
@@ -26,6 +26,9 @@ export function RolesPage() {
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState('');
   const [color, setColor] = useState('1');
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
+  useCommonsChrome({ title: r.title, showBack: true });
 
   useEffect(() => {
     if (!workspace?.id) return;
@@ -54,20 +57,15 @@ export function RolesPage() {
     const updated = await updateRole(role.id, { color: c });
     setRoles(prev => prev.map(x => (x.id === role.id ? updated : x)));
   }
-  async function remove(role) {
+  async function doDelete() {
+    const role = deleteTarget;
+    setDeleteTarget(null);
     await deleteRole(role.id);
     setRoles(prev => prev.filter(x => x.id !== role.id));
   }
 
   return (
-    <div className="commons-root commons-screen" dir={locale === 'he' ? 'rtl' : 'ltr'}>
-      <header className="commons-screen__bar">
-        <button type="button" className="commons-screen__back" onClick={() => navigate(-1)} aria-label={r.back}>
-          <IconChevronStart size={20} />
-        </button>
-        <span className="commons-screen__title">{r.title}</span>
-      </header>
-
+    <div className="commons-screen">
       <motion.div className="commons-screen__body"
         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 140, damping: 20 }}>
@@ -104,12 +102,20 @@ export function RolesPage() {
                   ))}
                 </div>
                 <button type="button" className="commons-roleRow__btn" onClick={() => rename(role)}>{r.rename}</button>
-                <button type="button" className="commons-roleRow__btn commons-roleRow__btn--danger" onClick={() => remove(role)}>{r.delete}</button>
+                <button type="button" className="commons-roleRow__btn commons-roleRow__btn--danger" onClick={() => setDeleteTarget(role)}>{r.delete}</button>
               </li>
             ))}
           </ul>
         )}
       </motion.div>
+
+      {deleteTarget && (
+        <ConfirmDialog
+          title={r.deleteTitle} body={r.deleteBody}
+          confirmLabel={r.delete} cancelLabel={r.cancel}
+          onConfirm={doDelete} onCancel={() => setDeleteTarget(null)}
+        />
+      )}
     </div>
   );
 }

@@ -57,9 +57,6 @@
 .commons-skillSelect__btn.is-placeholder .commons-skillSelect__summary { color: var(--commons-text-dim); }
 .commons-skillSelect__hint { padding: 8px 10px; color: var(--commons-text-dim); font-size: 13px; }
 
-/* Invite header button (icon + label). */
-.commons-screen__edit { display: inline-flex; align-items: center; gap: 6px; }
-
 /* Invite modal (sits on the shared .commons-sheetRoot / .commons-sheetBackdrop). The centering layer
    lets pointer events fall through to the backdrop; the card itself owns its (Framer) transform —
    centering must NOT use transform, or the entrance animation overrides it. */

@@ -11,6 +11,13 @@ export const commonsShellContent = {
     board: 'כל הלוח',
     overview: 'תמונת מצב',
     menuAriaLabel: 'ניווט מרחב העבודה',
+    backAria: 'חזרה',
+  },
+  guard: {
+    unsavedTitle: 'לצאת בלי לשמור?',
+    unsavedBody: 'יש שינויים שעוד לא נשמרו. אם תצאו עכשיו הם יימחקו.',
+    stay: 'הישארו',
+    leave: 'צאו בלי לשמור',
   },
   snapshot: {
     open: 'פתוחות',
@@ -47,6 +54,7 @@ export const commonsShellContent = {
     switchWorkspace: 'החלפת מרחב עבודה',
     members: 'ניהול חברים',
     roles: 'ניהול יכולות',
+    settings: 'הגדרות משתמש',
     backToSite: 'חזרה לכפר הירעור',
   },
   rolesScreen: {
@@ -60,6 +68,9 @@ export const commonsShellContent = {
     delete: 'מחיקה',
     empty: 'עוד אין יכולות. הוסיפו את הראשונה.',
     back: 'חזרה',
+    cancel: 'ביטול',
+    deleteTitle: 'למחוק את היכולת?',
+    deleteBody: 'היכולת תוסר מכל המשימות ומחברי הצוות.',
   },
   members: {
     title: 'חברי הצוות',
@@ -81,6 +92,11 @@ export const commonsShellContent = {
     done: 'סיום',
     remove: 'הסרה',
     removeConfirm: 'להסיר את החבר/ה מהמרחב?',
+    removeTitle: 'להסיר מהמרחב?',
+    removeBody: 'החבר/ה תאבד גישה למרחב העבודה.',
+    cancel: 'ביטול',
+    cancelInviteTitle: 'לבטל את ההזמנה?',
+    cancelInviteBody: 'ההזמנה הממתינה תימחק.',
     lastAdmin: 'חייב להישאר לפחות אדמין אחד.',
     empty: 'אין עדיין חברים.',
     back: 'חזרה',
@@ -154,6 +170,9 @@ export const commonsShellContent = {
     save: 'שמירה',
     back: 'חזרה',
     delete: 'מחיקה',
+    cancel: 'ביטול',
+    deleteTitle: 'למחוק?',
+    deleteBody: 'אי אפשר לבטל את הפעולה.',
   },
   view: {
     back: 'חזרה',

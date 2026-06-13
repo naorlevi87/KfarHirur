@@ -13,12 +13,17 @@ const LEVELS = ['admin', 'manager', 'member'];
 
 export function InviteDialog({ workspace, locale, m, levelLabel, skillOptions, onClose, onCreated }) {
   const ref = useRef(null);
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [level, setLevel] = useState('member');
   const [roleIds, setRoleIds] = useState([]);
   const [link, setLink] = useState('');
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
+
+  // Name + email are all required: a new member should arrive with a real name, not an email prefix.
+  const canSend = !!(firstName.trim() && lastName.trim() && email.trim()) && !busy;
 
   // Intentionally NOT closable by backdrop click or Escape — only the explicit close button exits,
   // so a stray tap (or finding an email to paste) can't discard a half-filled invite.
@@ -27,10 +32,10 @@ export function InviteDialog({ workspace, locale, m, levelLabel, skillOptions, o
   async function submit(e) {
     e.preventDefault();
     const mail = email.trim();
-    if (!mail || busy) return;
+    if (!canSend) return;
     setBusy(true);
     try {
-      const { token, has_account } = await createInvite(workspace.id, mail, level, roleIds);
+      const { token, has_account } = await createInvite(workspace.id, mail, level, roleIds, firstName, lastName);
       const url = `${window.location.origin}/commons/${workspace.slug}/join/${token}`;
       setLink(url);
       try {
@@ -56,6 +61,18 @@ export function InviteDialog({ workspace, locale, m, levelLabel, skillOptions, o
           <h2 className="commons-inviteCard__title">{m.inviteTitle}</h2>
 
         <form className="commons-invite" onSubmit={submit}>
+          <div className="commons-memberRow__names">
+            <label className="commons-field">
+              <span className="commons-field__label">{m.firstName}</span>
+              <input className="commons-field__input" value={firstName}
+                placeholder={m.firstName} onChange={e => setFirstName(e.target.value)} />
+            </label>
+            <label className="commons-field">
+              <span className="commons-field__label">{m.lastName}</span>
+              <input className="commons-field__input" value={lastName}
+                placeholder={m.lastName} onChange={e => setLastName(e.target.value)} />
+            </label>
+          </div>
           <label className="commons-field">
             <span className="commons-field__label">{m.inviteEmail}</span>
             <input className="commons-field__input" type="email" value={email}
@@ -81,7 +98,7 @@ export function InviteDialog({ workspace, locale, m, levelLabel, skillOptions, o
               </div>
             </div>
           ) : (
-            <button type="submit" className="commons-btn commons-btn--primary commons-invite__send" disabled={!email.trim() || busy}>
+            <button type="submit" className="commons-btn commons-btn--primary commons-invite__send" disabled={!canSend}>
               {m.inviteSend}
             </button>
           )}
