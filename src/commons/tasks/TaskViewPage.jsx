@@ -58,6 +58,7 @@ export function TaskViewPage() {
   const [deferDate, setDeferDate] = useState('');
   const [ownerEdit, setOwnerEdit] = useState(false);
   const [ownerPick, setOwnerPick] = useState('');
+  const [confirmCancel, setConfirmCancel] = useState(false);
 
   useEffect(() => {
     if (!workspace?.id) return;
@@ -136,6 +137,10 @@ export function TaskViewPage() {
   function openDefer(item) { setDeferItem(item); setDeferDate(''); }
   async function doDefer(toDate) { await tree.deferOccurrence(deferItem.id, toDate); setDeferItem(null); navigate(-1); }
   const tomorrowStr = () => { const d = currentOpDayStart(); d.setDate(d.getDate() + 1); return dateStr(d); };
+  async function doClone() {
+    const newId = await tree.cloneNode(node.id);
+    if (newId) navigate(`/commons/${workspaceSlug}/task/${newId}`);
+  }
 
   // One checklist row. Tap the NAME to open the item. Checkbox completes (a parent's checkbox
   // confirms via its sub-tasks first). A `!` badge marks an item that has a note. Progress sits
@@ -295,6 +300,16 @@ export function TaskViewPage() {
                   <button type="button" className="commons-btn commons-btn--ghost commons-view__defer"
                     onClick={() => openDefer(node)}>{v.deferTitle}</button>
                 )}
+                {isRunRoot && canManage && (
+                  <button type="button" className="commons-btn commons-btn--ghost commons-view__defer commons-deferMenu__skip"
+                    onClick={() => setConfirmCancel(true)}>{v.cancelDay}</button>
+                )}
+              </div>
+            )}
+
+            {isRoutine && canManage && (
+              <div className="commons-view__actions">
+                <button type="button" className="commons-btn commons-btn--ghost" onClick={doClone}>{v.cloneRoutine}</button>
               </div>
             )}
           </>
@@ -309,6 +324,17 @@ export function TaskViewPage() {
           cancelLabel={shell.form.back}
           onConfirm={() => { const id = completeTarget.id; setCompleteTarget(null); tree.completeSubtree(id); }}
           onCancel={() => setCompleteTarget(null)}
+        />
+      )}
+
+      {confirmCancel && (
+        <ConfirmDialog
+          title={v.cancelDayTitle}
+          body={v.cancelDayBody}
+          confirmLabel={v.cancelDay}
+          cancelLabel={shell.form.cancel}
+          onConfirm={async () => { setConfirmCancel(false); await tree.cancelRun(node.id); navigate(-1); }}
+          onCancel={() => setConfirmCancel(false)}
         />
       )}
 

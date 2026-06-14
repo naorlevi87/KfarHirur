@@ -15,6 +15,8 @@ import {
   unclaimNode as unclaimNodeQuery,
   resolveMissed as resolveMissedQuery,
   deferOccurrence as deferOccurrenceQuery,
+  cloneNode as cloneNodeQuery,
+  cancelRun as cancelRunQuery,
 } from '../../data/commons/nodeQueries.js';
 
 export function useWorkspaceTree(workspaceId) {
@@ -111,6 +113,17 @@ export function useWorkspaceTree(workspaceId) {
     await reload();
   }, [reload]);
 
+  // Clone a definition subtree (returns the new root id); cancel a whole run for its day.
+  const cloneNode = useCallback(async (id) => {
+    const newId = await cloneNodeQuery(id);
+    await reload();
+    return newId;
+  }, [reload]);
+  const cancelRun = useCallback(async (id) => {
+    await cancelRunQuery(id);
+    await reload();
+  }, [reload]);
+
   // Leaf-descendant progress for a node: { done, total } over tasks with no task-children.
   // Stays within the node's own layer (definition vs instance) so a routine's count doesn't
   // fold in its generated run, and a run's count doesn't fold in the template definitions.
@@ -149,5 +162,5 @@ export function useWorkspaceTree(workspaceId) {
     await reload();
   }, [reload]);
 
-  return { nodes, byParent, loading, addNode, toggleDone, saveTask, removeNode, reload, completeSubtree, claim, unclaim, resolveMissed, deferOccurrence, progress, hasChildren };
+  return { nodes, byParent, loading, addNode, toggleDone, saveTask, removeNode, reload, completeSubtree, claim, unclaim, resolveMissed, deferOccurrence, cloneNode, cancelRun, progress, hasChildren };
 }

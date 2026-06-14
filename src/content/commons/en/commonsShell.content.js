@@ -241,6 +241,10 @@ export const commonsShellContent = {
     ownerChange: 'Change owner',
     ownerSave: 'Save',
     removeMe: 'Remove me',
+    cloneRoutine: 'Duplicate routine',
+    cancelDay: "Cancel today's run",
+    cancelDayTitle: "Cancel today's run?",
+    cancelDayBody: "All of today's not-yet-done items will be marked cancelled.",
   },
   tasks: {
     addTask: 'New task',

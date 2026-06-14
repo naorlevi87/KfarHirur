@@ -63,6 +63,20 @@ export async function claimNode(id) {
   return data;
 }
 
+// Deep-copy a definition subtree (routine + orders, or any task/folder). Returns the new root id.
+export async function cloneNode(id) {
+  const { data, error } = await commonsDb.rpc('clone_node', { node_id: id });
+  if (error) throw error;
+  return data;
+}
+
+// Cancel a whole run for its day (cascade its subtree to 'cancelled'). Manager+.
+export async function cancelRun(id) {
+  const { data, error } = await commonsDb.rpc('cancel_run', { node_id: id });
+  if (error) throw error;
+  return data;
+}
+
 // Release a task's owner — a member removing themselves, or a manager clearing anyone.
 export async function unclaimNode(id) {
   const { data, error } = await commonsDb.rpc('unclaim_node', { node_id: id });

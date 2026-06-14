@@ -244,6 +244,10 @@ export const commonsShellContent = {
     ownerChange: 'שינוי אחראי/ת',
     ownerSave: 'שמירה',
     removeMe: 'הסר אותי',
+    cloneRoutine: 'שכפול המשימה הקבועה',
+    cancelDay: 'בטל את היום',
+    cancelDayTitle: 'לבטל את הריצה של היום?',
+    cancelDayBody: 'כל הפריטים שטרם בוצעו היום יסומנו כמבוטלים.',
   },
   tasks: {
     addTask: 'משימה חדשה',
