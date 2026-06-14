@@ -12,6 +12,7 @@ import {
   deleteNode,
   completeSubtree as completeSubtreeQuery,
   claimNode as claimNodeQuery,
+  unclaimNode as unclaimNodeQuery,
   resolveMissed as resolveMissedQuery,
   deferOccurrence as deferOccurrenceQuery,
 } from '../../data/commons/nodeQueries.js';
@@ -90,6 +91,13 @@ export function useWorkspaceTree(workspaceId) {
     return updated;
   }, []);
 
+  // Release ownership (member removes self, or manager clears). Returns the updated row.
+  const unclaim = useCallback(async (id) => {
+    const updated = await unclaimNodeQuery(id);
+    setNodes(prev => prev.map(n => (n.id === id ? updated : n)));
+    return updated;
+  }, []);
+
   // "זה כן קרה" — resolve a missed occurrence as a late completion by `didBy` (a member id, or null).
   const resolveMissed = useCallback(async (id, didBy) => {
     const updated = await resolveMissedQuery(id, didBy);
@@ -104,23 +112,31 @@ export function useWorkspaceTree(workspaceId) {
   }, [reload]);
 
   // Leaf-descendant progress for a node: { done, total } over tasks with no task-children.
+  // Stays within the node's own layer (definition vs instance) so a routine's count doesn't
+  // fold in its generated run, and a run's count doesn't fold in the template definitions.
   const progress = useCallback((id) => {
+    const start = nodes.find(n => n.id === id);
+    const layer = Boolean(start?.occurrence_date);
     let done = 0, total = 0;
     const walk = (pid) => {
       for (const child of byParent.get(pid) ?? []) {
-        if (child.kind !== 'task') continue;
-        const kids = (byParent.get(child.id) ?? []).filter(n => n.kind === 'task');
+        if (child.kind !== 'task' || Boolean(child.occurrence_date) !== layer) continue;
+        const kids = (byParent.get(child.id) ?? []).filter(n => n.kind === 'task' && Boolean(n.occurrence_date) === layer);
         if (kids.length === 0) { total += 1; if (child.status === 'done') done += 1; }
         else walk(child.id);
       }
     };
     walk(id);
     return { done, total };
-  }, [byParent]);
+  }, [byParent, nodes]);
 
   const hasChildren = useCallback(
-    (id) => (byParent.get(id) ?? []).some(n => n.kind === 'task'),
-    [byParent]);
+    (id) => {
+      const start = nodes.find(n => n.id === id);
+      const layer = Boolean(start?.occurrence_date);
+      return (byParent.get(id) ?? []).some(n => n.kind === 'task' && Boolean(n.occurrence_date) === layer);
+    },
+    [byParent, nodes]);
 
   const saveTask = useCallback(async (id, patch) => {
     const updated = await updateNode(id, patch);
@@ -133,5 +149,5 @@ export function useWorkspaceTree(workspaceId) {
     await reload();
   }, [reload]);
 
-  return { nodes, byParent, loading, addNode, toggleDone, saveTask, removeNode, reload, completeSubtree, claim, resolveMissed, deferOccurrence, progress, hasChildren };
+  return { nodes, byParent, loading, addNode, toggleDone, saveTask, removeNode, reload, completeSubtree, claim, unclaim, resolveMissed, deferOccurrence, progress, hasChildren };
 }

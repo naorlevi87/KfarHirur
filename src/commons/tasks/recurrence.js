@@ -7,6 +7,34 @@
 const UNIT_BY_FREQ = { daily: 'day', weekly: 'week', monthly: 'month' };
 const DEFAULT_TIME = '20:00';
 
+export const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
+
+// The weekday universe a routine runs on (mirror of SQL commons.routine_days).
+export function routineDays(rule) {
+  if (rule?.freq === 'weekly' && rule.byDay?.length) return [...rule.byDay].sort((a, b) => a - b);
+  return ALL_DAYS;
+}
+
+// Weekdays a node participates on: the routine root's days intersected with every day_mask up the
+// chain (mirror of SQL commons.effective_days). `nodes` is the flat node list; returns all 7 if the
+// node is not under a routine. Used by the editor to constrain a child's day picker to its parent's days.
+export function effectiveDaysFor(nodes, nodeId) {
+  const chain = [];
+  let cur = nodes.find(n => n.id === nodeId);
+  let rootRule = null;
+  while (cur) {
+    chain.push(cur);
+    if (cur.recurrence) { rootRule = cur.recurrence; break; }
+    cur = nodes.find(n => n.id === cur.parent_id);
+  }
+  if (!rootRule) return ALL_DAYS;
+  let days = routineDays(rootRule);
+  for (const n of chain) {
+    if (n.day_mask?.length) days = days.filter(d => n.day_mask.includes(d));
+  }
+  return days;
+}
+
 export function defaultRule(freq) {
   const rule = { freq, interval: 1, time: DEFAULT_TIME };
   if (freq === 'weekly') rule.byDay = [];

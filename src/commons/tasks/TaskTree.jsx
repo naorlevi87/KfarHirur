@@ -18,7 +18,8 @@ function formatDue(due, locale) {
 
 function NodeRow({ node, depth, ctx }) {
   const { byParent, rosterById, t, locale, expanded, onToggleExpand, onToggleDone, onOpenTask } = ctx;
-  const children = byParent.get(node.id) ?? [];
+  // Tree views show the definition layer only (no run instances); an optional `filter` narrows further.
+  const children = (byParent.get(node.id) ?? []).filter(c => !c.occurrence_date && (!ctx.filter || ctx.filter(c)));
   const pad = { paddingInlineStart: `${depth * 18 + 4}px` };
 
   if (node.kind === 'container') {
@@ -106,10 +107,11 @@ function NodeRow({ node, depth, ctx }) {
   );
 }
 
-export function TaskTree({ tree, rootId = 'root', rootKinds, rosterById, myRoleIds, t, locale, onOpenTask }) {
+export function TaskTree({ tree, rootId = 'root', rootKinds, filter, rosterById, myRoleIds, t, locale, onOpenTask }) {
   const [expanded, setExpanded] = useState(() => new Set());
-  const all = tree.byParent.get(rootId) ?? [];
-  const roots = rootKinds ? all.filter(n => rootKinds.includes(n.kind)) : all;
+  const all = (tree.byParent.get(rootId) ?? []).filter(n => !n.occurrence_date);
+  const kinded = rootKinds ? all.filter(n => rootKinds.includes(n.kind)) : all;
+  const roots = filter ? kinded.filter(filter) : kinded;
 
   function onToggleExpand(id) {
     setExpanded(prev => {

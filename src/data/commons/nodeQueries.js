@@ -5,7 +5,7 @@
 import { commonsDb } from './commonsClient.js';
 
 const FIELDS =
-  'id, workspace_id, parent_id, kind, title, description, status, owner_id, role_ids, due_date, recurrence, next_run, template_id, occurrence_date, day_mask, due_time, completed_by, completed_at, completed_late, position, created_at, updated_at';
+  'id, workspace_id, parent_id, kind, title, description, status, owner_id, role_ids, due_date, start_date, recurrence, next_run, template_id, occurrence_date, day_mask, due_time, completed_by, completed_at, completed_late, position, created_at, updated_at';
 
 // All nodes in a workspace, ordered for stable tree rendering.
 export async function fetchTree(workspaceId) {
@@ -59,6 +59,13 @@ export async function completeSubtree(id) {
 // "עלי" — take an unassigned task onto the signed-in member (server sets owner_id). Returns the row.
 export async function claimNode(id) {
   const { data, error } = await commonsDb.rpc('claim_node', { node_id: id });
+  if (error) throw error;
+  return data;
+}
+
+// Release a task's owner — a member removing themselves, or a manager clearing anyone.
+export async function unclaimNode(id) {
+  const { data, error } = await commonsDb.rpc('unclaim_node', { node_id: id });
   if (error) throw error;
   return data;
 }
