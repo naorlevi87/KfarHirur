@@ -101,12 +101,23 @@ proceed beyond dismissal).
 
 ### 2.1 Placement & scope
 - A section at the **bottom of the task screen** (`TaskViewPage`), below sub-tasks/actions.
+- Available on **every node** — any task and any sub-task can have a log.
 - Attached to the **instance** node — **per occurrence only**. A routine's daily run has its own log;
   the definition has its own. (Matches the routine/run model where `occurrence_date` set = instance.)
 - **Visibility:** every active member of the workspace can read. (Locked decision.)
 - **Delete:** manager/admin only. (Locked decision — no self-delete.)
 
-### 2.2 Layout
+### 2.2 Empty state — lazy, uncluttered
+Most tasks will never get a note, so the box must not clutter the screen when empty. There are **no
+rows in `node_entries`** until the first entry, so nothing is created prematurely on the data side.
+
+- **No entries** → render only a single quiet affordance: **"➕ הוסף הערה, תמונה או קישור"**. The task
+  screen otherwise stays minimal (owner + completer, which it already shows). Tapping it reveals the
+  composer.
+- **≥ 1 entry** (added directly, or a completion note) → render the full "מה קרה כאן" section: header
+  + composer + feed.
+
+### 2.3 Layout (when present)
 - **Composer on top:** a single input *"הוסף פתק, תמונה או קישור…"* with attach buttons
   (📷 photo · 🔗 link · 📎 file) and a **פרסם** button.
 - **Feed below, newest first.** Each entry: avatar + name + relative time, then content by kind:
@@ -117,7 +128,7 @@ proceed beyond dismissal).
 - The **completion note** appears as an entry with a green **"✓ סומן כבוצע"** badge.
 - A 🗑 control shows on each entry **only for managers**.
 
-### 2.3 Data model
+### 2.4 Data model
 New table:
 
 ```sql
@@ -142,7 +153,7 @@ commons.node_entries (
 - `node_id` cascade-deletes entries when a node is removed (covers run cleanup and task deletion).
 - Index: `(node_id, created_at desc)` for the feed.
 
-### 2.4 Access pattern
+### 2.5 Access pattern
 - **Read** — direct `select` from `node_entries`; RLS `select` policy = `commons.is_active_member(workspace_id)`.
 - **Write** — `add_node_entry(...)` RPC (SECURITY DEFINER): resolves the caller's membership id
   server-side (mirrors `claim_node` / `set_node_status`), validates active membership, inserts.
@@ -152,7 +163,7 @@ commons.node_entries (
   a focused hook `useNodeEntries(nodeId)` — kept separate from `useWorkspaceTree` to avoid bloat.
   Components never touch Supabase directly (data-source opacity).
 
-### 2.5 Storage
+### 2.6 Storage
 - Private bucket **`commons-attachments`**.
 - Path convention: `{workspace_id}/{node_id}/{uuid}-{filename}`.
 - Bucket limits: **5 MB per file**; mime allowlist — images (`image/*`), `application/pdf`, common
@@ -165,7 +176,7 @@ commons.node_entries (
 - **Delete flow:** deleting a photo/file entry removes the storage object first, then the row (handled
   in `deleteEntry`).
 
-### 2.6 Auto-cleanup (privacy: data minimization)
+### 2.7 Auto-cleanup (privacy: data minimization)
 - A **pg_cron** cleanup pass (piggybacking the existing 08:00 schedule that runs `run_recurrences`):
   for **run instances** (`occurrence_date is not null` and part of a routine) whose day is **older than
   30 days**, delete the **whole occurrence log** — `node_entries` rows **and** their storage objects.
