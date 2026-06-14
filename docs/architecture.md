@@ -505,7 +505,12 @@ sharing only auth + the Supabase client + deploy with the site. It has its own `
 schema, shell, routing, content, and styles, and is built to be extractable later.
 
 - Module docs: `src/commons/COMMONS.md`
-- Design spec: `docs/superpowers/specs/2026-06-09-community-work-engine-design.md`
+- Design spec: `docs/superpowers/specs/2026-06-09-community-work-engine-design.md`;
+  routine/run model: `docs/superpowers/specs/2026-06-14-commons-recurring-routines-design.md`.
+- **Tasks model (high level):** one `commons.nodes` tree; a recurring task is a *routine* whose nested
+  items carry weekday day-masks + times and generate a dated *run* per operational day (08:00). An area
+  shows temporal bands (today / earlier / upcoming) + a routine-definition section; a task screen shows
+  only its own sub-tasks. One-off tasks have a start/deadline window. Detail lives in `COMMONS.md`.
 - Not under `MainLayout`; no consciousness mode. Access requires active `commons.workspace_members`.
 
 ---

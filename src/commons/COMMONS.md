@@ -12,9 +12,13 @@ Full product design: `docs/superpowers/specs/2026-06-09-community-work-engine-de
 ## Status
 Foundation & shell + workspace selection — done. Tasks (tree, recurrence engine) — done.
 Board/shell redesign — done: שלי = my assigned tasks, לוח = areas board, full-screen create/view/edit,
-hamburger menu, FAB, task/folder permission split. Sub-tasks + scheduling — done: recursive sub-task
-checklists (task view = hub), due-date XOR recurrence with an "עד שעה" time, 8 AM operational day.
-Next: תמונת מצב snapshot, התראות, member management (admin links jump to the site /admin for now).
+hamburger menu, FAB, task/folder permission split. **Routines & runs — done:** a recurring task is a
+routine whose nested items each carry a weekday day-mask + time; it generates one dated run per
+operational day (1-day look-ahead) shown in the area's temporal bands (מה היום / מה היה / מה יהיה /
+הגדרות); a task screen shows only its own sub-tasks (layer-aware). Occurrence ops (resolve-missed,
+defer/skip, completion attribution, claim/unclaim), one-off start/deadline windows.
+Next: תמונת מצב snapshot, התראות/escalation, completion-note + per-task documentation (notes/photos/links),
+routine clone, cancel-a-run-for-a-day. Member management admin links jump to the site /admin for now.
 
 ## Routing
 - `/commons` — resolves the user's workspaces: 0 → no-access · 1 → auto-enter (redirect) · 2+ → picker.
@@ -47,9 +51,11 @@ responsibility tags, separate from `permission_level` (admin/manager/member).
   (→ Commons' own `account` screen: name, avatar, sign out, account deletion) and **back to Kfar Hirur**.
   `Fab.jsx` — create FAB on לוח/area (manager/admin).
 - `icons.jsx` — inline SVG icon set (replaces emoji glyphs across the shell).
-- `pages/` — `MyTasksPage` (שלי), `BoardPage` (לוח areas board), `AreaPage` (one area), `ComingSoonPage`.
-- `tasks/` — `TaskTree` (a subtree, via `rootId`), `TaskFormPage` (create/edit, task or folder),
-  `TaskViewPage` (read-only + complete + עריכה), `RecurrenceField`, `recurrence.js`.
+- `pages/` — `MyTasksPage` (שלי), `BoardPage` (לוח areas board), `AreaPage` (one area = the operational
+  surface: four temporal bands מה היום / מה היה / מה יהיה + הגדרות definition tree), `ComingSoonPage`.
+- `tasks/` — `TaskTree` (definition subtree via `rootId`, optional `filter`), `TaskFormPage`
+  (create/edit; day-mask + per-item time for routine orders, start/deadline for one-offs),
+  `TaskViewPage` (a task's own-layer sub-tasks with the row grammar + occurrence actions), `RecurrenceField`, `recurrence.js`.
 - `WorkspacePicker.jsx` (+ `WorkspaceList`) · `WorkspaceSwitcher.jsx` (opened from the menu) · `NoAccessScreen.jsx`.
 - `resolveCommonsShellContent.js` + `../content/commons/{he,en}/` — all UI copy (no hardcoded strings).
 - `styles/` — own tokens + layout (independent of Naor/Shay). Motion via `motion/react` (spring, staggered reveals).
@@ -63,16 +69,23 @@ responsibility tags, separate from `permission_level` (admin/manager/member).
 - **Node permissions:** read → any active member; write **tasks** → manager/admin (`managers write tasks`); write
   **folders/anything** → admin (`admins write nodes`). Members complete/reopen tasks through the
   `commons.set_node_status(id, status)` SECURITY DEFINER RPC (status-only) — wired in `setNodeStatus`.
-- Recurrence: a task with a `recurrence` rule `{freq,interval,byDay?,time}` is a **template** (`template_id`
-  null). `commons.run_recurrences()` (pg_cron, **08:00**) materializes each operational day's occurrence
-  (due that day at the rule's `time`) as a sibling task linked by `template_id`, advances `next_run`, and
-  marks prior un-done occurrences `missed`. A task has `due_date` XOR `recurrence`, never both.
-- Sub-tasks: any task nests tasks (`parent_id`). A parent task's status is **derived** by the
-  `rollup_parent_status` trigger (done ⇔ all task-children done). `commons.complete_subtree(id)` (RPC,
-  member-gated) cascades a whole subtree to done. Members may insert/delete sub-tasks inside an existing
-  task (`members add subtasks` / `members delete own subtasks` policies); top-level/area creation stays
-  manager/admin. Lists show one level + a `done/total` chip (`useWorkspaceTree.progress`); the task view is
-  the checklist hub.
+- **Routines, definitions, runs.** `occurrence_date` is the layer discriminator: **null = definition**,
+  **set = instance**. A task with a `recurrence` rule is a **routine** (a definition); its nested items
+  are definitions, each with an optional `day_mask` (weekday subset that must stay within its parent's
+  days — `commons.effective_days`) and a per-item `due_time`. `commons.run_recurrences()` (pg_cron, 08:00,
+  **1-day look-ahead**) generates one **run** per operational day: a deep clone of the definition subtree
+  nested *under* the routine (`template_id` → source), dropping day-masked-out branches. A separate pass
+  marks genuinely-past un-done instances `missed`. Guards: recurrence only on definitions and never nested.
+- **Occurrence ops.** `set_node_status` stamps completion attribution (`completed_by/at/late`);
+  `resolve_missed(node, did_by)` records a missed item as a late completion (member-gated);
+  `defer_occurrence(node, to_date)` (manager+) pushes one occurrence to another op-day or skips it
+  (`cancelled`); `unclaim_node` releases ownership (self, or manager clears anyone).
+- **One-off tasks** carry a window: `start_date` ("בתאריך", when it becomes actionable) and/or `due_date`
+  ("עד", the deadline, with time). Future start → upcoming; otherwise actionable now.
+- Sub-tasks: any task nests tasks (`parent_id`). A parent's status is **derived** by the
+  `rollup_parent_status` trigger (done ⇔ all task-children done); `commons.complete_subtree(id)` (RPC,
+  member-gated) cascades to done. A task screen lists only its own-layer children + a `done/total` chip
+  (`useWorkspaceTree.progress` is layer-aware). Members may add/delete sub-tasks inside an existing task.
 - Operational day = 08:00 → 08:00 (`src/commons/opDay.js`): all today/overdue/missed/rollover math, never midnight.
 
 ## Protecting the user from mistakes
