@@ -2,7 +2,7 @@
 // Upload and delete helpers for the homepage Supabase Storage bucket.
 // Used by admin media UI only — never called from public-facing components.
 
-import { supabase } from '../timeline/supabaseClient.js';
+import { supabase } from '../core/supabaseClient.js';
 
 const BUCKET = 'homepage';
 const BUCKET_HOST = 'kqlfvwlzayinngrgafec.supabase.co/storage';

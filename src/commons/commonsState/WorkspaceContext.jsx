@@ -5,7 +5,7 @@
 // Components never see Supabase or RLS.
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { useAuth } from '../../app/appState/AuthContext.jsx';
+import { useAccount } from '../../app/appState/AccountContext.jsx';
 import {
   fetchWorkspaceBySlug,
   fetchMyMembership,
@@ -15,7 +15,7 @@ import {
 const WorkspaceContext = createContext(null);
 
 export function WorkspaceProvider({ slug, children }) {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAccount();
   const userId = user?.id ?? null;
   const [state, setState] = useState({ loading: true, workspace: null, membership: null, roles: [] });
   const runRef = useRef(0); // newest run wins — a superseded fetch (slug change / refresh) never applies

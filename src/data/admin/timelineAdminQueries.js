@@ -2,7 +2,7 @@
 // All CRUD queries for the admin UI. Uses the authenticated supabase client.
 // Components never import supabase directly — they call these functions.
 
-import { supabase } from '../timeline/supabaseClient.js';
+import { supabase } from '../core/supabaseClient.js';
 
 // ── Items ─────────────────────────────────────────────────────────────────────
 

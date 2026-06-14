@@ -106,6 +106,7 @@ export const commonsShellContent = {
     firstName: 'שם פרטי',
     lastName: 'שם משפחה',
     namePlaceholder: 'שם',
+    requiredField: 'שדה חובה',
     joined: 'הצטרף/ה',
     actions: 'פעולות',
     edit: 'עריכה',

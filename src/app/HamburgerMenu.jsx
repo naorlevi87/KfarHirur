@@ -8,7 +8,7 @@ import { resolveSiteShellContent } from './resolveSiteShellContent.js';
 import { getText } from '../utils/content/getText.js';
 import { useAppContext } from './appState/useAppContext.js';
 import { useAuth } from './appState/AuthContext.jsx';
-import { supabase } from '../data/timeline/supabaseClient.js';
+import { supabase } from '../data/core/supabaseClient.js';
 import { useCommonsMembership } from '../data/commons/useCommonsMembership.js';
 
 const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';

@@ -1,7 +1,7 @@
 // src/data/pageContent/pageContent.queries.js
 // Supabase fetch + upsert for the page_content table.
 
-import { supabase } from '../timeline/supabaseClient.js';
+import { supabase } from '../core/supabaseClient.js';
 
 /**
  * Fetch all content rows for a page + locale.

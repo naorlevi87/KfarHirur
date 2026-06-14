@@ -3,7 +3,9 @@
 // Entries gate by permission: new task → manager/admin, new folder + member management → admin.
 // "Switch workspace" is delegated to the parent so it can open the existing WorkspaceSwitcher.
 // A bottom group (pinned to the drawer floor) holds the personal/exit actions: user settings
-// (→ the site /profile screen: name, avatar, account deletion) and back-to-site.
+// (→ Commons' own account screen: name, avatar, sign out, account deletion) and back-to-site,
+// under a "by Kfar Hirur" brand mark. Account management stays inside Commons — it never punts the
+// user to the community site (docs/superpowers/specs/2026-06-14-account-and-products-model-design.md).
 
 import { useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
@@ -52,11 +54,12 @@ export function CommonsMenu({ open, onClose, onSwitchWorkspace }) {
           {workspaces.length > 1 && (
             <li><button type="button" className="commons-menu__item" onClick={() => { onClose(); onSwitchWorkspace(); }}><IconSwap size={20} /> {m.switchWorkspace}</button></li>
           )}
-          <li className="commons-menu__bottom"><button type="button" className="commons-menu__item" onClick={() => { onClose(); guardedNavigate('/profile'); }}><IconUser size={20} /> {m.settings}</button></li>
+          <li className="commons-menu__bottom"><button type="button" className="commons-menu__item" onClick={() => go('/account')}><IconUser size={20} /> {m.settings}</button></li>
           <li><button type="button" className="commons-menu__item commons-menu__item--back" onClick={() => { onClose(); guardedNavigate('/'); }}>
             <img className="commons-menu__logo" src={kfarLogo} alt="" /> {m.backToSite}
           </button></li>
         </ul>
+        <p className="commons-menu__brand">{m.brandedBy}</p>
       </aside>
     </div>
   );

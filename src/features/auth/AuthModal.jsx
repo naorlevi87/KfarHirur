@@ -2,7 +2,7 @@
 // Auth modal: Google, Facebook, email+password. Consciousness-mode aware.
 
 import { useEffect, useRef } from 'react';
-import { supabase } from '../../data/timeline/supabaseClient.js';
+import { supabase } from '../../data/core/supabaseClient.js';
 import { getText } from '../../utils/content/getText.js';
 import { EmailAuthForm } from './EmailAuthForm.jsx';
 import './AuthModal.css';

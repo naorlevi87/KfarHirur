@@ -4,13 +4,13 @@
 // never Supabase. Scoped above the per-workspace WorkspaceContext.
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { useAuth } from '../../app/appState/AuthContext.jsx';
+import { useAccount } from '../../app/appState/AccountContext.jsx';
 import { fetchMyWorkspaces } from '../../data/commons/workspaceQueries.js';
 
 const MembershipsContext = createContext(null);
 
 export function MembershipsProvider({ children }) {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAccount();
   const userId = user?.id ?? null;
   const [state, setState] = useState({ loading: true, workspaces: [] });
   const runRef = useRef(0); // newest run wins — a superseded fetch never applies

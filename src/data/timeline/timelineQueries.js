@@ -1,7 +1,7 @@
 // src/data/timeline/timelineQueries.js
 // Raw DB queries for timeline data. Returns DB rows — no resolution, no geometry.
 
-import { supabase } from './supabaseClient.js';
+import { supabase } from '../core/supabaseClient.js';
 
 const ITEM_FIELDS = `
   id,

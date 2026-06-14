@@ -1,7 +1,9 @@
 // src/commons/pages/MembersPage/InviteDialog.jsx
-// Aesthetic modal for inviting a member: email + permission + skills. On send it creates a pending
-// invite (consent-based — a membership is created only when the invitee accepts), emails the link via
-// Resend (best-effort), and shows a copyable /join/<token> link. Closes on backdrop / Escape.
+// Aesthetic modal for inviting a member: name + email + permission + skills. First name, last name,
+// and email are required — clicking send validates them and shows a conventional red asterisk + a
+// "required field" message under each empty one (first invalid field receives focus). On a valid send
+// it creates a pending invite (consent-based — a membership is created only when the invitee accepts),
+// emails the link via Resend (best-effort), and shows a copyable /join/<token> link.
 
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
@@ -13,6 +15,9 @@ const LEVELS = ['admin', 'manager', 'member'];
 
 export function InviteDialog({ workspace, locale, m, levelLabel, skillOptions, onClose, onCreated }) {
   const ref = useRef(null);
+  const firstRef = useRef(null);
+  const lastRef = useRef(null);
+  const emailRef = useRef(null);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -21,18 +26,30 @@ export function InviteDialog({ workspace, locale, m, levelLabel, skillOptions, o
   const [link, setLink] = useState('');
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
-
-  // Name + email are all required: a new member should arrive with a real name, not an email prefix.
-  const canSend = !!(firstName.trim() && lastName.trim() && email.trim()) && !busy;
+  const [errors, setErrors] = useState({}); // { firstName?, lastName?, email? } → message strings
 
   // Intentionally NOT closable by backdrop click or Escape — only the explicit close button exits,
   // so a stray tap (or finding an email to paste) can't discard a half-filled invite.
-  useEffect(() => { ref.current?.querySelector('input')?.focus(); }, []);
+  useEffect(() => { firstRef.current?.focus(); }, []);
+
+  const clearError = (field) => setErrors(prev => (prev[field] ? { ...prev, [field]: '' } : prev));
 
   async function submit(e) {
     e.preventDefault();
+    if (busy) return;
+
+    const next = {};
+    if (!firstName.trim()) next.firstName = m.requiredField;
+    if (!lastName.trim())  next.lastName  = m.requiredField;
+    if (!email.trim())     next.email     = m.requiredField;
+    if (Object.keys(next).length) {
+      setErrors(next);
+      (next.firstName ? firstRef : next.lastName ? lastRef : emailRef).current?.focus();
+      return;
+    }
+    setErrors({});
+
     const mail = email.trim();
-    if (!canSend) return;
     setBusy(true);
     try {
       const { token, has_account } = await createInvite(workspace.id, mail, level, roleIds, firstName, lastName);
@@ -60,23 +77,35 @@ export function InviteDialog({ workspace, locale, m, levelLabel, skillOptions, o
           transition={{ type: 'spring', stiffness: 260, damping: 26 }}>
           <h2 className="commons-inviteCard__title">{m.inviteTitle}</h2>
 
-        <form className="commons-invite" onSubmit={submit}>
+        <form className="commons-invite" onSubmit={submit} noValidate>
           <div className="commons-memberRow__names">
             <label className="commons-field">
-              <span className="commons-field__label">{m.firstName}</span>
-              <input className="commons-field__input" value={firstName}
-                placeholder={m.firstName} onChange={e => setFirstName(e.target.value)} />
+              <span className="commons-field__label">{m.firstName} <span className="commons-field__req" aria-hidden="true">*</span></span>
+              <input ref={firstRef} className="commons-field__input" value={firstName}
+                placeholder={m.firstName} aria-required="true"
+                aria-invalid={errors.firstName ? 'true' : undefined}
+                aria-describedby={errors.firstName ? 'inv-err-first' : undefined}
+                onChange={e => { setFirstName(e.target.value); clearError('firstName'); }} />
+              {errors.firstName && <span id="inv-err-first" className="commons-field__error" role="alert">{errors.firstName}</span>}
             </label>
             <label className="commons-field">
-              <span className="commons-field__label">{m.lastName}</span>
-              <input className="commons-field__input" value={lastName}
-                placeholder={m.lastName} onChange={e => setLastName(e.target.value)} />
+              <span className="commons-field__label">{m.lastName} <span className="commons-field__req" aria-hidden="true">*</span></span>
+              <input ref={lastRef} className="commons-field__input" value={lastName}
+                placeholder={m.lastName} aria-required="true"
+                aria-invalid={errors.lastName ? 'true' : undefined}
+                aria-describedby={errors.lastName ? 'inv-err-last' : undefined}
+                onChange={e => { setLastName(e.target.value); clearError('lastName'); }} />
+              {errors.lastName && <span id="inv-err-last" className="commons-field__error" role="alert">{errors.lastName}</span>}
             </label>
           </div>
           <label className="commons-field">
-            <span className="commons-field__label">{m.inviteEmail}</span>
-            <input className="commons-field__input" type="email" value={email}
-              placeholder={m.inviteEmailPlaceholder} onChange={e => setEmail(e.target.value)} />
+            <span className="commons-field__label">{m.inviteEmail} <span className="commons-field__req" aria-hidden="true">*</span></span>
+            <input ref={emailRef} className="commons-field__input" type="email" value={email}
+              placeholder={m.inviteEmailPlaceholder} aria-required="true"
+              aria-invalid={errors.email ? 'true' : undefined}
+              aria-describedby={errors.email ? 'inv-err-email' : undefined}
+              onChange={e => { setEmail(e.target.value); clearError('email'); }} />
+            {errors.email && <span id="inv-err-email" className="commons-field__error" role="alert">{errors.email}</span>}
           </label>
           <label className="commons-field">
             <span className="commons-field__label">{m.levelLabel}</span>
@@ -98,7 +127,7 @@ export function InviteDialog({ workspace, locale, m, levelLabel, skillOptions, o
               </div>
             </div>
           ) : (
-            <button type="submit" className="commons-btn commons-btn--primary commons-invite__send" disabled={!canSend}>
+            <button type="submit" className="commons-btn commons-btn--primary commons-invite__send" disabled={busy}>
               {m.inviteSend}
             </button>
           )}

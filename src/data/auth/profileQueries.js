@@ -1,7 +1,7 @@
 // src/data/auth/profileQueries.js
 // Profile DB queries: fetch, upsert display name / avatar.
 
-import { supabase } from '../timeline/supabaseClient.js';
+import { supabase } from '../core/supabaseClient.js';
 
 export async function fetchUserProfile(userId) {
   const { data, error } = await supabase

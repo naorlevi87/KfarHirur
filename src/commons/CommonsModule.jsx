@@ -25,6 +25,7 @@ import { TaskFormPage } from './tasks/TaskFormPage.jsx';
 import { TaskViewPage } from './tasks/TaskViewPage.jsx';
 import { RolesPage } from './pages/RolesPage/RolesPage.jsx';
 import { MembersPage } from './pages/MembersPage/MembersPage.jsx';
+import { AccountPage } from './pages/AccountPage/AccountPage.jsx';
 import { JoinInvitePage } from './pages/JoinInvitePage/JoinInvitePage.jsx';
 
 // `name` (the workspace) is shown when known: "בודק מה קורה ב<workspace>". Falls back to the
@@ -114,6 +115,7 @@ function WorkspaceGate() {
           <Route path="task/:nodeId/edit" element={<TaskFormPage mode="edit" />} />
           <Route path="roles" element={<RolesPage />} />
           <Route path="members" element={<MembersPage />} />
+          <Route path="account" element={<AccountPage />} />
         </Route>
       ) : (
         <Route path="*" element={<Navigate to="/commons" replace />} />

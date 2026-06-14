@@ -21,7 +21,7 @@ Next: תמונת מצב snapshot, התראות, member management (admin links j
 - `/commons/:workspaceSlug` — shell (bottom tabs):
   - index → **שלי** (`MyTasksPage`) · `board` → **לוח** (`BoardPage`) · `board/:containerId` → area drill-in (`AreaPage`)
   - `overview` `alerts` → `ComingSoonPage` placeholders.
-- `/commons/:workspaceSlug/task/new` · `task/:nodeId` · `task/:nodeId/edit` · `roles` · `members` —
+- `/commons/:workspaceSlug/task/new` · `task/:nodeId` · `task/:nodeId/edit` · `roles` · `members` · `account` —
   these render **inside** `CommonsLayout` like every other in-workspace screen, so the header + ☰ + tabs
   are always present. They declare their top-bar chrome (back chevron, title, optional action) via
   `useCommonsChrome` instead of rendering their own bar.
@@ -43,8 +43,9 @@ responsibility tags, separate from `permission_level` (admin/manager/member).
   action — `docs/commons-standards.md` §1.1) + Outlet + bottom tab nav. Hosts the chrome + nav-guard
   providers; every in-workspace screen renders inside it.
 - `CommonsMenu.jsx` — hamburger side drawer: new task (manager/admin), new folder + member/role management (admin),
-  switch workspace, and a bottom-pinned personal group — **user settings** (→ the site `/profile`: name, avatar,
-  account deletion) and **back to Kfar Hirur**. `Fab.jsx` — create FAB on לוח/area (manager/admin).
+  switch workspace, and a bottom-pinned personal group under a **"מבית כפר הירעור"** brand mark — **user settings**
+  (→ Commons' own `account` screen: name, avatar, sign out, account deletion) and **back to Kfar Hirur**.
+  `Fab.jsx` — create FAB on לוח/area (manager/admin).
 - `icons.jsx` — inline SVG icon set (replaces emoji glyphs across the shell).
 - `pages/` — `MyTasksPage` (שלי), `BoardPage` (לוח areas board), `AreaPage` (one area), `ComingSoonPage`.
 - `tasks/` — `TaskTree` (a subtree, via `rootId`), `TaskFormPage` (create/edit, task or folder),
@@ -83,6 +84,14 @@ guarding unsaved work mandatory (see CLAUDE.md hard rule):
   covers browser refresh / tab-close. Save/Delete clear `dirty` and navigate directly.
 - **Destructive actions** — task/folder delete, skill delete, member removal, and invite cancel all
   confirm via `ConfirmDialog`. Completion stays one-tap (reopen is the undo).
+
+## Account & identity (neutral)
+Commons is a **product by Kfar Hirur** — a peer of the community site on a neutral account layer, not a room
+inside the community. It reads the account via `useAccount()` (never the site `role`), shows a "מבית כפר הירעור"
+brand mark, and hosts its **own** account screen (`/commons/:slug/account`: name, avatar, sign out, delete
+account) instead of sending users to the site's `/profile`. A per-workspace `display_name` may override the
+account name (`src/data/commons/identity.js`; avatar always inherits from the account).
+Full model: `docs/superpowers/specs/2026-06-14-account-and-products-model-design.md`.
 
 ## Rules (inherited from the site)
 Data-source opacity, no hardcoded strings, resolver pattern, mobile-first, file-header comments.

@@ -3,7 +3,7 @@
 // Components call this hook and render from `byParent` — they never touch Supabase.
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useAuth } from '../../app/appState/AuthContext.jsx';
+import { useAccount } from '../../app/appState/AccountContext.jsx';
 import {
   fetchTree,
   createNode,
@@ -15,7 +15,7 @@ import {
 } from '../../data/commons/nodeQueries.js';
 
 export function useWorkspaceTree(workspaceId) {
-  const { user } = useAuth();
+  const { user } = useAccount();
   const [nodes, setNodes] = useState([]);
   const [loading, setLoading] = useState(true);
 

@@ -105,6 +105,7 @@ export const commonsShellContent = {
     firstName: 'First name',
     lastName: 'Last name',
     namePlaceholder: 'Name',
+    requiredField: 'Required field',
     joined: 'Joined',
     actions: 'Actions',
     edit: 'Edit',

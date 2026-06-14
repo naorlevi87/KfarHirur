@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../app/appState/AuthContext.jsx';
 import { useAppContext } from '../../app/appState/useAppContext.js';
 import { upsertUserProfile, uploadAvatar, deleteAccount } from '../../data/auth/profileQueries.js';
-import { supabase } from '../../data/timeline/supabaseClient.js';
+import { supabase } from '../../data/core/supabaseClient.js';
 import { resolveProfileContent } from './resolveProfileContent.js';
 import './ProfilePage.css';
 

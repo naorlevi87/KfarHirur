@@ -9,7 +9,7 @@ import './join.css';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAppContext } from '../../../app/appState/useAppContext.js';
-import { useAuth } from '../../../app/appState/AuthContext.jsx';
+import { useAccount } from '../../../app/appState/AccountContext.jsx';
 import { useWorkspace } from '../../commonsState/WorkspaceContext.jsx';
 import { useMemberships } from '../../commonsState/MembershipsContext.jsx';
 import { resolveCommonsShellContent } from '../../resolveCommonsShellContent.js';
@@ -18,7 +18,7 @@ import { CommonsLoading } from '../../CommonsLoading.jsx';
 
 export function JoinInvitePage() {
   const { locale } = useAppContext();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAccount();
   const { refresh: refreshWorkspace } = useWorkspace();
   const { refresh: refreshMemberships } = useMemberships();
   const { token } = useParams();

@@ -1,7 +1,7 @@
 // src/data/auth/authQueries.js
 // Auth-related DB queries. Role lookup only — auth state lives in AuthContext.
 
-import { supabase } from '../timeline/supabaseClient.js';
+import { supabase } from '../core/supabaseClient.js';
 
 // Returns the role string ('admin' | 'editor' | 'member') or null if not found.
 export async function fetchUserRole(userId) {

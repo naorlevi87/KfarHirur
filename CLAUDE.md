@@ -358,6 +358,12 @@ see `src/commons/COMMONS.md`.
 
 - Project URL: `kqlfvwlzayinngrgafec.supabase.co`
 - Auth: `user_roles` table with roles `admin / editor / member`
+- **Account & products model:** one neutral account (`auth.users` + `user_profiles`; client at
+  `src/data/core/supabaseClient.js`; `useAccount()`) underlies two peer products — the community site and
+  Commons. The site `role` (`user_roles`, via `useAuth()`) is a community-site fact; Commons never reads it
+  (it uses `useAccount`). Each product hosts its own account/settings UI over the shared account — never punt
+  a user from one product to the other. Full model:
+  `docs/superpowers/specs/2026-06-14-account-and-products-model-design.md`.
 - RLS enabled on `timeline_items` and `timeline_item_blocks`
 - **Service role key:** `SUPABASE_SERVICE_ROLE_KEY` in `.env.local` — used only for local scripts that need to bypass RLS (seeding, admin scripting). Never expose to browser. Never commit.
 

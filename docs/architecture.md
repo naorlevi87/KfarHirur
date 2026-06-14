@@ -32,7 +32,8 @@ Owns:
 ### `AppProviders`
 Owns:
 - `AppContext.Provider` with `{ locale, mode, setMode }`
-- `AuthProvider` (Supabase auth subscription)
+- `AccountProvider` — the neutral account/identity trunk (session + profile + signOut/deleteAccount), shared by every product
+- `AuthProvider` — the community site's projection of the account: it adds the site `role` (`user_roles`) on top
 - context injection only — no logic
 
 ### `MainLayout`
@@ -74,7 +75,8 @@ src/
     appState/
       AppContext.jsx                 — context definition only
       useAppContext.js               — hook: throws if outside provider
-      AuthContext.jsx                — Supabase auth: user, role, loading
+      AccountContext.jsx             — neutral account/identity trunk: user, profile, signOut, deleteAccount (useAccount)
+      AuthContext.jsx                — community-site projection: account + site role (useAuth)
 
   pages/
     home/
@@ -143,8 +145,9 @@ src/
         (mirrors he/ — scaffolded for future English support; locale hardcoded to 'he' in App.jsx)
 
   data/
+    core/
+      supabaseClient.js              — Supabase client (anon key); the neutral account/DB handle shared by all products
     timeline/
-      supabaseClient.js              — Supabase client (anon key)
       timelineQueries.js             — fetchTimelineItems(), fetchTimelineItemBySlug()
       resolveTimelineItem.js         — resolves raw DB item → semantic payload (geometry optional)
       resolveBlock.js                — routes block_type to correct resolver
@@ -220,9 +223,13 @@ supabase/                            — Supabase config / migrations (if any)
 - **Auth:** Supabase email/password auth
 - **Roles table:** `user_roles` — columns: `user_id`, `role` (enum: `admin | editor | member`)
 - **RLS:** enabled on `timeline_items` and `timeline_item_blocks`
-- **AuthContext** subscribes to `supabase.auth.onAuthStateChange` → exposes `{ user, role, profile, loading }`
+- **AccountContext** (the neutral trunk) subscribes to `supabase.auth.onAuthStateChange` → exposes
+  `{ user, profile, loading, refreshProfile, signOut, deleteAccount }` — **no role**. Both products consume it via `useAccount()`.
   - `profile`: `{ displayName, avatarUrl }` — fetched from `user_profiles` table on sign-in
-- **Hook:** `useAuth()` from `AuthContext.jsx`
+- **AuthContext** is the **community site's projection**: it consumes `useAccount()` and layers the site `role`
+  (`user_roles`) on top, exposing `{ user, role, profile, loading, refreshProfile }` via `useAuth()`.
+  `role` is a community-site fact — Commons never reads it (it uses `useAccount`). See §18.
+- **Hooks:** `useAccount()` (neutral) from `AccountContext.jsx`; `useAuth()` (site) from `AuthContext.jsx`
 - **Auth UI:** `AuthModal` (in `features/auth/`) — rendered by `MainLayout`, opened via `onOpenAuth` prop passed to `HamburgerMenu`
 
 ### Admin users
@@ -500,3 +507,31 @@ schema, shell, routing, content, and styles, and is built to be extractable late
 - Module docs: `src/commons/COMMONS.md`
 - Design spec: `docs/superpowers/specs/2026-06-09-community-work-engine-design.md`
 - Not under `MainLayout`; no consciousness mode. Access requires active `commons.workspace_members`.
+
+---
+
+## 18. Account & Products model
+
+Full spec: `docs/superpowers/specs/2026-06-14-account-and-products-model-design.md`.
+
+Kfar Hirur runs **two products on one login**, organized as three layers:
+
+```
+ACCOUNT (neutral trunk)  →  one login, name, avatar, email, delete-account. Belongs to no product.
+   ├─ Community site      →  product: you are part of the Kfar Hirur community (site `role`).
+   └─ Commons             →  product by Kfar Hirur: you are a member of workspaces. "by Kfar Hirur" = a brand mark.
+```
+
+- **Account = neutral trunk:** `auth.users` + `user_profiles`, the `data/core/supabaseClient.js` handle, and
+  `AccountContext`/`useAccount`. One OAuth app (Google/Facebook) authenticates the **account**, not a product.
+- **Products are peers** on top. A product never assumes you belong to the other. Site `role` (`user_roles`) and
+  Commons `permission_level` (`workspace_members`) are separate; neither is an account fact.
+- **The test for any feature:** *account fact* (email, password, avatar, account name, delete-account → neutral,
+  shared) vs *product fact* (community role/donations; or workspaces/assignments/per-workspace name).
+- **Settings screens stack two tiers:** a shared **account section** (identical in every product) + a
+  **product section** (only that product's settings). Commons has its own account screen at
+  `/commons/:slug/account` — it never punts the user to the site's `/profile`.
+- **Profile identity:** the account name/avatar is canonical; a Commons workspace **may** override the display
+  name (avatar inherits). Rule lives in `src/data/commons/identity.js`. Latent today (Joz only).
+- **Deferred (Bucket 3):** separate domain, platform-vs-community terms, notification branding, federated
+  identity. One Supabase project, one OAuth app, one origin until a second tenant justifies otherwise.

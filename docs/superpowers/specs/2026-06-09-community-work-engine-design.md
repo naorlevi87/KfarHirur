@@ -38,7 +38,7 @@ Phase 1 includes: workspaces, the Area→Task tree, ownership (owner) + executio
 The council (5 advisors + peer review) converged on this over a *separate app*:
 - A separate Vite app/subdomain is **premature complexity** for a handful of users; the split is **reversible**, the schema is the only **irreversible** decision.
 - **Subpath, not subdomain** — same origin means the Supabase session "just works"; a subdomain breaks the shared session unless you fight cookie-domain/`storageKey`/redirect config for no benefit at this scale.
-- **Do not reuse the site's `user_roles` table** — site roles and work roles are different universes. Auth is shared; **authorization is not**.
+- **Do not reuse the site's `user_roles` table** — site roles and work roles are different universes. Auth is shared; **authorization is not**. (Formalized later in the account/products model: the account is a neutral trunk; the site `role` and Commons `permission_level` are separate product facts — see `docs/superpowers/specs/2026-06-14-account-and-products-model-design.md`.)
 - **`workspace_id` on every table, in every RLS policy and unique constraint** — a column alone is not multi-tenancy.
 - **Separate `work` schema** hedges the shared-backend blast radius: a bad work migration can't touch the live site's `public` tables.
 - Avoid over-building — but recurring chores + claiming are *core value* for a restaurant, not extras (the reason Phase 1 is full-featured).

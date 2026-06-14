@@ -2,7 +2,7 @@
 // Email + password form: sign-in and sign-up modes, email confirmation state.
 
 import { useState } from 'react';
-import { supabase } from '../../data/timeline/supabaseClient.js';
+import { supabase } from '../../data/core/supabaseClient.js';
 import { getText } from '../../utils/content/getText.js';
 
 export function EmailAuthForm({ copy, onSuccess }) {

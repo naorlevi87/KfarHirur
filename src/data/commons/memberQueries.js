@@ -3,7 +3,7 @@
 // flow (commons.invites). The data source (Supabase, `commons` schema, RLS) stays hidden here.
 
 import { commonsDb } from './commonsClient.js';
-import { supabase } from '../timeline/supabaseClient.js';
+import { supabase } from '../core/supabaseClient.js';
 
 // Active members of a workspace, for the member-management screen. Goes through an admin-gated
 // SECURITY DEFINER function so the email (from auth.users) can be included; returns [] for non-admins.
