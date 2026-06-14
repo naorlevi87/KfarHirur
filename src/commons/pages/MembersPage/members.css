@@ -38,20 +38,15 @@
 .commons-memberRow__edit:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
 .is-editing .commons-memberRow__edit { color: var(--commons-accent); }
 
-/* Inline edit panel revealed by the pencil. */
-.commons-memberRow__panelInner {
-  display: flex; flex-direction: column; gap: 12px; padding: 4px 14px 16px;
-}
-.commons-memberRow__panelActions { display: flex; gap: 8px; align-items: center; margin-top: 2px; }
+/* Pending-invite row buttons (resend / cancel). The edit-panel buttons are shared (CommonsLayout.css). */
 .commons-memberRow__btn {
   display: inline-flex; align-items: center; gap: 6px; background: none; border: 1px solid var(--commons-border);
   color: var(--commons-text); cursor: pointer; font: inherit; padding: 8px 14px; border-radius: 9px;
 }
 .commons-memberRow__btn:hover { background: var(--commons-surface); }
 .commons-memberRow__btn:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
-.commons-memberRow__btn--danger { color: var(--commons-danger); border-color: transparent; margin-inline-end: auto; }
+.commons-memberRow__btn--danger { color: var(--commons-danger); border-color: transparent; }
 .commons-memberRow__btn--danger:hover { background: var(--commons-surface); }
-.commons-memberRow__btn--done { background: var(--commons-accent); color: var(--commons-bg); border-color: transparent; font-weight: 700; }
 
 /* Dropdown placeholder/empty states (shared dropdowns, member context). */
 .commons-skillSelect__btn.is-placeholder .commons-skillSelect__summary { color: var(--commons-text-dim); }

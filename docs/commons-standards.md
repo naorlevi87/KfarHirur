@@ -21,7 +21,7 @@
 
 ## 1. Chrome & navigation
 
-### 1.1 Two-band header 🔜
+### 1.1 Two-band header ✅
 The top of every Commons screen is **two fixed bands**, owned by the shell — never re-built per page:
 
 ```
@@ -49,7 +49,7 @@ separate and stable.
 > `title = chrome.title || workspace.name` shared one slot). The chrome *API* is unchanged; only the
 > rendering splits into two bands.
 
-### 1.2 Back chevron points to the reading-start 🔜
+### 1.2 Back chevron points to the reading-start ✅
 In RTL (Hebrew), "back" points **→ right**. The back chevron (`IconChevronStart`) must follow reading
 direction, not a hardcoded left-pointing glyph. This is the standard everywhere a back affordance
 appears.
@@ -69,7 +69,7 @@ task" and "add a config row" look identical when they are not.
 This is the universal pattern for **any list of editable items** (capabilities, members, and every
 future catalogue/list screen). All such rows behave identically.
 
-### 2.1 Collapsed = read 🔜
+### 2.1 Collapsed = read ✅
 A collapsed row exposes **only identity and a way in**: the item name, a small read-only status/color
 **indicator** (e.g. a color dot), and a **pencil** button on the reading-end side (left in RTL).
 Nothing that mutates data appears on a collapsed row — no editable fields, no color swatches, no
@@ -82,7 +82,7 @@ delete.
 **Why:** controls living permanently on every row create visual noise and accidental mutations
 (a stray tap recolors or deletes an item). The resting state of a list must be calm and safe.
 
-### 2.2 Pencil → expand in place 🔜
+### 2.2 Pencil → expand in place ✅
 Tapping the pencil **expands the row in place** (spring motion) into an edit panel containing **all**
 of the item's editable fields — name, color, skills, etc. Editing is never a separate page or a native
 dialog for list items.
@@ -91,7 +91,7 @@ dialog for list items.
 - **Native `window.prompt` / `window.confirm` are banned** for editing or confirming. Everything is
   in-app and theme-aware.
 
-### 2.3 Save + Cancel 🔜
+### 2.3 Save + Cancel ✅
 The expanded panel commits via an explicit **Save** button and backs out via **Cancel**.
 
 - Nothing is persisted until **Save**. **Cancel** discards all changes in the panel and closes it.
@@ -101,7 +101,7 @@ The expanded panel commits via an explicit **Save** button and backs out via **C
 **Why:** an explicit commit moment is predictable on mobile and gives the user a guaranteed escape
 hatch from a mis-edit. (This replaces save-on-blur, which has no clear committed moment.)
 
-### 2.4 Secondary attributes live in the panel 🔜
+### 2.4 Secondary attributes live in the panel ✅
 Color pickers, toggles, multi-selects, and any control beyond plain identity belong **inside the
 expanded edit panel**, not on the collapsed row. The collapsed row may *display* the current value
 (a color dot, a badge) but never lets you *change* it.
@@ -149,6 +149,12 @@ principle. Restated here as an interaction standard.)
 ## Decision Log
 
 > Append a dated entry whenever a standard is added, changed, or an exception is granted. Newest first.
+
+### 2026-06-14 — Standard applied to Roles + Members
+- Chrome two-band header + RTL back-chevron flip shipped (the parallel-session shell work) → §1.1, §1.2 now ✅.
+- **RolesPage** rebuilt to the row grammar: `+` in the screen bar opens an empty edit panel; each row is a color dot + name + pencil; the pencil expands a shared panel (name + color picker + Save/Cancel); delete moved inside the panel. `window.prompt`, the always-live row swatches, and the open inline add-form are gone → §2, §3 now ✅.
+- **MembersPage** moved off save-on-blur to the same Save + Cancel model and adopted the shared panel classes → §2.3 now ✅.
+- Added shared `commons-editPanel*` classes (`CommonsLayout.css`) so both screens render one identical panel.
 
 ### 2026-06-12 — Initial standard locked
 Triggered by the capabilities (RolesPage) screen, whose interactions had drifted: add via an

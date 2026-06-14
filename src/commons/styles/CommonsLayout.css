@@ -59,6 +59,22 @@
 }
 .commons-screen__delete:focus-visible { outline: 2px solid var(--commons-danger); outline-offset: 2px; }
 
+/* ── Shared inline edit panel (list rows: roles, members) — docs/commons-standards.md §2 ──
+   The pencil expands a panel holding all editable fields; commit via Save, back out via Cancel.
+   Delete sits at the reading-start, the Cancel/Save commit group at the reading-end. */
+.commons-editPanel__inner { display: flex; flex-direction: column; gap: 12px; padding: 4px 14px 16px; }
+.commons-editPanel__actions { display: flex; gap: 8px; align-items: center; margin-top: 2px; }
+.commons-editPanel__commit { margin-inline-start: auto; display: flex; gap: 8px; }
+.commons-editPanel__btn {
+  display: inline-flex; align-items: center; gap: 6px; background: none; border: 1px solid var(--commons-border);
+  color: var(--commons-text); cursor: pointer; font: inherit; padding: 8px 14px; border-radius: 9px;
+}
+.commons-editPanel__btn:hover { background: var(--commons-surface-2); }
+.commons-editPanel__btn:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
+.commons-editPanel__btn--danger { color: var(--commons-danger); border-color: transparent; }
+.commons-editPanel__btn--save { background: var(--commons-accent); color: var(--commons-bg); border-color: transparent; font-weight: 700; }
+.commons-editPanel__btn--save:disabled { opacity: .5; cursor: default; }
+
 .commons-tabbar {
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 10;
   display: flex;
@@ -156,6 +172,7 @@
 .commons-drawer {
   position: absolute; inset-block: 0; inset-inline-start: 0;
   width: min(82vw, 320px); overflow-y: auto;
+  display: flex; flex-direction: column;
   background: var(--commons-surface); border-inline-end: 1px solid var(--commons-border);
   padding: 16px 14px calc(70px + env(safe-area-inset-bottom));
 }
@@ -165,11 +182,13 @@
 .commons-drawerRoot[dir="ltr"] .commons-drawer { animation: commons-drawer-in-ltr 240ms cubic-bezier(.2, .8, .2, 1); }
 @media (prefers-reduced-motion: reduce) { .commons-drawer { animation: none; } }
 
-.commons-menu { list-style: none; display: flex; flex-direction: column; gap: 6px; min-height: 100%; }
+.commons-menu { list-style: none; display: flex; flex-direction: column; gap: 6px; flex: 1 0 auto; }
 .commons-menu__logo { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; flex: 0 0 auto; }
 /* Personal/exit group floats to the drawer floor, separated by a divider. */
 .commons-menu__bottom { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--commons-border); }
 .commons-menu__item--back { color: var(--commons-text-dim); background: none; }
+/* Brand attribution — Commons is a product by Kfar Hirur, not a room inside the community site. */
+.commons-menu__brand { flex: 0 0 auto; margin: 14px 0 0; text-align: center; font-size: 12px; color: var(--commons-text-dim); }
 .commons-menu__item {
   width: 100%; text-align: start; display: flex; align-items: center; gap: 10px;
   background: var(--commons-surface-2); color: var(--commons-text);

@@ -45,7 +45,7 @@ export function MembersPage() {
   const [editingId, setEditingId] = useState(null);
   const [inviting, setInviting] = useState(false);
   const [resentId, setResentId] = useState(null);
-  const [nameDraft, setNameDraft] = useState({ firstName: '', lastName: '' });
+  const [draft, setDraft] = useState({ firstName: '', lastName: '', level: 'member', skillIds: [] });
   const [removeTarget, setRemoveTarget] = useState(null);   // member pending removal confirmation
   const [cancelTarget, setCancelTarget] = useState(null);   // invite pending cancel confirmation
 
@@ -58,7 +58,10 @@ export function MembersPage() {
   useCommonsChrome({ title: m.title, showBack: true, action: inviteAction });
 
   function openEdit(member) {
-    setNameDraft({ firstName: member.display_name ?? '', lastName: member.last_name ?? '' });
+    setDraft({
+      firstName: member.display_name ?? '', lastName: member.last_name ?? '',
+      level: member.permission_level, skillIds: (rolesByMember.get(member.id) ?? []).map(x => x.id),
+    });
     setEditingId(member.id);
   }
 
@@ -98,22 +101,37 @@ export function MembersPage() {
 
   if (!isAdmin) return null;
 
-  async function onLevel(member, level) {
+  // Commit the whole draft at once (docs/commons-standards.md §2.3 — explicit Save). Only fields that
+  // actually changed are written; optimistic update first, then persist.
+  async function saveEdit(member) {
+    const firstName = draft.firstName.trim() || null;
+    const lastName = draft.lastName.trim() || null;
+    const { level, skillIds } = draft;
+
     if (member.permission_level === 'admin' && level !== 'admin' && adminCount <= 1) { alert(m.lastAdmin); return; }
-    setMembers(prev => prev.map(x => (x.id === member.id ? { ...x, permission_level: level } : x)));
-    await updateMemberLevel(member.id, level);
-  }
-  async function saveName(member) {
-    const firstName = nameDraft.firstName.trim() || null;
-    const lastName = nameDraft.lastName.trim() || null;
-    if (firstName === (member.display_name ?? null) && lastName === (member.last_name ?? null)) return;
-    setMembers(prev => prev.map(x => (x.id === member.id ? { ...x, display_name: firstName, last_name: lastName } : x)));
-    await updateMemberName(member.id, nameDraft);
-  }
-  async function onSkills(member, nextIds) {
-    const nextRoles = roles.filter(r => nextIds.includes(r.id));
-    setRolesByMember(prev => { const c = new Map(prev); c.set(member.id, nextRoles); return c; });
-    await setMemberRoles(member.id, nextIds);
+
+    const nameChanged = firstName !== (member.display_name ?? null) || lastName !== (member.last_name ?? null);
+    const levelChanged = level !== member.permission_level;
+    const currentIds = (rolesByMember.get(member.id) ?? []).map(x => x.id);
+    const skillsChanged = currentIds.length !== skillIds.length || skillIds.some(id => !currentIds.includes(id));
+
+    if (nameChanged || levelChanged) {
+      setMembers(prev => prev.map(x => (x.id === member.id ? {
+        ...x,
+        display_name: nameChanged ? firstName : x.display_name,
+        last_name: nameChanged ? lastName : x.last_name,
+        permission_level: levelChanged ? level : x.permission_level,
+      } : x)));
+    }
+    if (skillsChanged) {
+      const nextRoles = roles.filter(rr => skillIds.includes(rr.id));
+      setRolesByMember(prev => { const c = new Map(prev); c.set(member.id, nextRoles); return c; });
+    }
+    setEditingId(null);
+
+    if (nameChanged) await updateMemberName(member.id, { firstName: draft.firstName, lastName: draft.lastName });
+    if (levelChanged) await updateMemberLevel(member.id, level);
+    if (skillsChanged) await setMemberRoles(member.id, skillIds);
   }
   function askRemove(member) {
     if (member.permission_level === 'admin' && adminCount <= 1) { alert(m.lastAdmin); return; }
@@ -140,7 +158,6 @@ export function MembersPage() {
           <ul className="commons-members__list">
             {members.map(member => {
               const editing = editingId === member.id;
-              const myRoles = (rolesByMember.get(member.id) ?? []).map(r => r.id);
               return (
                 <li key={member.id} className={editing ? 'commons-memberRow is-editing' : 'commons-memberRow'}>
                   <div className="commons-memberRow__line">
@@ -157,46 +174,47 @@ export function MembersPage() {
 
                   <AnimatePresence initial={false}>
                     {editing && (
-                      <motion.div className="commons-memberRow__panel"
+                      <motion.div className="commons-editPanel"
                         initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
                         transition={{ type: 'spring', stiffness: 320, damping: 32 }} style={{ overflow: 'hidden' }}>
-                        <div className="commons-memberRow__panelInner">
+                        <div className="commons-editPanel__inner">
                           <div className="commons-memberRow__names">
                             <label className="commons-field">
                               <span className="commons-field__label">{m.firstName}</span>
-                              <input className="commons-field__input" value={nameDraft.firstName}
+                              <input className="commons-field__input" value={draft.firstName}
                                 placeholder={m.firstName}
-                                onChange={e => setNameDraft(d => ({ ...d, firstName: e.target.value }))}
-                                onBlur={() => saveName(member)} />
+                                onChange={e => setDraft(d => ({ ...d, firstName: e.target.value }))} />
                             </label>
                             <label className="commons-field">
                               <span className="commons-field__label">{m.lastName}</span>
-                              <input className="commons-field__input" value={nameDraft.lastName}
+                              <input className="commons-field__input" value={draft.lastName}
                                 placeholder={m.lastName}
-                                onChange={e => setNameDraft(d => ({ ...d, lastName: e.target.value }))}
-                                onBlur={() => saveName(member)} />
+                                onChange={e => setDraft(d => ({ ...d, lastName: e.target.value }))} />
                             </label>
                           </div>
                           <label className="commons-field">
                             <span className="commons-field__label">{m.levelLabel}</span>
-                            <SelectField ariaLabel={m.levelLabel} value={member.permission_level}
-                              onChange={(v) => onLevel(member, v)}
+                            <SelectField ariaLabel={m.levelLabel} value={draft.level}
+                              onChange={(v) => setDraft(d => ({ ...d, level: v }))}
                               options={LEVELS.map(l => ({ value: l, label: levelLabel[l] }))} />
                           </label>
                           <label className="commons-field">
                             <span className="commons-field__label">{m.colSkills}</span>
-                            <MultiSelectField ariaLabel={m.colSkills} value={myRoles}
-                              onChange={(ids) => onSkills(member, ids)} options={skillOptions}
+                            <MultiSelectField ariaLabel={m.colSkills} value={draft.skillIds}
+                              onChange={(ids) => setDraft(d => ({ ...d, skillIds: ids }))} options={skillOptions}
                               placeholder={roles.length ? m.skillsPlaceholder : m.noSkills} />
                           </label>
                           <div className="commons-memberRow__meta">
                             {member.email}{member.created_at ? ` · ${m.joined} ${formatJoined(member.created_at, locale)}` : ''}
                           </div>
-                          <div className="commons-memberRow__panelActions">
-                            <button type="button" className="commons-memberRow__btn commons-memberRow__btn--danger" onClick={() => askRemove(member)}>
+                          <div className="commons-editPanel__actions">
+                            <button type="button" className="commons-editPanel__btn commons-editPanel__btn--danger" onClick={() => askRemove(member)}>
                               <IconTrash size={16} /> {m.remove}
                             </button>
-                            <button type="button" className="commons-memberRow__btn commons-memberRow__btn--done" onClick={() => setEditingId(null)}>{m.done}</button>
+                            <div className="commons-editPanel__commit">
+                              <button type="button" className="commons-editPanel__btn" onClick={() => setEditingId(null)}>{m.cancel}</button>
+                              <button type="button" className="commons-editPanel__btn commons-editPanel__btn--save" onClick={() => saveEdit(member)}>{m.save}</button>
+                            </div>
                           </div>
                         </div>
                       </motion.div>
