@@ -161,9 +161,7 @@ export function AreaPage() {
         </button>
         {t.due_date && (
           <span className={overdue ? 'commons-chip commons-chip--due' : 'commons-chip'}>
-            {rc.until} {isToday(t.due_date)
-              ? `${new Date(t.due_date).getHours() < 8 ? '↪ ' : ''}${timeOf(t.due_date, locale)}`
-              : dayMonth(t.due_date, locale)}
+            {rc.until} {isToday(t.due_date) ? timeOf(t.due_date, locale) : dayMonth(t.due_date, locale)}
           </span>
         )}
       </motion.li>

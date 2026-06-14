@@ -34,13 +34,12 @@ function toTimeInput(due) {
   const d = new Date(due);
   return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(11, 16);
 }
-// Operational day = 08:00→08:00, so a deadline before 08:00 belongs to the NEXT calendar morning.
+// A pre-08:00 routine item time belongs to the next calendar morning of its op-day — but only for
+// generated routine occurrences (handled in run_recurrences). A one-off deadline has an explicit
+// date, so it's stored literally.
 function beforeOpDay(time) { return !!time && parseInt(time.slice(0, 2), 10) < 8; }
 function dueToIso(date, time) {
-  const t = time || '08:00';
-  const dt = new Date(`${date}T${t}:00`);
-  if (beforeOpDay(t)) dt.setDate(dt.getDate() + 1);
-  return dt.toISOString();
+  return new Date(`${date}T${time || '08:00'}:00`).toISOString();
 }
 
 // Brief loading state while an edited node resolves — still shows the back chevron via chrome.
@@ -290,7 +289,6 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
                     <label className="commons-field">
                       <span className="commons-field__label">{f.dueTime}</span>
                       <input type="time" className="commons-field__input" value={dueTime} onChange={e => { setDueTime(e.target.value); mark(); }} />
-                      {beforeOpDay(dueTime) && <span className="commons-field__hint commons-dueNext">↪ {f.nextMorning}</span>}
                     </label>
                   </>
                 )}
