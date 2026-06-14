@@ -12,6 +12,8 @@ import {
   deleteNode,
   completeSubtree as completeSubtreeQuery,
   claimNode as claimNodeQuery,
+  resolveMissed as resolveMissedQuery,
+  deferOccurrence as deferOccurrenceQuery,
 } from '../../data/commons/nodeQueries.js';
 
 export function useWorkspaceTree(workspaceId) {
@@ -46,8 +48,10 @@ export function useWorkspaceTree(workspaceId) {
     return map;
   }, [nodes]);
 
-  const addNode = useCallback(async ({ parentId = null, kind, title }) => {
-    const created = await createNode({
+  // Create a node. occurrenceDate/dayMask/dueTime are optional: occurrenceDate makes it an
+  // ad-hoc run instance (e.g. "+ הוסף משימה" on a run); dayMask/dueTime belong to definition items.
+  const addNode = useCallback(async ({ parentId = null, kind, title, occurrenceDate, dayMask, dueTime }) => {
+    const input = {
       workspace_id: workspaceId,
       parent_id: parentId,
       kind,
@@ -55,7 +59,11 @@ export function useWorkspaceTree(workspaceId) {
       status: kind === 'task' ? 'open' : null,
       created_by: user?.id ?? null,
       position: Date.now(),
-    });
+    };
+    if (occurrenceDate) input.occurrence_date = occurrenceDate;
+    if (dayMask) input.day_mask = dayMask;
+    if (dueTime) input.due_time = dueTime;
+    const created = await createNode(input);
     setNodes(prev => [...prev, created]);
     return created;
   }, [workspaceId, user]);
@@ -81,6 +89,19 @@ export function useWorkspaceTree(workspaceId) {
     setNodes(prev => prev.map(n => (n.id === id ? updated : n)));
     return updated;
   }, []);
+
+  // "זה כן קרה" — resolve a missed occurrence as a late completion by `didBy` (a member id, or null).
+  const resolveMissed = useCallback(async (id, didBy) => {
+    const updated = await resolveMissedQuery(id, didBy);
+    setNodes(prev => prev.map(n => (n.id === id ? updated : n)));
+    return updated;
+  }, []);
+
+  // Defer (toDate = 'YYYY-MM-DD') or skip (toDate null) one occurrence. Reload to pick up any spawned instance.
+  const deferOccurrence = useCallback(async (id, toDate) => {
+    await deferOccurrenceQuery(id, toDate);
+    await reload();
+  }, [reload]);
 
   // Leaf-descendant progress for a node: { done, total } over tasks with no task-children.
   const progress = useCallback((id) => {
@@ -112,5 +133,5 @@ export function useWorkspaceTree(workspaceId) {
     await reload();
   }, [reload]);
 
-  return { nodes, byParent, loading, addNode, toggleDone, saveTask, removeNode, reload, completeSubtree, claim, progress, hasChildren };
+  return { nodes, byParent, loading, addNode, toggleDone, saveTask, removeNode, reload, completeSubtree, claim, resolveMissed, deferOccurrence, progress, hasChildren };
 }

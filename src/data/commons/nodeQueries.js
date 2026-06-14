@@ -5,7 +5,7 @@
 import { commonsDb } from './commonsClient.js';
 
 const FIELDS =
-  'id, workspace_id, parent_id, kind, title, description, status, owner_id, role_ids, due_date, recurrence, next_run, template_id, position, created_at, updated_at';
+  'id, workspace_id, parent_id, kind, title, description, status, owner_id, role_ids, due_date, recurrence, next_run, template_id, occurrence_date, day_mask, due_time, completed_by, completed_at, completed_late, position, created_at, updated_at';
 
 // All nodes in a workspace, ordered for stable tree rendering.
 export async function fetchTree(workspaceId) {
@@ -59,6 +59,22 @@ export async function completeSubtree(id) {
 // "עלי" — take an unassigned task onto the signed-in member (server sets owner_id). Returns the row.
 export async function claimNode(id) {
   const { data, error } = await commonsDb.rpc('claim_node', { node_id: id });
+  if (error) throw error;
+  return data;
+}
+
+// "זה כן קרה" — record a missed occurrence as a late completion attributed to a member (didBy).
+// Member-allowed; the row keeps completed_late = true. didBy is a workspace_members.id (or null).
+export async function resolveMissed(id, didBy) {
+  const { data, error } = await commonsDb.rpc('resolve_missed', { node_id: id, did_by: didBy ?? null });
+  if (error) throw error;
+  return data;
+}
+
+// Defer/skip a single occurrence (manager+). toDate null → skip ('cancelled'); else mark this one
+// 'deferred' and spawn an open instance on the target op-day. toDate is a 'YYYY-MM-DD' string.
+export async function deferOccurrence(id, toDate) {
+  const { data, error } = await commonsDb.rpc('defer_occurrence', { node_id: id, to_date: toDate ?? null });
   if (error) throw error;
   return data;
 }
