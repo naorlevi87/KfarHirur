@@ -60,50 +60,81 @@ Content keys (`view`): `editSeriesTitle`, `editSeriesBody`, `editSeriesConfirm` 
 
 The form derives its mode from the node:
 
-| Mode | Condition | Series controls | Orders list | Notice |
+| Mode | Condition | Series controls | Sub-tasks | Notice |
 |---|---|---|---|---|
-| **plain task** | not under a routine, no recurrence | one-off date/time | — | — |
+| **plain task** | not under a routine, no recurrence | one-off date/time | yes | — |
 | **routine root** | `node.recurrence` set | recurrence (`RecurrenceField`) | yes | — (series is implicit) |
 | **order** (under routine) | an ancestor has `recurrence` | day-mask + `עד שעה` | yes | — |
 | **occurrence** | `node.occurrence_date` set (`?scope=occurrence`) | none | — | "עריכת המופע של היום בלבד" |
 
-`occurrence` mode is the new branch: it hides recurrence, day-mask, orders, and start/deadline; it
+`occurrence` mode is the new branch: it hides recurrence, day-mask, sub-tasks, and start/deadline; it
 shows title · description · מי לקח? · מי יכול? · עד שעה, and saves to the instance node. It guards
 against ever writing a `recurrence` onto an instance.
 
-### 4.2 Layout changes
+### 4.2 Save model & visual hierarchy
+
+**Save model (amends `docs/commons-standards.md` §2.3 — see Decision Log).** The form keeps an
+**explicit Save / Cancel** commit for its own *fields* (title, description, who, recurrence, days,
+time). It is the same on Create and Edit. The **sub-tasks** section is the one exception: sub-tasks
+are independent objects (their own page, status, completion), so add/remove write **immediately** —
+and the UI makes that honest rather than hiding it (see §4.3). Cancel discards field edits; it does
+not undo a sub-task add/remove (each sub-task carries its own trash). This is the Notion/Linear
+split: fields commit, child objects are live. Auto-save was rejected — Create can't auto-save, and
+silent saves on a weak mobile connection conflict with the project's "never lose work" rule.
+
+**Three zones.** The form reads as three stacked zones with thin separation between them, not one flat
+list: **זהות** (title, description, who) → **תזמון** (recurrence / days / time, or one-off dates) →
+**תת-משימות** (the live card). Zone separation is quiet (spacing + a hairline rule), not heavy boxes.
+
+**Layout changes:**
 
 - **No `autoFocus`** on the title input.
-- **Owner + skill** wrapped in a `.commons-fieldRow` (flex, two equal columns; both are compact
-  dropdown buttons, so they fit a mobile row). Stacks under ~320px via `flex-wrap`.
+- **Owner + skill** share one row (`.commons-fieldRow`, flex). Split **60/40** toward "מי יכול?"
+  (skills run longer than a single owner name); wraps to stacked under ~340px. Verify truncation on a
+  real narrow viewport before shipping.
 - **Recurrence**: delete the `scheduling` (`חד-פעמי / חוזר`) block. Render `RecurrenceField` as the
   single control (its `בלי חזרה` button is the "one-off" state). The one-off date fields
   (`startDate`, `due`, `dueTime`) render **below it only when `recurrence` is null**.
 - **"כל X ימים"** stays a tight inline row directly under the frequency buttons.
+- **Motion (MOTION_INTENSITY 6).** Wrap the appear/disappear of the day chips, the one-off date
+  fields, and sub-task rows in `AnimatePresence` + `layout` spring transitions — no instant
+  show/hide. Continuous values via Framer Motion, never `useState` (project rule).
+- **Delete separation (standards §4).** `מחיקה` sits well below `שמירה` with a clear gap and a
+  hairline rule above it, low-emphasis (danger text, not a filled button), so it is never fat-fingered
+  next to the commit.
 
-### 4.3 Orders list (series edit only)
+### 4.3 Sub-tasks — the live card (edit mode)
 
-In edit mode, for a routine root or an order, list the node's **same-layer child definitions**
-(`tree.byParent.get(node.id)`, `kind === 'task'`, `occurrence_date` null):
+In edit mode, list the node's **same-layer child sub-tasks**
+(`tree.byParent.get(node.id)`, `kind === 'task'`, `occurrence_date` null). Everything here is a
+**תת-משימה** — the same generic vocabulary the view already uses (`view.subtasks`, `view.addSub`); no
+domain-specific "order" wording.
+
+The section is a **visually distinct card** (its own surface/border, set apart from the fields above)
+with a quiet inline hint that it **saves immediately** (`form.subtasksLive`, e.g. "נשמר מיד"). This is
+what resolves the mixed-save confusion: the card *looks* live, so add/remove acting outside Save/Cancel
+reads as intentional, not a bug.
 
 ```
-הזמנות
- • עגבניות                     🗑
- • דגים                        🗑
- [ שם ההזמנה…              ] [ + ]
+┌ תת-משימות ························· נשמר מיד ┐
+│ • עגבניות                              🗑    │
+│ • דגים                                 🗑    │
+│ [ הוספת תת-משימה…                  ] [ + ]   │
+└──────────────────────────────────────────────┘
 ```
 
-- The name is a button → `navigate(.../task/<childId>/edit)` (edit that order).
+- The name is a button → `navigate(.../task/<childId>/edit)` (edit that sub-task).
 - A trailing `IconTrash` button → `ConfirmDialog` → `tree.removeNode(childId)`.
 - An **add row** at the bottom mirrors the view's `commons-subAdd` grammar: a text input + `+`.
   Enter / quick-add inserts immediately (`tree.addNode({ parentId: node.id, kind: 'task', title })`);
-  the `+` opens the full new-order page (`/task/new?parent=<node.id>&title=…`) so days/time can be set.
+  the `+` opens the full new-sub-task page (`/task/new?parent=<node.id>&title=…`) so days/time can be set.
 - Add **and** remove act **immediately** (direct `tree` writes), independent of the form's Save/Cancel —
   consistent with how sub-task add/remove already behave in the view. They do not arm the form's
   unsaved-changes guard.
-- Empty list (no orders yet) → the rows are omitted but the add row still shows.
+- Empty list (no sub-tasks yet) → the rows are omitted but the add row still shows.
 
-Content keys (`form`): `orders`, `addOrder`, `addOrderDetailed`, `removeOrderTitle`, `removeOrderBody`.
+Content keys: reuse `view.subtasks`, `view.addSub`, `view.addSubDetailed`; new `form.subtasksLive`,
+`form.removeSubTitle`, `form.removeSubBody`.
 
 ### 4.4 Clearable interval (RecurrenceField)
 

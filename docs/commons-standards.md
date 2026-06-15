@@ -101,6 +101,15 @@ The expanded panel commits via an explicit **Save** button and backs out via **C
 **Why:** an explicit commit moment is predictable on mobile and gives the user a guaranteed escape
 hatch from a mis-edit. (This replaces save-on-blur, which has no clear committed moment.)
 
+> **Child-object exception (2026-06-15).** When an edit surface manages **child objects** (e.g. a
+> task's sub-tasks inside the task edit form), those add/remove actions commit **immediately**, outside
+> the Save/Cancel of the parent's fields — a sub-task is its own object (own page, status, completion),
+> not a field of this form. The exception must be made **visually honest**: the child-object section is
+> a distinct "live" card carrying a quiet "saves immediately" hint, so the divergent commit model reads
+> as intentional. Cancel discards field edits only; it does not undo child add/remove (each child
+> carries its own delete). Full auto-save of the *fields* was considered and rejected (Create cannot
+> auto-save; silent saves on weak connections conflict with the "never lose work" rule).
+
 ### 2.4 Secondary attributes live in the panel ✅
 Color pickers, toggles, multi-selects, and any control beyond plain identity belong **inside the
 expanded edit panel**, not on the collapsed row. The collapsed row may *display* the current value
@@ -149,6 +158,15 @@ principle. Restated here as an interaction standard.)
 ## Decision Log
 
 > Append a dated entry whenever a standard is added, changed, or an exception is granted. Newest first.
+
+### 2026-06-15 — Child-object exception to the Save/Cancel model (§2.3)
+- Triggered by the task/routine **edit-form redesign**
+  (`docs/superpowers/specs/2026-06-15-commons-task-edit-redesign-design.md`). The form manages its own
+  fields via explicit Save/Cancel (unchanged) **and** lists the task's sub-tasks for add/remove. Decided
+  with Naor: sub-task add/remove commit **immediately** (they are independent objects), shown in a
+  distinct "live" card with a "saves immediately" hint so the mixed model is honest. Auto-saving the
+  fields was rejected (Create can't auto-save; silent mobile saves risk losing work). Recorded as the
+  child-object exception under §2.3.
 
 ### 2026-06-14 — Standard applied to Roles + Members
 - Chrome two-band header + RTL back-chevron flip shipped (the parallel-session shell work) → §1.1, §1.2 now ✅.
