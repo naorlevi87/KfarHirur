@@ -1,7 +1,10 @@
 /* src/commons/styles/commons-tokens.css */
 /* Commons Engine design tokens — its own palette, NOT tied to the site's Naor/Shay modes. */
 
-.commons-root {
+/* Token scope. Also applied to .commons-sheetRoot because the nav-guard dialog renders as a sibling
+   of .commons-root (outside the layout) — without this, its dialog would have no surface/text colors. */
+.commons-root,
+.commons-sheetRoot {
   --commons-bg:        #14161c;
   --commons-surface:   #1d2029;
   --commons-surface-2: #272b37;
@@ -12,11 +15,16 @@
   --commons-danger:    #ff6b6b;
   --commons-border:    #2a2e3a;
   --commons-radius:    12px;
+}
 
+.commons-root {
   min-height: 100dvh;
   background: var(--commons-bg);
   color: var(--commons-text);
 }
+
+/* Overlay root carries base text color so a dialog rendered outside .commons-root is still readable. */
+.commons-sheetRoot { color: var(--commons-text); }
 
 /* Skill (role) swatches — referenced by [data-role-color] on chips and the picker. */
 :root {

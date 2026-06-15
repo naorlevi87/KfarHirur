@@ -53,6 +53,56 @@
 .commons-subAdd { display: flex; gap: 8px; margin: 12px 0 4px; }
 .commons-subAdd .commons-field__input { flex: 1; }
 .commons-subAdd .commons-btn { flex: 0 0 auto; display: grid; place-items: center; padding: 0 14px; }
+
+/* completion style — two cards (title + hint), the "cuter" picker. */
+.commons-completeStyle { display: flex; gap: 8px; }
+.commons-completeStyle button {
+  flex: 1; border: 1.5px solid var(--commons-border); border-radius: 12px; padding: 12px 10px;
+  background: var(--commons-surface); color: var(--commons-text); cursor: pointer;
+  display: flex; flex-direction: column; gap: 3px; text-align: center;
+}
+.commons-completeStyle button.is-active {
+  border-color: var(--commons-accent);
+  background: color-mix(in srgb, var(--commons-accent) 16%, transparent);
+}
+.commons-completeStyle button:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
+.commons-completeStyle__t { font-weight: 700; }
+.commons-completeStyle__d { font-size: 11px; color: var(--commons-text-dim); }
+
+/* Separator line before the sub-tasks card. */
+.commons-formDivider { height: 1px; background: var(--commons-border); margin: 20px 0 14px; }
+
+/* Note shown when editing a single occurrence (not the series). */
+.commons-occNote {
+  margin-bottom: 14px; padding: 10px 12px; border-radius: 10px; line-height: 1.45;
+  background: var(--commons-surface-2); color: var(--commons-text-dim); font-size: 13px;
+}
+
+/* Sub-tasks "live" card inside the edit form — a distinct surface that commits immediately, set
+   apart from the Save/Cancel fields above it (docs/commons-standards.md §2.3 child-object exception). */
+.commons-subCard {
+  margin-top: 8px; padding: 14px; border-radius: 14px;
+  background: var(--commons-surface); border: 1px solid var(--commons-border);
+}
+.commons-subCard__head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.commons-subCard__head .commons-field__label { margin: 0; }
+.commons-subCard__live { flex: 0 0 auto; font-size: 11px; color: var(--commons-text-dim); }
+.commons-subCard__list { list-style: none; display: flex; flex-direction: column; gap: 4px; margin: 0 0 10px; padding: 0; }
+.commons-subCard__row { display: flex; align-items: center; gap: 8px; }
+.commons-subCard__name {
+  flex: 1; min-width: 0; text-align: start; background: none; border: 0; color: var(--commons-text);
+  font: inherit; cursor: pointer; padding: 6px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.commons-subCard__name:hover { text-decoration: underline; }
+.commons-subCard__name:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; border-radius: 4px; }
+.commons-subCard__time { flex: 0 0 auto; font-size: 12px; color: var(--commons-text-dim); font-variant-numeric: tabular-nums; }
+.commons-subCard__del {
+  flex: 0 0 auto; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 8px;
+  background: none; border: 0; color: var(--commons-text-dim); cursor: pointer;
+}
+.commons-subCard__del:hover { color: var(--commons-danger); background: var(--commons-surface-2); }
+.commons-subCard__del:focus-visible { outline: 2px solid var(--commons-danger); outline-offset: 2px; }
+.commons-subCard .commons-subAdd { margin: 0; }
 .commons-view__chip--skill { color: var(--commons-bg); font-weight: 700; border: 0; }
 
 /* routine hub / row grammar — title stacks an optional meta line (who·when, schedule, count) */
@@ -76,21 +126,6 @@
 .commons-deferMenu__date .commons-field__input { flex: 1; }
 .commons-deferMenu__date .commons-btn { width: auto; flex: 0 0 auto; }
 .commons-deferMenu__skip { color: var(--commons-danger); }
-
-/* ── completion style segmented control (in the task form) ── */
-.commons-completeStyle { display: flex; gap: 8px; }
-.commons-completeStyle button {
-  flex: 1; border: 1.5px solid var(--commons-border); border-radius: 12px; padding: 12px 10px;
-  background: var(--commons-surface); color: var(--commons-text); cursor: pointer;
-  display: flex; flex-direction: column; gap: 3px; text-align: center;
-}
-.commons-completeStyle button.is-active {
-  border-color: var(--commons-accent);
-  background: color-mix(in srgb, var(--commons-accent) 16%, transparent);
-}
-.commons-completeStyle button:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
-.commons-completeStyle__t { font-weight: 700; }
-.commons-completeStyle__d { font-size: 11px; color: var(--commons-text-dim); }
 
 /* tree marker: a task that confirms on completion */
 .commons-confirmDot {

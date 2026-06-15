@@ -1,12 +1,12 @@
 // src/commons/commonsState/NavGuardContext.jsx
-// Protects in-progress work: a form registers an isDirty() predicate; every chrome navigation
-// (tabs, ☰ menu, back chevron, switcher, back-to-site) goes through guardedNavigate(). If a dirty
-// form is registered, the navigation is held and a confirm dialog ("changes won't be saved") is
-// shown instead — Stay aborts, Discard proceeds. beforeunload (registered by the form via
-// useUnsavedGuard) covers browser refresh / tab-close, which the router can't see.
+// Protects in-progress work: a form registers an isDirty() predicate (and optionally a save handler).
+// A single React Router useBlocker then intercepts EVERY navigation while dirty — in-app pushes (tabs,
+// ☰ menu, back chevron, switcher, back-to-site) AND the browser / phone hardware back (a POP) — and
+// shows a Save / Discard / Stay dialog. This needs a data router (see src/app/App.jsx). beforeunload
+// (armed by useUnsavedGuard) still covers a real page refresh / tab-close, which the router can't see.
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useBlocker, useNavigate } from 'react-router-dom';
 import { useAppContext } from '../../app/appState/useAppContext.js';
 import { resolveCommonsShellContent } from '../resolveCommonsShellContent.js';
 import { ConfirmDialog } from '../ConfirmDialog.jsx';
@@ -17,24 +17,49 @@ export function NavGuardProvider({ children }) {
   const { locale } = useAppContext();
   const navigate = useNavigate();
   const dirtyRef = useRef(null);        // () => boolean, set by the active form
-  const [pending, setPending] = useState(null); // { to } awaiting confirmation, or null
+  const saveRef = useRef(null);         // optional () => Promise<boolean>, lets the dialog offer "Save"
+  const [saving, setSaving] = useState(false);
+  const [canSave, setCanSave] = useState(false); // does the active form expose a save handler?
 
-  const registerGuard = useCallback((predicate) => {
+  const registerGuard = useCallback((predicate, onSave) => {
     dirtyRef.current = predicate;
-    return () => { if (dirtyRef.current === predicate) dirtyRef.current = null; };
+    saveRef.current = onSave ?? null;
+    setCanSave(!!onSave);
+    return () => {
+      if (dirtyRef.current === predicate) { dirtyRef.current = null; saveRef.current = null; setCanSave(false); }
+    };
   }, []);
 
-  const guardedNavigate = useCallback((to) => {
-    if (dirtyRef.current?.()) setPending({ to });
-    else navigate(to);
-  }, [navigate]);
+  // Block any real navigation while the active form is dirty (skip same-path updates).
+  const blocker = useBlocker(useCallback(
+    ({ currentLocation, nextLocation }) =>
+      !!dirtyRef.current?.() && currentLocation.pathname !== nextLocation.pathname,
+    []
+  ));
+  const blocked = blocker.state === 'blocked';
 
-  const confirmLeave = () => {
-    const to = pending?.to;
-    dirtyRef.current = null; // leaving discards; don't re-prompt on the same navigation
-    setPending(null);
-    if (to !== undefined) navigate(to);
+  // guardedNavigate is now a plain navigate — the blocker decides whether to intercept. Kept so call
+  // sites (chrome, menu, switcher) don't change.
+  const guardedNavigate = useCallback((to) => navigate(to), [navigate]);
+
+  const proceed = () => { dirtyRef.current = null; blocker.proceed?.(); };   // discard + leave
+  const stay = () => blocker.reset?.();
+  const saveAndProceed = async () => {
+    setSaving(true);
+    let ok = false;
+    try { ok = await saveRef.current?.(); } finally { setSaving(false); }
+    if (ok) { dirtyRef.current = null; blocker.proceed?.(); }  // saved → leave
+    else blocker.reset?.();                                    // couldn't save (e.g. empty title) → stay to fix
   };
+
+  // Escape dismisses the prompt (keyboard reachability — the custom dialog lacks ConfirmDialog's
+  // built-in handler). Ignored mid-save.
+  useEffect(() => {
+    if (!blocked) return;
+    const onKey = (e) => { if (e.key === 'Escape' && !saving) blocker.reset?.(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [blocked, saving, blocker]);
 
   const value = useMemo(() => ({ registerGuard, guardedNavigate }), [registerGuard, guardedNavigate]);
   const g = resolveCommonsShellContent(locale).guard;
@@ -42,16 +67,30 @@ export function NavGuardProvider({ children }) {
   return (
     <NavGuardContext.Provider value={value}>
       {children}
-      {pending && (
+      {blocked && (canSave ? (
+        <div className="commons-sheetRoot" dir={locale === 'he' ? 'rtl' : 'ltr'}>
+          <div className="commons-sheetBackdrop" role="presentation" aria-hidden="true"
+            onClick={() => { if (!saving) stay(); }} />
+          <div className="commons-confirm" role="dialog" aria-modal="true" aria-label={g.unsavedTitle}>
+            <h2 className="commons-confirm__title">{g.unsavedTitle}</h2>
+            <p className="commons-confirm__body">{g.unsavedBody}</p>
+            <div className="commons-confirm__actions commons-confirm__actions--stack">
+              <button type="button" className="commons-btn commons-btn--primary" disabled={saving} onClick={saveAndProceed} autoFocus>{g.save}</button>
+              <button type="button" className="commons-btn commons-btn--ghost commons-confirm__discard" disabled={saving} onClick={proceed}>{g.discard}</button>
+              <button type="button" className="commons-btn commons-btn--ghost" disabled={saving} onClick={stay}>{g.stay}</button>
+            </div>
+          </div>
+        </div>
+      ) : (
         <ConfirmDialog
           title={g.unsavedTitle}
           body={g.unsavedBody}
           confirmLabel={g.leave}
           cancelLabel={g.stay}
-          onConfirm={confirmLeave}
-          onCancel={() => setPending(null)}
+          onConfirm={proceed}
+          onCancel={stay}
         />
-      )}
+      ))}
     </NavGuardContext.Provider>
   );
 }
@@ -64,14 +103,24 @@ export function useNavGuard() {
 }
 
 // Used by a form: registers its dirty state with the guard and arms a beforeunload prompt while dirty.
+// `isDirty` is a **synchronous getter** `() => boolean` (a ref read), so a form that clears its dirty
+// flag and navigates in the same tick isn't blocked by stale state. An optional async `onSave` lets
+// the dialog offer "Save" (returns true on success). Both are read through refs so the latest closures
+// run without re-registering every render.
 // eslint-disable-next-line react-refresh/only-export-components
-export function useUnsavedGuard(isDirty) {
+export function useUnsavedGuard(isDirty, onSave) {
   const { registerGuard } = useNavGuard();
-  useEffect(() => registerGuard(() => isDirty), [registerGuard, isDirty]);
+  const getterRef = useRef(isDirty);
+  const saveRef = useRef(onSave);
+  useEffect(() => { getterRef.current = isDirty; saveRef.current = onSave; }); // keep latest closures
+  const hasSave = !!onSave;
+  useEffect(
+    () => registerGuard(() => !!getterRef.current?.(), hasSave ? () => saveRef.current?.() : null),
+    [registerGuard, hasSave]
+  );
   useEffect(() => {
-    if (!isDirty) return;
-    const handler = (e) => { e.preventDefault(); e.returnValue = ''; };
+    const handler = (e) => { if (getterRef.current?.()) { e.preventDefault(); e.returnValue = ''; } };
     window.addEventListener('beforeunload', handler);
     return () => window.removeEventListener('beforeunload', handler);
-  }, [isDirty]);
+  }, []);
 }

@@ -54,7 +54,7 @@
 .commons-screen__body { flex: 1; padding: 2px 0 28px; max-width: 560px; width: 100%; margin-inline: auto; display: flex; flex-direction: column; }
 .commons-screen__save { margin-top: 10px; width: 100%; padding: 14px; font-size: 15px; font-weight: 700; }
 .commons-screen__delete {
-  margin: 14px auto 0; background: none; border: 0; color: var(--commons-danger);
+  margin: 26px auto 0; background: none; border: 0; color: var(--commons-danger);
   font: inherit; cursor: pointer; padding: 8px 12px; border-radius: 8px;
 }
 .commons-screen__delete:focus-visible { outline: 2px solid var(--commons-danger); outline-offset: 2px; }
@@ -234,6 +234,10 @@
 .commons-confirm__body { color: var(--commons-text-dim); line-height: 1.5; margin-bottom: 16px; }
 .commons-confirm__actions { display: flex; gap: 10px; }
 .commons-confirm__actions .commons-btn { flex: 1; }
+/* Stacked variant (save / discard / stay) — full-width buttons, primary action on top. */
+.commons-confirm__actions--stack { flex-direction: column; }
+.commons-confirm__actions--stack .commons-btn { width: 100%; flex: none; }
+.commons-confirm__discard { color: var(--commons-danger); }
 
 /* ── Create FAB (bottom-left, above the tab bar) ── */
 .commons-fab {

@@ -6,14 +6,14 @@
 // registers it with the nav guard so leaving with unsaved changes prompts; delete is confirmed.
 
 import './taskScreens.css';
-import { motion } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAppContext } from '../../app/appState/useAppContext.js';
 import { useWorkspace } from '../commonsState/WorkspaceContext.jsx';
 import { useWorkspaceTree } from '../commonsState/useWorkspaceTree.js';
 import { useCommonsChrome } from '../commonsState/CommonsChromeContext.jsx';
-import { useUnsavedGuard } from '../commonsState/NavGuardContext.jsx';
+import { useUnsavedGuard, useNavGuard } from '../commonsState/NavGuardContext.jsx';
 import { fetchRoster } from '../../data/commons/workspaceQueries.js';
 import { fetchRoles } from '../../data/commons/roleQueries.js';
 import { resolveCommonsShellContent } from '../resolveCommonsShellContent.js';
@@ -22,6 +22,7 @@ import { SkillSelect } from './SkillSelect.jsx';
 import { SelectField } from '../SelectField.jsx';
 import { ConfirmDialog } from '../ConfirmDialog.jsx';
 import { CommonsLoading } from '../CommonsLoading.jsx';
+import { IconTrash, IconPlus } from '../icons.jsx';
 import { normalizeRule, computeFirstNextRun, effectiveDaysFor } from './recurrence.js';
 
 function toDateInput(due) {
@@ -38,6 +39,23 @@ function toTimeInput(due) {
 // generated routine occurrences (handled in run_recurrences). A one-off deadline has an explicit
 // date, so it's stored literally.
 function beforeOpDay(time) { return !!time && parseInt(time.slice(0, 2), 10) < 8; }
+// A sub-task's "עד שעה", if any: a definition carries due_time, an occurrence item a dated due_date.
+function subTime(k, locale) {
+  if (k.due_time) return k.due_time.slice(0, 5);
+  if (k.due_date) {
+    try { return new Intl.DateTimeFormat(locale === 'he' ? 'he-IL' : 'en-US', { hour: '2-digit', minute: '2-digit' }).format(new Date(k.due_date)); }
+    catch { return ''; }
+  }
+  return '';
+}
+
+// Spring reveal for conditional blocks / list rows (MOTION_INTENSITY 6 — no instant pop-in).
+const reveal = {
+  initial: { opacity: 0, y: -6 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -6 },
+  transition: { type: 'spring', stiffness: 320, damping: 30 },
+};
 function dueToIso(date, time) {
   return new Date(`${date}T${time || '08:00'}:00`).toISOString();
 }
@@ -72,6 +90,7 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
   const { workspace } = useWorkspace();
   const { workspaceSlug, nodeId } = useParams();
   const navigate = useNavigate();
+  const { guardedNavigate } = useNavGuard();
   const shell = resolveCommonsShellContent(locale);
   const f = shell.form;
   const editing = mode === 'edit';
@@ -86,7 +105,7 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
   const [roster, setRoster] = useState([]);
   const [roleIds, setRoleIds] = useState(node?.role_ids ?? []);
   const [roles, setRoles] = useState([]);
-  const [dirty, setDirty] = useState(false);
+  const dirtyRef = useRef(false); // synchronous dirty flag — read live by the nav guard / blocker
   const [confirmDelete, setConfirmDelete] = useState(false);
   // Day-mask + per-item time apply when this task sits inside a routine (an "order" definition).
   const [dayMask, setDayMask] = useState(node?.day_mask?.length ? node.day_mask : null);
@@ -94,7 +113,16 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
     node?.due_time ? node.due_time.slice(0, 5) : (node?.due_date ? toTimeInput(node.due_date) : ''));
   const [startDate, setStartDate] = useState(toDateInput(node?.start_date));  // "בתאריך" — when it becomes actionable
   const [confirmOnComplete, setConfirmOnComplete] = useState(node?.confirm_on_complete ?? true);
-  const mark = () => setDirty(true); // any user edit arms the unsaved-changes guard
+  const [subAdd, setSubAdd] = useState('');          // quick-add a sub-task — commits immediately
+  const [removeSub, setRemoveSub] = useState(null);  // sub-task pending removal confirmation
+  const mark = () => { dirtyRef.current = true; }; // any user edit arms the unsaved-changes guard
+
+  // Same-layer child sub-tasks (live card in edit mode). Layer-aware: a definition lists its
+  // definition children; an occurrence lists that day's instance children (so you can drop an item
+  // from today's run without touching the series).
+  const subKids = (editing && !isFolder)
+    ? (tree.byParent.get(node.id) ?? []).filter(n => n.kind === 'task' && Boolean(n.occurrence_date) === Boolean(node?.occurrence_date))
+    : [];
 
   const rcDays = shell.tasks.recurrence;
   const routineRoot = (() => {
@@ -103,6 +131,7 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
     return null;
   })();
   const underRoutine = !isFolder && !!routineRoot;        // an order inside a routine
+  const isInstance = !isFolder && !!node?.occurrence_date; // editing one run occurrence (today only)
   const parentDays = underRoutine ? effectiveDaysFor(tree.nodes, parentId) : [];
   const selectedDays = dayMask ?? parentDays;             // null mask = inherit the parent's days
   // null when "all parent days" (inherit) or empty; a strict subset is the real restriction.
@@ -120,7 +149,7 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
     ? (editing ? f.editFolderTitle : f.newFolderTitle)
     : (editing ? f.editTaskTitle : f.newTaskTitle);
   useCommonsChrome({ title: heading, showBack: true });
-  useUnsavedGuard(dirty);
+  useUnsavedGuard(() => dirtyRef.current, persist); // the leave dialog can Save (persist) or discard
 
   useEffect(() => {
     if (!workspace?.id) return;
@@ -146,10 +175,11 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
     return () => { cancelled = true; };
   }, [workspace?.id, node]);
 
-  async function submit(e) {
-    e.preventDefault();
+  // Commit the form's fields. Returns true on success, false if it can't save (empty title) — the
+  // leave-guard uses the boolean to decide whether to proceed. Does not navigate.
+  async function persist() {
     const name = title.trim();
-    if (!name) return;
+    if (!name) return false;
     const parent = parentId || null;
     // All-selected or none-selected both mean "anyone" → store an empty set (future-proof: it
     // stays open even when new skills are later added). A strict subset is the real restriction.
@@ -158,6 +188,9 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
     // An order inside a routine carries a day-mask + per-item time; it never recurs or has a due date.
     const taskFields = () => {
       const base = { description: description.trim() || null, owner_id: ownerId || null, role_ids: persistRoleIds, confirm_on_complete: confirmOnComplete };
+      // A single occurrence: only identity-ish fields change; never touch the schedule/recurrence
+      // (that belongs to the series). Its own due_date / occurrence_date stay as generated.
+      if (isInstance) return base;
       if (underRoutine) {
         return { ...base, day_mask: persistMask, due_time: dueTime || null, recurrence: null, due_date: null, next_run: null, start_date: null };
       }
@@ -187,15 +220,41 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
       const created = await tree.addNode({ parentId: parent, kind: 'task', title: name });
       await tree.saveTask(created.id, taskFields());
     }
-    setDirty(false); // saved — leaving now is safe
-    navigate(-1);
+    dirtyRef.current = false; // saved — leaving now is safe
+    return true;
+  }
+
+  async function submit(e) {
+    e.preventDefault();
+    if (await persist()) navigate(-1);
   }
 
   async function doRemove() {
     setConfirmDelete(false);
-    setDirty(false);
+    dirtyRef.current = false;
     await tree.removeNode(nodeId);
     navigate(`/commons/${workspaceSlug}/board`);
+  }
+
+  // Sub-task ops act immediately (a sub-task is its own object), independent of the form's Save — the
+  // card is visibly marked "saves instantly". Navigations route through the guard so a dirty form warns.
+  async function quickAddSub() {
+    const t = subAdd.trim();
+    if (!t) return;
+    // Inside an occurrence the new item belongs to that day's run (one-off); a definition adds a definition.
+    await tree.addNode({ parentId: node.id, kind: 'task', title: t, occurrenceDate: node.occurrence_date ?? undefined });
+    setSubAdd('');
+  }
+  function detailedAddSub() {
+    // Days/time only apply to a definition — for an occurrence the "+" just quick-adds a one-off item.
+    if (isInstance) { quickAddSub(); return; }
+    const t = subAdd.trim();
+    guardedNavigate(`/commons/${workspaceSlug}/task/new?parent=${node.id}${t ? `&title=${encodeURIComponent(t)}` : ''}`);
+  }
+  async function doRemoveSub() {
+    const id = removeSub.id;
+    setRemoveSub(null);
+    await tree.removeNode(id);
   }
 
   return (
@@ -209,11 +268,12 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
       >
         <label className="commons-field">
           <span className="commons-field__label">{f.titleLabel}</span>
-          <input className="commons-field__input" value={title} onChange={e => { setTitle(e.target.value); mark(); }} autoFocus />
+          <input className="commons-field__input" value={title} onChange={e => { setTitle(e.target.value); mark(); }} />
         </label>
 
         {!isFolder && (
           <>
+            {isInstance && <p className="commons-occNote">{f.occurrenceNote}</p>}
             <label className="commons-field">
               <span className="commons-field__label">{f.description}</span>
               <textarea
@@ -222,17 +282,83 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
                 onChange={e => { setDescription(e.target.value); mark(); }}
               />
             </label>
-            <label className="commons-field">
-              <span className="commons-field__label">{f.owner}</span>
-              <SelectField
-                ariaLabel={f.owner}
-                value={ownerId}
-                onChange={(v) => { setOwnerId(v); mark(); }}
-                placeholder={f.unassigned}
-                options={[{ value: '', label: f.unassigned }, ...roster.map(mb => ({ value: mb.id, label: mb.display_name ?? '—' }))]}
-              />
-            </label>
-            <div className="commons-field">
+            <div className="commons-fieldRow">
+              <label className="commons-field">
+                <span className="commons-field__label">{f.owner}</span>
+                <SelectField
+                  ariaLabel={f.owner}
+                  value={ownerId}
+                  onChange={(v) => { setOwnerId(v); mark(); }}
+                  placeholder={f.unassigned}
+                  options={[{ value: '', label: f.unassigned }, ...roster.map(mb => ({ value: mb.id, label: mb.display_name ?? '—' }))]}
+                />
+              </label>
+              <div className="commons-field commons-field--grow">
+                <span className="commons-field__label">{f.skill}</span>
+                {roles.length === 0 ? (
+                  <span className="commons-field__hint">{f.skillAnyone}</span>
+                ) : (
+                  <SkillSelect roles={roles} value={roleIds} onChange={(v) => { setRoleIds(v); mark(); }} anyoneLabel={f.skillAnyone} />
+                )}
+              </div>
+            </div>
+
+            {/* Timing zone — one cadence control: an order carries a day-mask, anything else uses the
+                single recurrence control (its "בלי" state reveals the one-off date fields). Hidden
+                for a single occurrence — the schedule belongs to the series. */}
+            {!isInstance && (
+            <div className="commons-formZone">
+              {underRoutine ? (
+                <>
+                  <div className="commons-field">
+                    <span className="commons-field__label">{f.orderDays}</span>
+                    <div className="commons-recur__days" role="group" aria-label={f.orderDays}>
+                      {rcDays.dayShort.map((label, d) => {
+                        const allowed = parentDays.includes(d);
+                        const on = selectedDays.includes(d);
+                        return (
+                          <button key={d} type="button" className={on ? 'is-active' : ''} aria-pressed={on}
+                            disabled={!allowed} onClick={() => toggleDay(d)}>{label}</button>
+                        );
+                      })}
+                    </div>
+                    <span className="commons-field__hint">{f.orderDaysHint}</span>
+                  </div>
+                  <label className="commons-field">
+                    <span className="commons-field__label">{f.dueTime}</span>
+                    <input type="time" className="commons-field__input" value={dueTime}
+                      onChange={e => { setDueTime(e.target.value); mark(); }} />
+                    {beforeOpDay(dueTime) && <span className="commons-field__hint commons-dueNext">↪ {rcDays.nextDay}</span>}
+                  </label>
+                </>
+              ) : (
+                <>
+                  <RecurrenceField value={recurrence} rc={shell.tasks.recurrence} onChange={(v) => { setRecurrence(v); mark(); }} />
+                  <AnimatePresence initial={false}>
+                    {!recurrence && (
+                      <motion.div key="oneoff" {...reveal}>
+                        <label className="commons-field">
+                          <span className="commons-field__label">{f.startDate}</span>
+                          <input type="date" className="commons-field__input" value={startDate} onChange={e => { setStartDate(e.target.value); mark(); }} />
+                        </label>
+                        <label className="commons-field">
+                          <span className="commons-field__label">{f.due}</span>
+                          <input type="date" className="commons-field__input" value={due} onChange={e => { setDue(e.target.value); mark(); }} />
+                        </label>
+                        <label className="commons-field">
+                          <span className="commons-field__label">{f.dueTime}</span>
+                          <input type="time" className="commons-field__input" value={dueTime} onChange={e => { setDueTime(e.target.value); mark(); }} />
+                        </label>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </>
+              )}
+            </div>
+            )}
+
+            {/* How completion is recorded — a quiet option, last (most tasks use the default). */}
+            <div className="commons-field commons-formZone">
               <span className="commons-field__label">{f.completionStyle}</span>
               <div className="commons-completeStyle" role="group" aria-label={f.completionStyle}>
                 <button type="button" className={confirmOnComplete ? 'is-active' : ''} aria-pressed={confirmOnComplete}
@@ -247,68 +373,46 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
                 </button>
               </div>
             </div>
-            <div className="commons-field">
-              <span className="commons-field__label">{f.skill}</span>
-              {roles.length === 0 ? (
-                <span className="commons-field__hint">{f.skillAnyone}</span>
-              ) : (
-                <SkillSelect roles={roles} value={roleIds} onChange={(v) => { setRoleIds(v); mark(); }} anyoneLabel={f.skillAnyone} />
-              )}
-            </div>
-            {underRoutine ? (
-              <>
-                <div className="commons-field">
-                  <span className="commons-field__label">{f.orderDays}</span>
-                  <div className="commons-recur__days" role="group" aria-label={f.orderDays}>
-                    {rcDays.dayShort.map((label, d) => {
-                      const allowed = parentDays.includes(d);
-                      const on = selectedDays.includes(d);
-                      return (
-                        <button key={d} type="button" className={on ? 'is-active' : ''} aria-pressed={on}
-                          disabled={!allowed} onClick={() => toggleDay(d)}>{label}</button>
-                      );
-                    })}
-                  </div>
-                  <span className="commons-field__hint">{f.orderDaysHint}</span>
-                </div>
-                <label className="commons-field">
-                  <span className="commons-field__label">{f.dueTime}</span>
-                  <input type="time" className="commons-field__input" value={dueTime}
-                    onChange={e => { setDueTime(e.target.value); mark(); }} />
-                  {beforeOpDay(dueTime) && <span className="commons-field__hint commons-dueNext">↪ {f.nextMorning}</span>}
-                </label>
-              </>
-            ) : (
-              <>
-                <div className="commons-field">
-                  <span className="commons-field__label">{f.scheduling}</span>
-                  <div className="commons-recur__freqs" role="group" aria-label={f.scheduling}>
-                    <button type="button" className={recurrence ? '' : 'is-active'} aria-pressed={!recurrence}
-                      onClick={() => { setRecurrence(null); mark(); }}>{f.once}</button>
-                    <button type="button" className={recurrence ? 'is-active' : ''} aria-pressed={!!recurrence}
-                      onClick={() => { setRecurrence(recurrence ?? { freq: 'daily', interval: 1, time: '20:00' }); mark(); }}>{f.repeats}</button>
-                  </div>
-                </div>
 
-                {recurrence ? (
-                  <RecurrenceField value={recurrence} rc={shell.tasks.recurrence} onChange={(v) => { setRecurrence(v); mark(); }} />
-                ) : (
-                  <>
-                    <label className="commons-field">
-                      <span className="commons-field__label">{f.startDate}</span>
-                      <input type="date" className="commons-field__input" value={startDate} onChange={e => { setStartDate(e.target.value); mark(); }} />
-                    </label>
-                    <label className="commons-field">
-                      <span className="commons-field__label">{f.due}</span>
-                      <input type="date" className="commons-field__input" value={due} onChange={e => { setDue(e.target.value); mark(); }} />
-                    </label>
-                    <label className="commons-field">
-                      <span className="commons-field__label">{f.dueTime}</span>
-                      <input type="time" className="commons-field__input" value={dueTime} onChange={e => { setDueTime(e.target.value); mark(); }} />
-                    </label>
-                  </>
+            {/* Sub-tasks — a live card: add/remove commit immediately (a sub-task is its own object),
+                marked "saves instantly" so the divergence from the form's Save/Cancel is honest.
+                A divider sets it apart from the fields above. */}
+            {editing && <div className="commons-formDivider" aria-hidden="true" />}
+            {editing && (
+              <div className="commons-subCard">
+                <div className="commons-subCard__head">
+                  <span className="commons-field__label">{shell.view.subtasks}</span>
+                  <span className="commons-subCard__live">{f.subtasksLive}</span>
+                </div>
+                {subKids.length > 0 && (
+                  <ul className="commons-subCard__list">
+                    <AnimatePresence initial={false}>
+                      {subKids.map(k => {
+                        const t = subTime(k, locale);
+                        return (
+                          <motion.li key={k.id} layout className="commons-subCard__row"
+                            initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: 12 }}
+                            transition={{ type: 'spring', stiffness: 350, damping: 32 }}>
+                            <button type="button" className="commons-subCard__name"
+                              onClick={() => guardedNavigate(`/commons/${workspaceSlug}/task/${k.id}/edit`)}>{k.title}</button>
+                            {t && <span className="commons-subCard__time">{t}</span>}
+                            <button type="button" className="commons-subCard__del" aria-label={`${f.removeSub} · ${k.title}`}
+                              onClick={() => setRemoveSub(k)}><IconTrash size={16} /></button>
+                          </motion.li>
+                        );
+                      })}
+                    </AnimatePresence>
+                  </ul>
                 )}
-              </>
+                <div className="commons-subAdd">
+                  <input className="commons-field__input" value={subAdd} placeholder={shell.view.addSub}
+                    onChange={e => setSubAdd(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); quickAddSub(); } }}
+                    aria-label={shell.view.addSub} />
+                  <button type="button" className="commons-btn commons-btn--primary" aria-label={shell.view.addSubDetailed}
+                    onClick={detailedAddSub}><IconPlus size={18} /></button>
+                </div>
+              </div>
             )}
           </>
         )}
@@ -329,6 +433,17 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
           cancelLabel={f.cancel}
           onConfirm={doRemove}
           onCancel={() => setConfirmDelete(false)}
+        />
+      )}
+
+      {removeSub && (
+        <ConfirmDialog
+          title={f.removeSubTitle}
+          body={removeSub.title}
+          confirmLabel={f.removeSub}
+          cancelLabel={f.cancel}
+          onConfirm={doRemoveSub}
+          onCancel={() => setRemoveSub(null)}
         />
       )}
     </div>

@@ -159,6 +159,13 @@ principle. Restated here as an interaction standard.)
 
 > Append a dated entry whenever a standard is added, changed, or an exception is granted. Newest first.
 
+### 2026-06-15 — Unsaved-changes guard: Save option + hardware-back coverage (§4)
+- The leave prompt now offers **Save · Discard · Stay** (was Stay/Discard only) — a dirty back is no
+  longer a dead-end. The guard moved from a manual `guardedNavigate` check to React Router's
+  **`useBlocker`**, so it intercepts *every* navigation, including the **browser / phone hardware back**
+  (previously unguarded). This required migrating the app to a **data router** (`createBrowserRouter` —
+  see `docs/architecture.md` §4). Decided with Naor (a popstate hack was rejected as fragile).
+
 ### 2026-06-15 — Child-object exception to the Save/Cancel model (§2.3)
 - Triggered by the task/routine **edit-form redesign**
   (`docs/superpowers/specs/2026-06-15-commons-task-edit-redesign-design.md`). The form manages its own

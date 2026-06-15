@@ -211,6 +211,12 @@ supabase/                            — Supabase config / migrations (if any)
 /admin/timeline/items/:slug  → AdminItemPage          (ProtectedRoute: admin|editor)
 ```
 
+**Router:** the app uses a React Router **data router** (`createBrowserRouter` + `RouterProvider` in
+`App.jsx`); the whole route tree above lives under a single catch-all data route. This is deliberate —
+it makes `useBlocker` available, which Commons' unsaved-changes guard relies on to intercept *every*
+navigation (including the browser / phone hardware back, a POP a manual guard can't see). Descendant
+`<Routes>` (e.g. inside `CommonsModule`) keep working unchanged under it.
+
 `ProtectedRoute` uses `useAuth()` to check `role`. Redirects to `/login` if not authenticated.
 - `allowedRoles={[]}` — any authenticated user (used for `/profile`)
 - `allowedRoles={['admin','editor']}` — restricted roles only

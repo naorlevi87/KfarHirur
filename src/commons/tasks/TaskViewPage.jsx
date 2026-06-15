@@ -62,6 +62,7 @@ export function TaskViewPage() {
   const [ownerEdit, setOwnerEdit] = useState(false);
   const [ownerPick, setOwnerPick] = useState('');
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const [editChoice, setEditChoice] = useState(false); // instance edit: series vs today-only
   const [sheet, setSheet] = useState(null);   // { node, conflictName, run } | null
 
   useEffect(() => {
@@ -78,14 +79,16 @@ export function TaskViewPage() {
   }, [workspace?.id]);
 
   const canManage = ['admin', 'manager'].includes(permissionLevel);
-  // Editing an instance is meaningless — send it to the definition it came from (the recurring task).
-  const editTargetId = node?.occurrence_date ? node.template_id : nodeId;
+  // Editing an instance forks: "the series" (its definition) vs "today only" (this occurrence). The
+  // choice is offered in a dialog; a definition edits directly.
+  const isInstanceNode = !!node?.occurrence_date;
+  const goEdit = (id) => navigate(`/commons/${workspaceSlug}/task/${id}/edit`);
   const canEdit = node
     ? (node.kind === 'container' ? permissionLevel === 'admin' : canManage)
     : false;
-  const editAction = (canEdit && editTargetId) ? (
+  const editAction = canEdit ? (
     <button type="button" className="commons-topbar__action"
-      onClick={() => navigate(`/commons/${workspaceSlug}/task/${editTargetId}/edit`)}>{v.edit}</button>
+      onClick={() => { if (isInstanceNode) setEditChoice(true); else goEdit(nodeId); }}>{v.edit}</button>
   ) : null;
   useCommonsChrome({ title: node?.title ?? '', showBack: true, action: editAction });
 
@@ -379,6 +382,24 @@ export function TaskViewPage() {
           onConfirm={async () => { setConfirmCancel(false); await tree.cancelRun(node.id); navigate(-1); }}
           onCancel={() => setConfirmCancel(false)}
         />
+      )}
+
+      {editChoice && (
+        <div className="commons-sheetRoot">
+          <div className="commons-sheetBackdrop" role="presentation" aria-hidden="true" onClick={() => setEditChoice(false)} />
+          <div className="commons-confirm" role="dialog" aria-modal="true" aria-label={v.editSeriesTitle}>
+            <h2 className="commons-confirm__title">{v.editSeriesTitle}</h2>
+            <p className="commons-confirm__body">{v.editSeriesBody}</p>
+            <div className="commons-confirm__actions commons-confirm__actions--stack">
+              <button type="button" className="commons-btn commons-btn--primary"
+                onClick={() => { setEditChoice(false); goEdit(node.template_id); }}>{v.editSeriesConfirm}</button>
+              <button type="button" className="commons-btn commons-btn--ghost"
+                onClick={() => { setEditChoice(false); goEdit(nodeId); }}>{v.editTodayOnly}</button>
+              <button type="button" className="commons-btn commons-btn--ghost"
+                onClick={() => setEditChoice(false)}>{shell.form.cancel}</button>
+            </div>
+          </div>
+        </div>
       )}
 
       {resolveItem && (
