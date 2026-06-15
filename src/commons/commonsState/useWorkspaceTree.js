@@ -151,6 +151,17 @@ export function useWorkspaceTree(workspaceId) {
     },
     [byParent, nodes]);
 
+  // Effective owner of a node: its own owner_id if set, else the nearest ancestor's. Derived, never
+  // copied — so claiming a parent makes you owner of its sub-tasks, and claiming a sub-task overrides.
+  const effectiveOwner = useCallback((node) => {
+    let cur = node;
+    while (cur) {
+      if (cur.owner_id) return cur.owner_id;
+      cur = cur.parent_id ? nodes.find(n => n.id === cur.parent_id) : null;
+    }
+    return null;
+  }, [nodes]);
+
   const saveTask = useCallback(async (id, patch) => {
     const updated = await updateNode(id, patch);
     setNodes(prev => prev.map(n => (n.id === id ? updated : n)));
@@ -162,5 +173,5 @@ export function useWorkspaceTree(workspaceId) {
     await reload();
   }, [reload]);
 
-  return { nodes, byParent, loading, addNode, toggleDone, saveTask, removeNode, reload, completeSubtree, claim, unclaim, resolveMissed, deferOccurrence, cloneNode, cancelRun, progress, hasChildren };
+  return { nodes, byParent, loading, addNode, toggleDone, saveTask, removeNode, reload, completeSubtree, claim, unclaim, resolveMissed, deferOccurrence, cloneNode, cancelRun, progress, hasChildren, effectiveOwner };
 }

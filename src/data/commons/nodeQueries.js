@@ -5,7 +5,7 @@
 import { commonsDb } from './commonsClient.js';
 
 const FIELDS =
-  'id, workspace_id, parent_id, kind, title, description, status, owner_id, role_ids, due_date, start_date, recurrence, next_run, template_id, occurrence_date, day_mask, due_time, completed_by, completed_at, completed_late, position, created_at, updated_at';
+  'id, workspace_id, parent_id, kind, title, description, status, owner_id, role_ids, due_date, start_date, recurrence, next_run, template_id, occurrence_date, day_mask, due_time, completed_by, completed_at, completed_late, position, created_at, updated_at, confirm_on_complete';
 
 // All nodes in a workspace, ordered for stable tree rendering.
 export async function fetchTree(workspaceId) {
