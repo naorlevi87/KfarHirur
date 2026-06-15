@@ -90,14 +90,20 @@ In edit mode, for a routine root or an order, list the node's **same-layer child
 הזמנות
  • עגבניות                     🗑
  • דגים                        🗑
+ [ שם ההזמנה…              ] [ + ]
 ```
 
 - The name is a button → `navigate(.../task/<childId>/edit)` (edit that order).
 - A trailing `IconTrash` button → `ConfirmDialog` → `tree.removeNode(childId)`.
-- Adding new orders is **not** duplicated here — it stays on the view screen (`TaskViewPage`).
-- Empty list → the block is omitted.
+- An **add row** at the bottom mirrors the view's `commons-subAdd` grammar: a text input + `+`.
+  Enter / quick-add inserts immediately (`tree.addNode({ parentId: node.id, kind: 'task', title })`);
+  the `+` opens the full new-order page (`/task/new?parent=<node.id>&title=…`) so days/time can be set.
+- Add **and** remove act **immediately** (direct `tree` writes), independent of the form's Save/Cancel —
+  consistent with how sub-task add/remove already behave in the view. They do not arm the form's
+  unsaved-changes guard.
+- Empty list (no orders yet) → the rows are omitted but the add row still shows.
 
-Content keys (`form`): `orders`, `removeOrderTitle`, `removeOrderBody`.
+Content keys (`form`): `orders`, `addOrder`, `addOrderDetailed`, `removeOrderTitle`, `removeOrderBody`.
 
 ### 4.4 Clearable interval (RecurrenceField)
 
@@ -118,7 +124,6 @@ interval. The draft re-syncs when the rule's interval changes from outside.
 ## 6. Out of scope
 
 - Re-syncing today's run after a series edit ("apply to today too" from the routines spec §4.3).
-- Adding orders from inside the edit form (stays in the view).
 - Any schema, RLS, or generation change.
 
 ## 7. Affected files
