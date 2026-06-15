@@ -85,6 +85,9 @@ function NodeRow({ node, depth, ctx }) {
         >
           {node.title}
         </button>
+        {node.kind === 'task' && node.confirm_on_complete && (
+          <span className="commons-confirmDot" role="img" aria-label={t.confirmMark} title={t.confirmMark} />
+        )}
         {isTemplate ? (
           <span className="commons-chip commons-chip--recur">{buildRecurrenceSummary(node.recurrence, t.recurrence)}</span>
         ) : (

@@ -19,6 +19,9 @@ import { resolveCommonsShellContent } from '../resolveCommonsShellContent.js';
 import { buildRecurrenceSummary } from './recurrence.js';
 import { SelectField } from '../SelectField.jsx';
 import { ConfirmDialog } from '../ConfirmDialog.jsx';
+import { CompletionSheet } from './CompletionSheet.jsx';
+import { DocumentationBox } from './DocumentationBox.jsx';
+import { addEntry } from '../../data/commons/entryQueries.js';
 import { CommonsLoading } from '../CommonsLoading.jsx';
 import { currentOpDayStart, isOverdue } from '../opDay.js';
 import { IconCheck, IconRepeat, IconClock, IconPlus } from '../icons.jsx';
@@ -59,6 +62,7 @@ export function TaskViewPage() {
   const [ownerEdit, setOwnerEdit] = useState(false);
   const [ownerPick, setOwnerPick] = useState('');
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const [sheet, setSheet] = useState(null);   // { node, conflictName, run } | null
 
   useEffect(() => {
     if (!workspace?.id) return;
@@ -124,10 +128,32 @@ export function TaskViewPage() {
     await tree.addNode({ parentId: node.id, kind: 'task', title, occurrenceDate: node.occurrence_date ?? undefined });
     setAdding('');
   }
-  // Completing a parent: if it still has open sub-tasks, confirm (lists them) before cascading.
+  const myMid = membership?.id ?? null;
+  // Decide how a completion proceeds: confirm sheet if the task is "עם אישור" OR someone else owns it
+  // (effective owner, inherited up the tree). Otherwise run the action straight away.
+  function requestComplete(target, run) {
+    const effOwner = tree.effectiveOwner(target);
+    const conflict = effOwner && effOwner !== myMid;
+    const conflictName = conflict ? (roster.find(m => m.id === effOwner)?.display_name ?? '') : '';
+    if (target.confirm_on_complete || conflict) setSheet({ node: target, conflictName, run });
+    else run();
+  }
+  async function finishComplete(noteText) {
+    const { node: target, run } = sheet;
+    setSheet(null);
+    await run();
+    if (noteText) {
+      try { await addEntry({ nodeId: target.id, kind: 'note', body: noteText, isCompletion: true }); }
+      catch { /* note is best-effort; the completion already happened */ }
+    }
+  }
+
+  // Completing a parent: confirm the moment first, then (if it still has open sub-tasks) confirm the cascade.
   function openComplete(target) {
-    if (openSubsOf(target).length > 0) setCompleteTarget(target);
-    else tree.completeSubtree(target.id);
+    const open = openSubsOf(target);
+    requestComplete(target, () => {
+      if (open.length > 0) setCompleteTarget(target); else tree.completeSubtree(target.id);
+    });
   }
   function openResolve(item) { setResolveItem(item); setResolveWho(membership?.id ?? ''); }
   async function confirmResolve() {
@@ -163,7 +189,7 @@ export function TaskViewPage() {
         ) : (
           <button type="button" className={kDone ? 'commons-check is-on' : 'commons-check'} role="checkbox"
             aria-checked={kDone} aria-label={shell.tasks.toggleDoneAria}
-            onClick={() => (kHasKids ? openComplete(k) : tree.toggleDone(k))}>
+            onClick={() => (kHasKids ? openComplete(k) : (k.status === 'done' ? tree.toggleDone(k) : requestComplete(k, () => tree.toggleDone(k))))}>
             {kDone && <IconCheck size={14} />}
           </button>
         )}
@@ -292,7 +318,7 @@ export function TaskViewPage() {
                   </button>
                 ) : (
                   <button type="button" className={done ? 'commons-btn commons-btn--ghost' : 'commons-btn commons-btn--primary'}
-                    onClick={() => tree.toggleDone(node)}>
+                    onClick={() => (done ? tree.toggleDone(node) : requestComplete(node, () => tree.toggleDone(node)))}>
                     {done ? v.reopen : <><IconCheck size={18} /> {v.markDone}</>}
                   </button>
                 )}
@@ -312,6 +338,12 @@ export function TaskViewPage() {
                 <button type="button" className="commons-btn commons-btn--ghost" onClick={doClone}>{v.cloneRoutine}</button>
               </div>
             )}
+
+            {!isRoutine && (
+              <DocumentationBox
+                nodeId={node.id} workspaceId={workspace.id} v={v} locale={locale}
+                roster={roster} canManage={canManage} />
+            )}
           </>
         )}
       </motion.div>
@@ -324,6 +356,17 @@ export function TaskViewPage() {
           cancelLabel={shell.form.back}
           onConfirm={() => { const id = completeTarget.id; setCompleteTarget(null); tree.completeSubtree(id); }}
           onCancel={() => setCompleteTarget(null)}
+        />
+      )}
+
+      {sheet && (
+        <CompletionSheet
+          v={v}
+          cancelLabel={shell.form.cancel}
+          title={sheet.node.title}
+          ownerConflictName={sheet.conflictName}
+          onConfirm={finishComplete}
+          onCancel={() => setSheet(null)}
         />
       )}
 

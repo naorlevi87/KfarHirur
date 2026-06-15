@@ -76,3 +76,110 @@
 .commons-deferMenu__date .commons-field__input { flex: 1; }
 .commons-deferMenu__date .commons-btn { width: auto; flex: 0 0 auto; }
 .commons-deferMenu__skip { color: var(--commons-danger); }
+
+/* ── completion style segmented control (in the task form) ── */
+.commons-completeStyle { display: flex; gap: 8px; }
+.commons-completeStyle button {
+  flex: 1; border: 1.5px solid var(--commons-border); border-radius: 12px; padding: 12px 10px;
+  background: var(--commons-surface); color: var(--commons-text); cursor: pointer;
+  display: flex; flex-direction: column; gap: 3px; text-align: center;
+}
+.commons-completeStyle button.is-active {
+  border-color: var(--commons-accent);
+  background: color-mix(in srgb, var(--commons-accent) 16%, transparent);
+}
+.commons-completeStyle button:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
+.commons-completeStyle__t { font-weight: 700; }
+.commons-completeStyle__d { font-size: 11px; color: var(--commons-text-dim); }
+
+/* tree marker: a task that confirms on completion */
+.commons-confirmDot {
+  display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--commons-role-2); margin-inline-start: 6px; flex: 0 0 auto;
+}
+
+/* ── completion sheet (bottom sheet over .commons-sheetRoot) ── */
+.commons-completeSheet {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
+  width: 100%; max-width: 520px; margin: 0 auto;
+  background: var(--commons-surface); border-top: 1px solid var(--commons-border);
+  border-radius: 18px 18px 0 0; padding: 14px 16px calc(16px + env(safe-area-inset-bottom));
+  display: flex; flex-direction: column; gap: 10px;
+}
+.commons-completeSheet__grab { width: 38px; height: 4px; border-radius: 99px; background: var(--commons-border); margin: 0 auto 4px; }
+.commons-completeSheet__burst { font-size: 30px; text-align: center; }
+.commons-completeSheet__q { font-size: 18px; font-weight: 800; text-align: center; margin: 0; }
+.commons-completeSheet__sub { font-size: 13px; color: var(--commons-text-dim); text-align: center; margin: 0; }
+.commons-completeSheet .commons-btn { width: 100%; }
+.commons-completeSheet .commons-btn--ghost { background: transparent; color: var(--commons-text-dim); border: 0; }
+.commons-btn--amber { background: var(--commons-role-2); color: #221206; }
+.commons-addNoteBtn {
+  border: 1px dashed var(--commons-border); background: transparent; color: var(--commons-text-dim);
+  border-radius: 12px; padding: 11px; font: inherit; font-weight: 600; cursor: pointer;
+}
+.commons-ownWarn {
+  display: flex; gap: 10px; align-items: flex-start; text-align: start;
+  background: color-mix(in srgb, var(--commons-role-2) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--commons-role-2) 40%, transparent);
+  border-radius: 12px; padding: 11px 12px;
+}
+.commons-ownWarn__ava {
+  width: 30px; height: 30px; border-radius: 50%; background: var(--commons-role-2); color: #221206;
+  display: flex; align-items: center; justify-content: center; font-weight: 700; flex: none;
+}
+.commons-ownWarn__txt { font-size: 13px; color: var(--commons-text); line-height: 1.45; }
+
+/* ── documentation box ("מה קרה כאן") ── */
+.commons-docAdd {
+  width: 100%; border: 1px dashed var(--commons-border); background: transparent;
+  color: var(--commons-text-dim); border-radius: 12px; padding: 12px; font: inherit; font-weight: 600; cursor: pointer;
+}
+.commons-composer {
+  background: var(--commons-bg); border: 1px solid var(--commons-border);
+  border-radius: 14px; padding: 12px; margin-bottom: 14px;
+}
+.commons-composer__in {
+  width: 100%; box-sizing: border-box; border: 0; resize: none; background: transparent;
+  font: inherit; color: var(--commons-text); outline: none;
+}
+.commons-composer__bar { display: flex; align-items: center; gap: 6px; margin-top: 8px; border-top: 1px solid var(--commons-border); padding-top: 10px; }
+.commons-attBtn {
+  width: 36px; height: 36px; border-radius: 10px; border: 0; cursor: pointer; font-size: 16px;
+  background: var(--commons-surface-2); display: inline-flex; align-items: center; justify-content: center;
+}
+.commons-attBtn:focus-within, .commons-attBtn:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
+.commons-composer__send {
+  margin-inline-start: auto; background: var(--commons-accent); color: var(--commons-on-accent);
+  border: 0; border-radius: 10px; padding: 9px 16px; font: inherit; font-weight: 700; cursor: pointer;
+}
+.commons-composer__send:disabled { opacity: .5; cursor: default; }
+.commons-composer__err { color: var(--commons-danger); font-size: 12px; margin-top: 8px; }
+
+.commons-feed { list-style: none; margin: 0; padding: 0; }
+.commons-entry { display: flex; gap: 10px; padding: 13px 4px; border-bottom: 1px solid var(--commons-border); position: relative; }
+.commons-entry__ava {
+  width: 34px; height: 34px; border-radius: 50%; background: var(--commons-accent); color: var(--commons-on-accent);
+  display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex: none;
+}
+.commons-entry__body { flex: 1; min-width: 0; }
+.commons-entry__top { display: flex; align-items: baseline; gap: 8px; }
+.commons-entry__name { font-size: 14px; font-weight: 700; }
+.commons-entry__time { font-size: 11px; color: var(--commons-text-dim); }
+.commons-entry__text { font-size: 14px; line-height: 1.5; margin-top: 3px; white-space: pre-wrap; word-break: break-word; }
+.commons-entry__photo { margin-top: 8px; width: 100%; max-height: 240px; object-fit: cover; border-radius: 12px; display: block; }
+.commons-entry__photo--loading { height: 120px; background: var(--commons-surface-2); }
+.commons-entry__chip {
+  display: inline-flex; align-items: center; gap: 7px; margin-top: 8px; max-width: 100%;
+  border: 1px solid var(--commons-border); border-radius: 10px; padding: 8px 11px;
+  font-size: 13px; color: var(--commons-text); background: var(--commons-surface);
+  text-decoration: none; cursor: pointer; word-break: break-all;
+}
+.commons-entry__badge {
+  display: inline-flex; align-items: center; gap: 4px; margin-top: 5px; font-size: 11px; font-weight: 700;
+  color: var(--commons-accent); background: color-mix(in srgb, var(--commons-accent) 16%, transparent);
+  border-radius: 99px; padding: 2px 9px;
+}
+.commons-entry__del {
+  position: absolute; top: 13px; inset-inline-start: 2px; font-size: 14px;
+  background: none; border: 0; color: var(--commons-text-dim); cursor: pointer;
+}

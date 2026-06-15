@@ -93,6 +93,7 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
   const [dueTime, setDueTime] = useState(
     node?.due_time ? node.due_time.slice(0, 5) : (node?.due_date ? toTimeInput(node.due_date) : ''));
   const [startDate, setStartDate] = useState(toDateInput(node?.start_date));  // "בתאריך" — when it becomes actionable
+  const [confirmOnComplete, setConfirmOnComplete] = useState(node?.confirm_on_complete ?? true);
   const mark = () => setDirty(true); // any user edit arms the unsaved-changes guard
 
   const rcDays = shell.tasks.recurrence;
@@ -156,7 +157,7 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
 
     // An order inside a routine carries a day-mask + per-item time; it never recurs or has a due date.
     const taskFields = () => {
-      const base = { description: description.trim() || null, owner_id: ownerId || null, role_ids: persistRoleIds };
+      const base = { description: description.trim() || null, owner_id: ownerId || null, role_ids: persistRoleIds, confirm_on_complete: confirmOnComplete };
       if (underRoutine) {
         return { ...base, day_mask: persistMask, due_time: dueTime || null, recurrence: null, due_date: null, next_run: null, start_date: null };
       }
@@ -231,6 +232,21 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
                 options={[{ value: '', label: f.unassigned }, ...roster.map(mb => ({ value: mb.id, label: mb.display_name ?? '—' }))]}
               />
             </label>
+            <div className="commons-field">
+              <span className="commons-field__label">{f.completionStyle}</span>
+              <div className="commons-completeStyle" role="group" aria-label={f.completionStyle}>
+                <button type="button" className={confirmOnComplete ? 'is-active' : ''} aria-pressed={confirmOnComplete}
+                  onClick={() => { setConfirmOnComplete(true); mark(); }}>
+                  <span className="commons-completeStyle__t">{f.completionConfirm}</span>
+                  <span className="commons-completeStyle__d">{f.completionConfirmHint}</span>
+                </button>
+                <button type="button" className={!confirmOnComplete ? 'is-active' : ''} aria-pressed={!confirmOnComplete}
+                  onClick={() => { setConfirmOnComplete(false); mark(); }}>
+                  <span className="commons-completeStyle__t">{f.completionQuick}</span>
+                  <span className="commons-completeStyle__d">{f.completionQuickHint}</span>
+                </button>
+              </div>
+            </div>
             <div className="commons-field">
               <span className="commons-field__label">{f.skill}</span>
               {roles.length === 0 ? (
