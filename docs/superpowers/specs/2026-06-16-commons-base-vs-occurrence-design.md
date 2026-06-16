@@ -9,10 +9,11 @@
 
 > Status: approved design, pre-implementation. Date: 2026-06-16.
 > Scope: `src/commons/tasks/TaskViewPage.jsx`, `TaskFormPage.jsx`, `useWorkspaceTree.js`
-> (`addNode` args), `src/commons/icons.jsx`, `tasks/taskScreens.css`, `commons-tokens.css`,
-> the Hebrew/English commons content, plus a small shared sub-task-defaults helper.
-> **No schema or data-layer query changes** beyond passing inherited fields into the existing
-> `addNode` / `createNode` path. Builds on and refines
+> (`addNode` args + a `deferRun` wrapper), `src/commons/icons.jsx`, `tasks/taskScreens.css`,
+> `commons-tokens.css`, the Hebrew/English commons content, a small shared sub-task-defaults helper,
+> `src/data/commons/nodeQueries.js`, and **one new SQL migration** (`commons.defer_run`). No table
+> schema change — `defer_run` is a SECURITY DEFINER function alongside the existing
+> `cancel_run` / `defer_occurrence`. Builds on and refines
 > `docs/superpowers/specs/2026-06-14-commons-recurring-routines-design.md` and
 > `docs/superpowers/specs/2026-06-15-commons-task-edit-redesign-design.md`; conforms to
 > `docs/commons-standards.md`.
@@ -129,22 +130,19 @@ meaning per IS 5568):
   subtree to `cancelled`, so it is correct for a leaf, a parent branch, **and** the whole-day root
   alike. It replaces both the old root-only `בטל את היום` *and* the old leaf `defer_occurrence(null)`
   skip — one primitive for "not needed", at any level.
-- **🙆 דחה למחר** — present **only** when the item does **not** already recur tomorrow **and** it is a
-  **leaf** (a single occurrence `defer_occurrence` can cleanly respawn) → `deferOccurrence(item.id,
-  tomorrowStr())`.
+- **🙆 דחה למחר** — present **only** when the item does **not** already recur tomorrow → `deferRun(item.id,
+  tomorrowStr())`. Applies to **any** item — leaf, parent, or the run root.
   - *Recurs tomorrow* = tomorrow's op-day weekday ∈ the item's definition effective days
     (`effectiveDaysFor(nodes, item.template_id)`). A **daily** item always recurs tomorrow → **no defer
-    button** (it returns on its own; nothing to defer). This is the user's corollary.
-  - Non-leaf items (a parent, or the run root) never show defer: `defer_occurrence` cannot cascade a
-    subtree, and the only case it would otherwise arise (a non-daily parent on an off-day) needs a
-    backend `defer_run` — deferred to a future change (§14).
-- **📅 דחה לתאריך אחר…** — kept for **leaf** items (existing functionality) →
-  `deferOccurrence(item.id, chosenDate)`.
+    button** (it returns on its own; nothing to defer). This is the user's corollary, and the **only**
+    condition gating the button.
+- **📅 דחה לתאריך אחר…** — pick a target op-day → `deferRun(item.id, chosenDate)`. Any item.
 
-Backdrop = cancel. **No backend change** — `cancel_run` and `defer_occurrence` are used strictly within
-their proven scope (cascade-cancel any subtree; single-occurrence respawn for a leaf). The separate
-`cancelDay` / `confirmCancel` path is removed; a daily routine's run root simply shows the one
-meaningful action (🤷 לא צריך הפעם) in the unified menu.
+`deferRun` is a new SECURITY DEFINER RPC modelled on `cancel_run` + `defer_occurrence`: it
+cascades the run subtree to `deferred` and **re-creates the whole subtree** (structure preserved,
+`occurrence_date` = the target day) so a parent/run-root defers *with its items*, not as a childless
+husk. Backdrop = cancel. The separate `cancelDay` / `confirmCancel` path is removed; a daily routine's
+run root simply shows the one meaningful action (🤷 לא צריך הפעם) in the unified menu.
 
 **Retone the cancellation indication.** Replace the stark `--commons-danger` on the skip affordance
 with a new warm **reddish-orange** token `--commons-cancel` (orange-red, ~`#ff8a4d`, verified ≥ 4.5:1
@@ -195,7 +193,10 @@ no longer sits flush against "בטל".
 - `src/commons/tasks/TaskFormPage.jsx` — reframe the owner picker's open option as "מי שיכול לוקח";
   seed שיוך + skills + עד שעה from parent on detailed-add; use `inheritedSubDefaults` for quick-add.
 - `src/commons/commonsState/useWorkspaceTree.js` — `addNode` accepts `ownerId` + `roleIds` (passes to
-  `createNode`).
+  `createNode`); add a `deferRun(id, toDate)` wrapper (RPC + reload).
+- `src/data/commons/nodeQueries.js` — `deferRun(id, toDate)` calling `rpc('defer_run', …)`.
+- `supabase/migrations/<ts>_commons_defer_run.sql` — the `commons.defer_run` function (cascade-defer +
+  re-create the run subtree on the target op-day) + grant to `authenticated`.
 - `src/commons/icons.jsx` — new `IconInfo`.
 - `src/commons/tasks/taskScreens.css` — note-marker restyle, settings-line, day-cancel sheet,
   doc-box divider.
@@ -209,9 +210,6 @@ no longer sits flush against "בטל".
 ## 14. Out of scope
 
 - Re-syncing today's run after a series edit ("apply to today too", routines spec §4.3).
-- A backend `defer_run` RPC (cascade-defer a whole run/parent + regenerate it on a chosen off-schedule
-  day). Until it exists, "דחה למחר" is offered only on leaf items that don't already recur tomorrow
-  (§8); parents and the run root get "לא צריך הפעם" only.
 - Replacing `DocumentationBox`'s `window.prompt` link entry (a pre-existing standards §2.2 violation —
   tracked separately, not part of this change).
 - Any schema / RLS / generation change. Run generation already inherits the routine root's owner
