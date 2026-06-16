@@ -85,6 +85,12 @@ export const commonsShellContent = {
     timeLeftMin: '{n} min left',
     noOwner: 'No owner',
   },
+  day: {
+    back: 'Back',
+    toHandle: 'Still to handle',
+    done: 'Done',
+    lateTag: 'late',
+  },
   dashboard: {
     emptyTitle: 'All calm here',
     emptyBody: 'No tasks yet. We will fill this soon.',
@@ -341,6 +347,32 @@ export const commonsShellContent = {
     docDeleteBody: 'This cannot be undone.',
     docDeleteCancel: 'Cancel',
     docTooBig: 'File too large (max 5MB).',
+    // activity log — derived, read-only; below the manual doc box
+    activityTitle: 'Activity log',
+    activityShowMore: 'Show all',
+    activityShowLess: 'Show less',
+    activityLate: 'late',
+    activityTypes: {
+      created: 'created',
+      edited: 'edited',
+      claimed: 'claimed',
+      unclaimed: 'released',
+      reassigned: 'reassigned',
+      completed: 'completed',
+      reopened: 'reopened',
+      missed: 'missed',
+      resolved: 'marked as done',
+      deferred: 'deferred',
+      cancelled: 'cancelled',
+    },
+    activityFields: {
+      title: 'title', description: 'description', due: 'due', time: 'target time',
+      roles: 'skills', schedule: 'schedule', days: 'days', start: 'start date',
+    },
+    activityEmoji: {
+      created: '➕', edited: '✏️', claimed: '🙌', unclaimed: '↩️', reassigned: '🔄',
+      completed: '😎', reopened: '↺', missed: '⏰', resolved: '🫢', deferred: '🙆', cancelled: '🤷',
+    },
   },
   tasks: {
     confirmMark: 'Needs confirm on complete',

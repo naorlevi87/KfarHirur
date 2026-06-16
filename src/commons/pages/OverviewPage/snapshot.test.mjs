@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { buildSnapshot } from './snapshot.js';
+import { buildSnapshot, buildDay } from './snapshot.js';
 
 // op-day = 08:00→08:00. Pick a fixed "now" inside one op-day.
 const now = new Date('2026-06-16T12:00:00');
@@ -43,5 +43,11 @@ assert.equal(s.closedToday, false);
 // scoping to a non-existent area yields empty progress
 const empty = buildSnapshot({ nodes, roster, now, scopeAreaId: 'ZZZ' });
 assert.equal(empty.progress.totalLeaves, 0);
+
+// buildDay: the one-off with a due on that op-day is the only day-leaf (t1/t2 have no due → not tied to a day)
+const day = buildDay({ nodes, roster, dayStr: today });
+assert.deepEqual(day.toHandle.map((x) => x.id), ['t3']);
+assert.equal(day.done.length, 0);
+assert.equal(day.progress.totalLeaves, 1);
 
 console.log('snapshot.test.mjs OK');

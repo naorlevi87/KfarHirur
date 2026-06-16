@@ -3,6 +3,12 @@
 
 .commons-snapshot { position: relative; min-height: 60dvh; padding-bottom: 96px; } /* buffer so content clears the FAB */
 
+/* day-view header (DayPage) */
+.commons-dayHead { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+.commons-dayHead__back { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 10px; background: var(--commons-surface); border: 1px solid var(--commons-border); color: var(--commons-text); cursor: pointer; flex: none; }
+.commons-dayHead__back:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
+.commons-dayHead__title { font-size: 18px; font-weight: 800; letter-spacing: -.02em; }
+
 /* header / living line */
 .commons-snapHeader { margin-bottom: 12px; }
 .commons-snapHeader__kicker { font-size: 13px; font-weight: 800; color: var(--commons-accent); letter-spacing: .03em; margin-bottom: 6px; }
@@ -100,7 +106,9 @@
 
 /* week ("בימים האחרונים") — a cake per op-day with its weekday letter */
 .commons-week__dots { display: flex; align-items: flex-end; justify-content: space-between; padding: 2px 2px 0; }
-.commons-week__day { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.commons-week__day { display: flex; flex-direction: column; align-items: center; gap: 5px; background: none; border: 0; padding: 4px 2px; font: inherit; cursor: pointer; border-radius: 10px; }
+.commons-week__day:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
+.commons-week__day:hover .commons-week__dot { transform: scale(1.08); transition: transform .2s cubic-bezier(.16,1,.3,1); }
 .commons-week__dot { width: 22px; height: 22px; border-radius: 50%; }
 .commons-week__dot.is-today { width: 26px; height: 26px; box-shadow: 0 0 0 2px var(--commons-surface-2); }
 .commons-week__lbl { font-size: 10px; color: var(--commons-text-dim); }

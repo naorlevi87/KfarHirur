@@ -139,3 +139,51 @@ export function buildSnapshot({ nodes, roster, now = new Date(), scopeAreaId = n
     closedToday: totalLeaves > 0 && doneLeaves === totalLeaves,
   };
 }
+
+// One specific op-day (the "בימים האחרונים" drill-in): that day's leaves split into done + toHandle,
+// with completion attribution. Same leaf rules as buildSnapshot, keyed to dayStr instead of "today".
+export function buildDay({ nodes, roster, dayStr }) {
+  const byId = new Map(nodes.map((n) => [n.id, n]));
+  const byParent = new Map();
+  for (const n of nodes) {
+    const k = n.parent_id ?? 'root';
+    if (!byParent.has(k)) byParent.set(k, []);
+    byParent.get(k).push(n);
+  }
+  const rosterById = new Map((roster ?? []).map((m) => [m.id, m]));
+  const taskChildren = (id, inst) =>
+    (byParent.get(id) ?? []).filter((c) => c.kind === 'task' && Boolean(c.occurrence_date) === inst);
+  const hasRecurringAncestor = (n) => {
+    let c = byId.get(n.parent_id);
+    while (c) { if (c.recurrence) return true; c = byId.get(c.parent_id); }
+    return false;
+  };
+
+  const leaves = nodes.filter((n) => {
+    if (n.kind !== 'task') return false;
+    if (n.occurrence_date) return n.occurrence_date === dayStr && !taskChildren(n.id, true).length;
+    if (n.recurrence || hasRecurringAncestor(n)) return false;
+    if (taskChildren(n.id, false).length) return false;
+    return n.due_date ? ymd(opDayStartFor(new Date(n.due_date))) === dayStr : false;
+  });
+
+  const nameOf = (id) => rosterById.get(id)?.name ?? null;
+  const toView = (n) => {
+    const due = n.due_date ? new Date(n.due_date)
+      : (n.due_time && n.occurrence_date ? new Date(`${n.occurrence_date}T${n.due_time}`) : null);
+    return {
+      id: n.id, title: n.title, status: n.status,
+      due: due ? due.toISOString() : null,
+      doer: n.status === 'done' ? nameOf(n.completed_by) : null,
+      late: Boolean(n.completed_late),
+    };
+  };
+  const done = leaves.filter((n) => n.status === 'done').map(toView);
+  const toHandle = leaves.filter((n) => n.status !== 'done').map(toView);
+  const total = leaves.length;
+  return {
+    dayStr,
+    progress: { doneLeaves: done.length, totalLeaves: total, fraction: total ? done.length / total : 0 },
+    done, toHandle,
+  };
+}

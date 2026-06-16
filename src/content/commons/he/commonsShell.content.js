@@ -86,6 +86,12 @@ export const commonsShellContent = {
     timeLeftMin: 'עוד {n} דק׳',
     noOwner: 'אין אחראי',
   },
+  day: {
+    back: 'חזרה',
+    toHandle: 'נשאר לטפל',
+    done: 'בוצע',
+    lateTag: 'באיחור',
+  },
   dashboard: {
     emptyTitle: 'הכל רגוע פה',
     emptyBody: 'עוד אין משימות. תכף נמלא את זה.',
@@ -344,6 +350,32 @@ export const commonsShellContent = {
     docDeleteBody: 'אי אפשר לבטל את הפעולה.',
     docDeleteCancel: 'ביטול',
     docTooBig: 'הקובץ גדול מדי (עד 5MB).',
+    // activity log ("יומן פעילות") — derived, read-only; below the manual doc box
+    activityTitle: 'יומן פעילות',
+    activityShowMore: 'הצג הכול',
+    activityShowLess: 'הצג פחות',
+    activityLate: 'באיחור',
+    activityTypes: {
+      created: 'נוצרה',
+      edited: 'נערכה',
+      claimed: 'נתפסה',
+      unclaimed: 'שוחררה',
+      reassigned: 'הועברה',
+      completed: 'הושלמה',
+      reopened: 'נפתחה מחדש',
+      missed: 'נתקעה',
+      resolved: 'סומן שקרה',
+      deferred: 'נדחתה',
+      cancelled: 'בוטלה',
+    },
+    activityFields: {
+      title: 'כותרת', description: 'תיאור', due: 'מועד', time: 'שעת יעד',
+      roles: 'כישורים', schedule: 'תדירות', days: 'ימים', start: 'תאריך התחלה',
+    },
+    activityEmoji: {
+      created: '➕', edited: '✏️', claimed: '🙌', unclaimed: '↩️', reassigned: '🔄',
+      completed: '😎', reopened: '↺', missed: '⏰', resolved: '🫢', deferred: '🙆', cancelled: '🤷',
+    },
   },
   tasks: {
     confirmMark: 'דורש אישור בסיום',

@@ -21,6 +21,7 @@ import { MyTasksPage } from './pages/MyTasksPage/MyTasksPage.jsx';
 import { BoardPage } from './pages/BoardPage/BoardPage.jsx';
 import { AreaPage } from './pages/AreaPage/AreaPage.jsx';
 import { OverviewPage } from './pages/OverviewPage/OverviewPage.jsx';
+import { DayPage } from './pages/OverviewPage/DayPage.jsx';
 import { TaskFormPage } from './tasks/TaskFormPage.jsx';
 import { TaskViewPage } from './tasks/TaskViewPage.jsx';
 import { RolesPage } from './pages/RolesPage/RolesPage.jsx';
@@ -110,6 +111,7 @@ function WorkspaceGate() {
           <Route path="board" element={<BoardPage />} />
           <Route path="board/:containerId" element={<AreaPage />} />
           <Route path="overview" element={<OverviewPage />} />
+          <Route path="day/:date" element={<DayPage />} />
           <Route path="task/new" element={<TaskFormPage mode="create" />} />
           <Route path="task/:nodeId" element={<TaskViewPage />} />
           <Route path="task/:nodeId/edit" element={<TaskFormPage mode="edit" />} />
