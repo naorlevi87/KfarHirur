@@ -1,47 +1,26 @@
 // src/commons/pages/OverviewPage/OverviewPage.jsx
-// "תמונת מצב" — the read-only snapshot any shift manager / helper opens to see the whole restaurant's
-// current state: open / overdue / done-today tiles + per-area progress. Computed from the loaded tree
-// (no new DB). The activity feed (יומן) is a later increment. FAB creates (manager/admin).
+// "מה קורה היום?" — the communal snapshot ("us" view). Derives a view model from the loaded tree +
+// roster (snapshot.js), renders the spectrum ring + invitation-framed sections + credit strip + week.
+// Read-mostly; the few actions reuse existing occurrence ops. No new DB reads.
 
 import './overview.css';
+import { useMemo, useRef, useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAppContext } from '../../../app/appState/useAppContext.js';
 import { useWorkspace } from '../../commonsState/WorkspaceContext.jsx';
 import { useWorkspaceTree } from '../../commonsState/useWorkspaceTree.js';
+import { fetchRoster } from '../../../data/commons/workspaceQueries.js';
 import { resolveCommonsShellContent } from '../../resolveCommonsShellContent.js';
 import { CommonsLoading } from '../../CommonsLoading.jsx';
 import { Fab } from '../../Fab.jsx';
-import { isToday, isOverdue } from '../../opDay.js';
-
-function relTime(iso, locale) {
-  try {
-    const diff = (new Date(iso).getTime() - Date.now()) / 1000; // negative = past
-    const rtf = new Intl.RelativeTimeFormat(locale === 'he' ? 'he' : 'en', { numeric: 'auto' });
-    const abs = Math.abs(diff);
-    if (abs < 60) return rtf.format(Math.round(diff), 'second');
-    if (abs < 3600) return rtf.format(Math.round(diff / 60), 'minute');
-    if (abs < 86400) return rtf.format(Math.round(diff / 3600), 'hour');
-    return rtf.format(Math.round(diff / 86400), 'day');
-  } catch { return ''; }
-}
-
-// Recent "added / completed" events derived from the loaded tree (no activity-log table yet).
-function recentActivity(nodes) {
-  const events = [];
-  for (const n of nodes) {
-    if (n.kind !== 'task' || n.recurrence) continue;
-    if (!n.template_id) events.push({ id: `${n.id}-a`, type: 'added', title: n.title, at: n.created_at });
-    if (n.status === 'done') events.push({ id: `${n.id}-d`, type: 'done', title: n.title, at: n.updated_at });
-  }
-  return events.sort((a, b) => new Date(b.at) - new Date(a.at)).slice(0, 8);
-}
-
-const gridV = { hidden: {}, show: { transition: { staggerChildren: 0.05 } } };
-const itemV = {
-  hidden: { opacity: 0, y: 14 },
-  show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 130, damping: 18 } },
-};
+import { buildSnapshot } from './snapshot.js';
+import { SnapshotRing } from './SnapshotRing.jsx';
+import { AreaLens } from './AreaLens.jsx';
+import { SnapshotSections } from './SnapshotSections.jsx';
+import { RecentStrip } from './RecentStrip.jsx';
+import { WeekStrip } from './WeekStrip.jsx';
+import { SnapshotList } from './SnapshotList.jsx';
 
 export function OverviewPage() {
   const { locale } = useAppContext();
@@ -49,96 +28,88 @@ export function OverviewPage() {
   const { workspaceSlug } = useParams();
   const navigate = useNavigate();
   const shell = resolveCommonsShellContent(locale);
-  const s = shell.snapshot;
+  const t = shell.snapshot;
   const tree = useWorkspaceTree(workspace?.id);
   const canTask = ['admin', 'manager'].includes(permissionLevel);
+  const canManage = canTask;
 
-  if (tree.loading) {
-    return (
-      <section className="commons-snapshot">
-        <CommonsLoading />
-      </section>
-    );
-  }
+  const [roster, setRoster] = useState([]);
+  useEffect(() => {
+    if (!workspace?.id) return;
+    let cancelled = false;
+    fetchRoster(workspace.id).then((r) => { if (!cancelled) setRoster(r); });
+    return () => { cancelled = true; };
+  }, [workspace?.id]);
 
-  // Leaf tasks = the real checkable items (no task-children, not recurrence templates).
-  const leaves = tree.nodes.filter(n => n.kind === 'task' && !n.recurrence && !tree.hasChildren(n.id));
-  const isOpen = n => n.status === 'open' || n.status === 'in_progress';
-  const open = leaves.filter(isOpen).length;
-  const overdue = leaves.filter(n => isOpen(n) && isOverdue(n.due_date)).length;
-  const doneToday = leaves.filter(n => n.status === 'done' && isToday(n.updated_at)).length;
+  const [scope, setScope] = useState(null);
+  const freeRef = useRef(null);
 
-  const areas = (tree.byParent.get('root') ?? []).filter(n => n.kind === 'container');
+  const areas = useMemo(
+    () => (tree.byParent.get('root') ?? []).filter((n) => n.kind === 'container'),
+    [tree.byParent]);
 
-  const tiles = [
-    { key: 'open', n: open, label: s.open, cls: '' },
-    { key: 'overdue', n: overdue, label: s.overdue, cls: 'is-late' },
-    { key: 'doneToday', n: doneToday, label: s.doneToday, cls: 'is-done' },
-  ];
+  const s = useMemo(
+    () => buildSnapshot({ nodes: tree.nodes, roster, now: new Date(), scopeAreaId: scope }),
+    [tree.nodes, roster, scope]);
+
+  if (tree.loading) return <section className="commons-snapshot"><CommonsLoading /></section>;
+
+  const open = (id) => navigate(`/commons/${workspaceSlug}/task/${id}`);
+  const line = buildLine(t, s);
+  const allLeaves = [...s.approaching, ...s.free, ...s.stuck];
+  const statusLabel = (n) => (n.status === 'done' ? t.center : (n.status === 'missed' ? t.stuck : t.free));
 
   return (
     <section className="commons-snapshot">
-      <h1 className="commons-snapshot__title">{workspace?.name}</h1>
+      <header className="commons-snapHeader">
+        <div className="commons-snapHeader__kicker">{t.heading}</div>
+        <button type="button" className="commons-snapHeader__line"
+                onClick={() => freeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
+          <span>{line}</span><span aria-hidden="true" className="commons-snapHeader__chev">↓</span>
+        </button>
+      </header>
 
-      <motion.div className="commons-statGrid" variants={gridV} initial="hidden" animate="show">
-        {tiles.map(t => (
-          <motion.div key={t.key} className={`commons-stat ${t.cls}`} variants={itemV}>
-            <span className="commons-stat__n">{t.n}</span>
-            <span className="commons-stat__l">{t.label}</span>
-          </motion.div>
-        ))}
+      <AreaLens areas={areas} value={scope} onChange={setScope} allLabel={t.scopeAll} />
+
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                  transition={{ type: 'spring', stiffness: 140, damping: 20 }}>
+        <SnapshotRing fraction={s.progress.fraction} done={s.progress.doneLeaves}
+                      total={s.progress.totalLeaves} centerLabel={t.center} countOf={t.countOf} />
+
+        <SnapshotList items={allLeaves} statusLabel={statusLabel} toggleLabel={t.listToggle} onOpen={open} />
+
+        <SnapshotSections
+          s={s} t={t} canManage={canManage} onOpen={open} anchorRef={freeRef}
+          onClaim={(id) => tree.claim(id)}
+          onResolve={(id) => tree.resolveMissed(id, null)}
+          onDefer={(id) => { const d = nextOpDayStr(); tree.deferOccurrence(id, d); }}
+          onSkip={(id) => tree.deferOccurrence(id, null)}
+        />
+
+        <RecentStrip recent={s.recent} closed={s.closedToday} t={t} locale={locale} />
+        <WeekStrip week={s.week} label={t.week} />
       </motion.div>
 
-      {areas.length > 0 && (
-        <>
-          <h2 className="commons-snapshot__h">{s.byArea}</h2>
-          <motion.ul className="commons-areaList" variants={gridV} initial="hidden" animate="show">
-            {areas.map(area => {
-              const p = tree.progress(area.id);
-              const pct = p.total ? Math.round((p.done / p.total) * 100) : 0;
-              return (
-                <motion.li key={area.id} variants={itemV}>
-                  <button
-                    type="button"
-                    className="commons-areaStat"
-                    onClick={() => navigate(`/commons/${workspaceSlug}/board/${area.id}`)}
-                  >
-                    <div className="commons-areaStat__head">
-                      <span className="commons-areaStat__name">{area.title}</span>
-                      <span className="commons-areaStat__count">{p.done}/{p.total}</span>
-                    </div>
-                    <div className="commons-areaStat__bar"><span style={{ width: `${pct}%` }} /></div>
-                  </button>
-                </motion.li>
-              );
-            })}
-          </motion.ul>
-        </>
-      )}
-
-      {(() => {
-        const feed = recentActivity(tree.nodes);
-        return feed.length > 0 && (
-          <>
-            <h2 className="commons-snapshot__h">{s.activity}</h2>
-            <ul className="commons-feed">
-              {feed.map(e => (
-                <li key={e.id} className="commons-feedItem">
-                  <span className={e.type === 'done' ? 'commons-feedDot is-done' : 'commons-feedDot'} aria-hidden="true" />
-                  <span className="commons-feedItem__text">
-                    <b>{e.type === 'done' ? s.done : s.added}</b> {e.title}
-                  </span>
-                  <span className="commons-feedItem__time">{relTime(e.at, locale)}</span>
-                </li>
-              ))}
-            </ul>
-          </>
-        );
-      })()}
-
-      {leaves.length === 0 && areas.length === 0 && <p className="commons-snapshot__empty">{s.empty}</p>}
+      {(s.progress.totalLeaves === 0) && <p className="commons-snapshot__empty">{t.empty}</p>}
 
       {canTask && <Fab onClick={() => navigate(`/commons/${workspaceSlug}/task/new`)} label={shell.fab.newTaskAria} />}
     </section>
   );
+}
+
+// Pick a living-line template by op-day phase + counts (never says "ביחד").
+function buildLine(t, s) {
+  const { doneLeaves: done, totalLeaves: total } = s.progress;
+  const left = total - done;
+  if (total > 0 && left === 0) return t.lineAllDone;
+  if (s.stuck.length >= 3) return t.lineHardDay;
+  const h = new Date().getHours();
+  const tmpl = h < 12 ? t.lineMorning : h < 17 ? t.lineMidday : t.lineEvening;
+  return tmpl.replace('{done}', done).replace('{left}', left).replace('{free}', s.free.length);
+}
+
+// Tomorrow's op-day as 'YYYY-MM-DD' (deferOccurrence target).
+function nextOpDayStr() {
+  const d = new Date(); d.setDate(d.getDate() + 1);
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 }
