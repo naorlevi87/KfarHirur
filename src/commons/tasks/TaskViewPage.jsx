@@ -16,15 +16,18 @@ import { useCommonsChrome } from '../commonsState/CommonsChromeContext.jsx';
 import { fetchRoster } from '../../data/commons/workspaceQueries.js';
 import { fetchRoles } from '../../data/commons/roleQueries.js';
 import { resolveCommonsShellContent } from '../resolveCommonsShellContent.js';
-import { buildRecurrenceSummary } from './recurrence.js';
+import { buildRecurrenceSummary, effectiveDaysFor } from './recurrence.js';
+import { inheritedSubDefaults } from './subDefaults.js';
 import { SelectField } from '../SelectField.jsx';
 import { ConfirmDialog } from '../ConfirmDialog.jsx';
 import { CompletionSheet } from './CompletionSheet.jsx';
 import { DocumentationBox } from './DocumentationBox.jsx';
+import { ActivityLog } from './ActivityLog.jsx';
+import { StandingAttachments } from './StandingAttachments.jsx';
 import { addEntry } from '../../data/commons/entryQueries.js';
 import { CommonsLoading } from '../CommonsLoading.jsx';
 import { currentOpDayStart, isOverdue } from '../opDay.js';
-import { IconCheck, IconRepeat, IconClock, IconPlus } from '../icons.jsx';
+import { IconCheck, IconRepeat, IconClock, IconPlus, IconInfo } from '../icons.jsx';
 import raiseHand from '../../assets/images/raise-hand.svg';
 
 function timeOf(due, locale) {
@@ -38,6 +41,28 @@ function formatDue(due, locale) {
 function dateStr(d) {
   const x = new Date(d);
   return new Date(x.getTime() - x.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+}
+// A row's "עד שעה": a definition carries due_time ("HH:MM[:ss]"); an instance carries a dated due_date.
+function rowTime(k, locale) {
+  if (k.due_time) return k.due_time.slice(0, 5);
+  if (k.due_date) return timeOf(k.due_date, locale);
+  return '';
+}
+// Pre-08:00 belongs to the next calendar morning of the op-day — show a "↪" hint.
+function rowTimeNextDay(k) {
+  if (k.due_time) return parseInt(k.due_time.slice(0, 2), 10) < 8;
+  if (k.due_date) return new Date(k.due_date).getHours() < 8;
+  return false;
+}
+// Does this run item's definition run again tomorrow? (If so, no "defer to tomorrow" — it returns on
+// its own; only "not needed this time".) A daily item always recurs tomorrow. Ad-hoc one-offs (no
+// template) do not recur. `nodes` is the flat tree; `template_id` points at the source definition.
+function recursTomorrow(item, nodes) {
+  if (!item.template_id) return false;
+  const days = effectiveDaysFor(nodes, item.template_id);
+  const t = currentOpDayStart();
+  t.setDate(t.getDate() + 1);
+  return days.includes(t.getDay());
 }
 
 export function TaskViewPage() {
@@ -61,7 +86,6 @@ export function TaskViewPage() {
   const [deferDate, setDeferDate] = useState('');
   const [ownerEdit, setOwnerEdit] = useState(false);
   const [ownerPick, setOwnerPick] = useState('');
-  const [confirmCancel, setConfirmCancel] = useState(false);
   const [editChoice, setEditChoice] = useState(false); // instance edit: series vs today-only
   const [sheet, setSheet] = useState(null);   // { node, conflictName, run } | null
 
@@ -110,7 +134,18 @@ export function TaskViewPage() {
   const missed = node.status === 'missed';
   const isRoutine = !!node.recurrence;
   const isRun = !!node.occurrence_date;                              // a run instance
-  const isRunRoot = isRun && node.template_id === node.parent_id;    // the run's top node (not a deferrable item)
+
+  // A base/definition (template) vs a run instance. A base order sits under a routine with no
+  // occurrence_date; the routine root carries its own recurrence. Bases declare capability + cadence
+  // + an assignment choice — never a status or a per-day claim.
+  const underRoutine = !isRun && (() => {
+    let c = tree.nodes.find(n => n.id === node.parent_id);
+    while (c) { if (c.recurrence) return true; c = tree.nodes.find(n => n.id === c.parent_id); }
+    return false;
+  })();
+  const isBase = isRoutine || underRoutine;
+  const baseDays = underRoutine ? effectiveDaysFor(tree.nodes, node.id) : [];
+  const baseDaysText = baseDays.length === 7 ? v.everyDay : baseDays.map(d => rc.dayShort[d]).join(' ');
 
   // Show children on the same layer as this node: a definition lists its definitions (orders),
   // a run lists its instances. Without this, a routine's view would show its own run root as a
@@ -127,8 +162,14 @@ export function TaskViewPage() {
     e?.preventDefault?.();
     const title = adding.trim();
     if (!title) return;
-    // Inside a run → an ad-hoc item carries that run's day (one-off for that day only).
-    await tree.addNode({ parentId: node.id, kind: 'task', title, occurrenceDate: node.occurrence_date ?? undefined });
+    // Inherit the parent's assignment + who-can; due_time only applies to a definition (not an occurrence).
+    const inh = inheritedSubDefaults(node);
+    await tree.addNode({
+      parentId: node.id, kind: 'task', title,
+      occurrenceDate: node.occurrence_date ?? undefined,
+      ownerId: inh.ownerId, roleIds: inh.roleIds,
+      dueTime: node.occurrence_date ? undefined : inh.dueTime,
+    });
     setAdding('');
   }
   const myMid = membership?.id ?? null;
@@ -164,7 +205,8 @@ export function TaskViewPage() {
     setResolveItem(null);
   }
   function openDefer(item) { setDeferItem(item); setDeferDate(''); }
-  async function doDefer(toDate) { await tree.deferOccurrence(deferItem.id, toDate); setDeferItem(null); navigate(-1); }
+  async function doDefer(toDate) { await tree.deferRun(deferItem.id, toDate); setDeferItem(null); navigate(-1); }
+  async function doSkip() { await tree.cancelRun(deferItem.id); setDeferItem(null); navigate(-1); }
   const tomorrowStr = () => { const d = currentOpDayStart(); d.setDate(d.getDate() + 1); return dateStr(d); };
   async function doClone() {
     const newId = await tree.cloneNode(node.id);
@@ -202,7 +244,7 @@ export function TaskViewPage() {
           <span className="commons-subRow__name">
             <span className={kDone || kClosed ? 'commons-subRow__nameText is-done' : 'commons-subRow__nameText'}>{k.title}</span>
             {kHasKids && <span className="commons-chip commons-chip--progress">{p.done}/{p.total}</span>}
-            {hasNote && <span className="commons-subRow__note" title={k.description.trim()} aria-label={v.hasNote}>!</span>}
+            {hasNote && <span className="commons-subRow__note" title={k.description.trim()} aria-label={v.hasNote}><IconInfo size={14} /></span>}
           </span>
           {kDone && !kHasKids && completer && (
             <span className="commons-subRow__meta">
@@ -212,9 +254,9 @@ export function TaskViewPage() {
           )}
         </button>
 
-        {k.due_date && !kHasKids && !kDone && (
-          <span className={overdue ? 'commons-chip commons-chip--due' : 'commons-chip'}>
-            {new Date(k.due_date).getHours() < 8 ? '↪ ' : ''}{rc.until} {timeOf(k.due_date, locale)}
+        {rowTime(k, locale) && (
+          <span className={overdue && !kDone ? 'commons-chip commons-chip--due' : 'commons-chip'}>
+            {rowTimeNextDay(k) ? '↪ ' : ''}{rc.until} {rowTime(k, locale)}
           </span>
         )}
         {kMissed && (
@@ -241,7 +283,7 @@ export function TaskViewPage() {
       >
         <h1 className="commons-view__title">{node.title}</h1>
         <div className="commons-view__chips">
-          {!isRoutine && (
+          {!isBase && (
             <span className={`commons-view__chip${done ? ' commons-view__chip--done' : missed ? ' commons-view__chip--missed' : ''}`}>
               {done ? v.statusDone : missed ? v.statusMissed : v.statusOpen}
             </span>
@@ -259,6 +301,12 @@ export function TaskViewPage() {
               {role.name}
             </span>
           ))}
+          {underRoutine && baseDaysText && (
+            <span className="commons-view__chip">{v.settingsDays}: {baseDaysText}</span>
+          )}
+          {underRoutine && node.due_time && (
+            <span className="commons-view__chip"><IconClock size={14} /> {rc.until} {node.due_time.slice(0, 5)}</span>
+          )}
         </div>
 
         <div className="commons-view__block">
@@ -273,10 +321,10 @@ export function TaskViewPage() {
             ) : (
               <>
                 <span className="commons-view__avatar">{ownerName ? [...ownerName][0] : '·'}</span>
-                <span>{ownerName ?? v.unassigned}</span>
+                <span>{ownerName ?? v.ownerOpen}</span>
               </>
             )}
-            {!owner && node.kind === 'task' && canClaim && (
+            {!owner && node.kind === 'task' && canClaim && !isBase && (
               <button type="button" className="commons-claim commons-claim--lg" aria-label={shell.tasks.claimAria}
                 onClick={() => tree.claim(node.id)}>
                 <img src={raiseHand} alt="" className="commons-claim__icon" /> {shell.tasks.claim}
@@ -284,11 +332,11 @@ export function TaskViewPage() {
             )}
           </div>
         </div>
-        <div className="commons-view__block">
-          <div className={node.description?.trim() ? 'commons-view__desc' : 'commons-view__desc is-empty'}>
-            {node.description?.trim() ? node.description : v.noDescription}
+        {node.description?.trim() && (
+          <div className="commons-view__block">
+            <div className="commons-view__desc">{node.description}</div>
           </div>
-        </div>
+        )}
 
         {node.kind === 'task' && (
           <>
@@ -312,7 +360,7 @@ export function TaskViewPage() {
               </div>
             )}
 
-            {!isRoutine && (
+            {!isBase && (
               <div className="commons-view__actions">
                 {hasKids ? (
                   <button type="button" className="commons-btn commons-btn--primary"
@@ -325,13 +373,9 @@ export function TaskViewPage() {
                     {done ? v.reopen : <><IconCheck size={18} /> {v.markDone}</>}
                   </button>
                 )}
-                {isRun && !isRunRoot && !hasKids && canManage && (node.status === 'open' || node.status === 'in_progress') && (
-                  <button type="button" className="commons-btn commons-btn--ghost commons-view__defer"
+                {isRun && canManage && (node.status === 'open' || node.status === 'in_progress') && (
+                  <button type="button" className="commons-btn commons-btn--ghost commons-view__defer commons-cancelBtn"
                     onClick={() => openDefer(node)}>{v.deferTitle}</button>
-                )}
-                {isRunRoot && canManage && (
-                  <button type="button" className="commons-btn commons-btn--ghost commons-view__defer commons-deferMenu__skip"
-                    onClick={() => setConfirmCancel(true)}>{v.cancelDay}</button>
                 )}
               </div>
             )}
@@ -342,10 +386,21 @@ export function TaskViewPage() {
               </div>
             )}
 
-            {!isRoutine && (
-              <DocumentationBox
-                nodeId={node.id} workspaceId={workspace.id} v={v} locale={locale}
-                roster={roster} canManage={canManage} />
+            {isBase && (
+              <StandingAttachments nodeId={node.id} workspaceId={workspace.id} v={v} canManage={canManage} />
+            )}
+
+            {!isBase && (
+              <>
+                <div className="commons-formDivider" aria-hidden="true" />
+                {isRun && node.template_id && (
+                  <StandingAttachments nodeId={node.template_id} workspaceId={workspace.id} v={v} readOnly />
+                )}
+                <DocumentationBox
+                  nodeId={node.id} workspaceId={workspace.id} v={v} locale={locale}
+                  roster={roster} canManage={canManage} />
+                <ActivityLog nodes={tree.nodes} nodeId={node.id} v={v} locale={locale} roster={roster} />
+              </>
             )}
           </>
         )}
@@ -370,17 +425,6 @@ export function TaskViewPage() {
           ownerConflictName={sheet.conflictName}
           onConfirm={finishComplete}
           onCancel={() => setSheet(null)}
-        />
-      )}
-
-      {confirmCancel && (
-        <ConfirmDialog
-          title={v.cancelDayTitle}
-          body={v.cancelDayBody}
-          confirmLabel={v.cancelDay}
-          cancelLabel={shell.form.cancel}
-          onConfirm={async () => { setConfirmCancel(false); await tree.cancelRun(node.id); navigate(-1); }}
-          onCancel={() => setConfirmCancel(false)}
         />
       )}
 
@@ -445,25 +489,36 @@ export function TaskViewPage() {
         </div>
       )}
 
-      {deferItem && (
-        <div className="commons-sheetRoot">
-          <div className="commons-sheetBackdrop" role="presentation" aria-hidden="true" onClick={() => setDeferItem(null)} />
-          <div className="commons-confirm" role="dialog" aria-modal="true" aria-label={v.deferTitle}>
-            <h2 className="commons-confirm__title">{v.deferTitle}</h2>
-            <div className="commons-deferMenu">
-              <button type="button" className="commons-btn commons-btn--ghost" onClick={() => doDefer(tomorrowStr())}>{v.deferTomorrow}</button>
-              <div className="commons-deferMenu__date">
-                <input type="date" className="commons-field__input" value={deferDate} onChange={e => setDeferDate(e.target.value)} aria-label={v.deferDate} />
-                <button type="button" className="commons-btn commons-btn--ghost" disabled={!deferDate} onClick={() => doDefer(deferDate)}>{v.deferDate}</button>
+      {deferItem && (() => {
+        const canTomorrow = !recursTomorrow(deferItem, tree.nodes);
+        return (
+          <div className="commons-sheetRoot">
+            <div className="commons-sheetBackdrop" role="presentation" aria-hidden="true" onClick={() => setDeferItem(null)} />
+            <div className="commons-confirm" role="dialog" aria-modal="true" aria-label={v.deferTitle}>
+              <h2 className="commons-confirm__title">{v.deferTitle}</h2>
+              <div className="commons-deferMenu">
+                {canTomorrow && (
+                  <button type="button" className="commons-btn commons-btn--ghost" onClick={() => doDefer(tomorrowStr())}>
+                    <span aria-hidden="true">🙆</span> {v.deferTomorrow}
+                  </button>
+                )}
+                <div className="commons-deferMenu__date">
+                  <input type="date" className="commons-field__input" value={deferDate} onChange={e => setDeferDate(e.target.value)} aria-label={v.deferDate} />
+                  <button type="button" className="commons-btn commons-btn--ghost" disabled={!deferDate} onClick={() => doDefer(deferDate)}>
+                    <span aria-hidden="true">📅</span> {v.deferDate}
+                  </button>
+                </div>
+                <button type="button" className="commons-btn commons-btn--ghost commons-cancelOpt" onClick={doSkip}>
+                  <span aria-hidden="true">🤷</span> {v.deferSkip}
+                </button>
               </div>
-              <button type="button" className="commons-btn commons-btn--ghost commons-deferMenu__skip" onClick={() => doDefer(null)}>{v.deferSkip}</button>
-            </div>
-            <div className="commons-confirm__actions">
-              <button type="button" className="commons-btn commons-btn--ghost" onClick={() => setDeferItem(null)}>{shell.form.cancel}</button>
+              <div className="commons-confirm__actions">
+                <button type="button" className="commons-btn commons-btn--ghost" onClick={() => setDeferItem(null)}>{shell.form.cancel}</button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
