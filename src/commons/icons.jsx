@@ -59,3 +59,4 @@ export const IconExit = (p) => <Svg {...p}><path d="M14 4h4a1 1 0 011 1v14a1 1 0
 // Tasks
 export const IconRepeat = (p) => <Svg {...p}><path d="M4 11V9a3 3 0 013-3h11l-3-3M20 13v2a3 3 0 01-3 3H6l3 3" /></Svg>;
 export const IconClock = (p) => <Svg {...p}><circle cx="12" cy="12" r="8" /><path d="M12 8v4.5l3 1.8" /></Svg>;
+export const IconInfo = (p) => <Svg {...p}><circle cx="12" cy="12" r="9" /><path d="M12 11.5v4.5" /><path d="M12 8h.01" /></Svg>;

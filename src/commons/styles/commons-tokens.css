@@ -13,6 +13,7 @@
   --commons-accent:    #6c8cff;
   --commons-on-accent: #ffffff;
   --commons-danger:    #ff6b6b;
+  --commons-cancel:    #ff8a4d;  /* warm orange-red — "called off", softer than danger (delete stays danger) */
   --commons-border:    #2a2e3a;
   --commons-radius:    12px;
   /* Progress spectrum (keep in sync with src/commons/styles/spectrum.js) */

@@ -267,6 +267,7 @@ export const commonsShellContent = {
     descriptionPlaceholder: 'פרטים, הערות, קישורים…',
     owner: 'מי לקח?',
     unassigned: 'לא משויך',
+    ownerOpen: 'מי שיכול לוקח',
     skill: 'מי יכול?',
     skillAnyone: 'כל עובד',
     scheduling: 'תזמון',
@@ -303,6 +304,7 @@ export const commonsShellContent = {
     noDescription: 'אין תיאור.',
     owner: 'מי לקח?',
     unassigned: 'לא משויך',
+    ownerOpen: 'מי שיכול לוקח',
     skill: 'מי יכול?',
     due: 'תאריך יעד',
     statusOpen: 'פתוחה',
@@ -324,6 +326,7 @@ export const commonsShellContent = {
     noFuture: 'אין מה שמתוכנן קדימה.',
     items: 'פריטים',
     everyDay: 'כל יום',
+    settingsDays: 'ימים',
     addOrder: 'הוספת הזמנה קבועה',
     // occurrence actions on a run item
     didHappen: 'זה כן קרה',
