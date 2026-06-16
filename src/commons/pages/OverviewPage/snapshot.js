@@ -90,7 +90,9 @@ export function buildSnapshot({ nodes, roster, now = new Date(), scopeAreaId = n
     const overdue = (isOpen(n) && due && due.getTime() < now.getTime()) || n.status === 'missed';
     if (overdue) { stuck.push(n); continue; }
     if (isOpen(n) && !effectiveOwner(n)) free.push(n);
-    if (isOpen(n) && due && due.getTime() - now.getTime() <= APPROACH_MS) approaching.push(n);
+    if (isOpen(n) && due && due.getTime() - now.getTime() <= APPROACH_MS) {
+      approaching.push({ ...n, minsLeft: Math.max(0, Math.round((due.getTime() - now.getTime()) / 60000)) });
+    }
   }
 
   const recent = nodes

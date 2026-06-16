@@ -19,8 +19,7 @@ function Section({ label, children }) {
 }
 
 export function SnapshotSections({ s, t, canManage, onOpen, onClaim, onResolve, onDefer, onSkip, anchorRef }) {
-  const minsTo = (due) => Math.max(0, Math.round((new Date(due).getTime() - Date.now()) / 60000));
-
+  // minsLeft is precomputed in buildSnapshot (pure, given `now`) — no Date.now() during render.
   return (
     <>
       {s.approaching.length > 0 && (
@@ -29,7 +28,7 @@ export function SnapshotSections({ s, t, canManage, onOpen, onClaim, onResolve, 
             <motion.li key={n.id} className="commons-snapRow" variants={rowV}>
               <span className="commons-snapDot is-soon" aria-hidden="true" />
               <button type="button" className="commons-snapRow__title" onClick={() => onOpen(n.id)}>{n.title}</button>
-              {n.due_date && <span className="commons-snapRow__meta">{t.timeLeftMin.replace('{n}', minsTo(n.due_date))}</span>}
+              {n.minsLeft != null && <span className="commons-snapRow__meta">{t.timeLeftMin.replace('{n}', n.minsLeft)}</span>}
             </motion.li>
           ))}
         </Section>

@@ -4,20 +4,21 @@
 
 export function AreaLens({ areas, value, onChange, allLabel }) {
   if (!areas.length) return null;
-  const Pill = ({ id, label }) => (
-    <button
-      type="button"
-      className={`commons-lensPill${value === id ? ' is-on' : ''}`}
-      aria-pressed={value === id}
-      onClick={() => onChange(id)}
-    >
-      {label}
-    </button>
-  );
+  // "הכל" (id null) + one option per area. Flat map — no nested component declared in render.
+  const options = [{ id: null, title: allLabel }, ...areas];
   return (
     <div className="commons-lens" role="group" aria-label={allLabel}>
-      <Pill id={null} label={allLabel} />
-      {areas.map((a) => <Pill key={a.id} id={a.id} label={a.title} />)}
+      {options.map((o) => (
+        <button
+          key={o.id ?? '__all'}
+          type="button"
+          className={`commons-lensPill${value === o.id ? ' is-on' : ''}`}
+          aria-pressed={value === o.id}
+          onClick={() => onChange(o.id)}
+        >
+          {o.title}
+        </button>
+      ))}
     </div>
   );
 }
