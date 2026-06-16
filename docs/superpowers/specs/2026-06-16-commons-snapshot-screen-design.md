@@ -1,4 +1,4 @@
-# Commons — תמונת מצב (Snapshot / "מה קורה היום?") — Design
+# Commons — תמונת מצב (the pulse) + תמונת יום (the day) — Design
 
 <!-- COMMONS-VISION · canonical: docs/superpowers/specs/2026-06-09-community-work-engine-design.md -->
 > **Commons — why this exists.** Commons helps any group of people acting together for a shared purpose run itself. The Joz ve Loz crew is the first, not the last — it must replicate to a community garden, a social project, a protest, an עמותה. The long arc is a *network* of these projects.
@@ -7,233 +7,126 @@
 >
 > *Direction: collective decision-making lives here too, later.*
 
-> Status: approved design, pre-implementation. Date: 2026-06-16. Module: `src/commons/`.
-> Supersedes **Handoff B** (`docs/superpowers/handoffs/B-snapshot-screen.md`) and replaces the
-> first-pass `src/commons/pages/OverviewPage/` (which predates the routines/runs model).
-> Builds on the routines/runs model (`docs/superpowers/specs/2026-06-14-commons-recurring-routines-design.md`).
+> Status: **v2 — evolved in conversation 2026-06-16/17, under external review.** Date: 2026-06-17. Module: `src/commons/`.
+> Supersedes Handoff B and the v1 concept below. A first pass (v1: ring + free/stuck/recent + week) is
+> already built on `feat/commons-snapshot`; this spec defines the **target** model and marks what's built
+> vs pending. Builds on the routines/runs model (`docs/superpowers/specs/2026-06-14-commons-recurring-routines-design.md`).
 
 ---
 
-## 1. Problem
+## 1. The core idea (read this first)
 
-The `תמונת מצב` tab is live but its `OverviewPage` predates the **routines/runs** model: it counts flat
-leaf tasks by `due_date`/`updated_at` and derives a feed from `created_at`/`updated_at`. It knows nothing
-about runs (`occurrence_date`), completion attribution (`completed_by/at`), or the `late`/`missed`/
-`deferred`/`skipped` states.
+There is **one list** — an operational day's tasks — shown in **two views that differ only by filters**:
 
-Handoff B framed the rebuild as a **manager audit/triage console** — stat tiles, a "needs attention"
-problem list, per-area progress bars, an admin "day view" to defer/skip/resolve. In conversation the
-founder rejected that hard: it reads as **surveillance and top-down cleanup** — the opposite of the
-vision (communal, circular, non-hierarchical, playful). It must also **generalize** to any collective
-(garden, protest, עמותה), where a manager-dashboard framing fits nothing.
+| | **תמונת מצב** (the *pulse*) | **תמונת יום** (the *day*) |
+|---|---|---|
+| Question | "what needs us **now**?" | "the **whole** day, in full" |
+| States shown | פנוי · בדרך · נתקע | + בוצע + עוד-לא-רלוונטי (everything) |
+| Relevance filter | **on** (hides not-yet-relevant) | **off** (shows all) |
+| Row grammar | parent ▸ → items | same |
+| It is | the calm action surface | the record |
 
-This spec redesigns the screen around the vision while still letting the group **see what's slipping and
-act on it** — reframed as mutual aid, not management.
+**One sentence:** *the pulse is the day with two filters on (only-now + only-needs-hands); remove the filters and you get the full day.* This is an architecture (one source of truth) **and** the mental model.
 
-## 2. Concept — "מה קורה היום?"
+Three tabs frame it: **שלי** = me · **לוח** = the board where you create/edit/browse by area · **תמונת מצב** = the communal pulse. The **day screen** is reached *from* the pulse (tap the ring or a day-cake), not a tab.
 
-`תמונת מצב` is the **"us" view**: a shared glance at *our* day. It sits between **שלי** (me) and **לוח**
-(by area) as the third bottom tab. Three principles drive every element:
+## 2. The pulse — `תמונת מצב`
 
-1. **Surface the work, never rank people.** No scoreboard, no per-person stats anywhere. Names appear
-   only as *credit* on something that got done.
-2. **Deficit → invitation.** "unassigned" → **"פנוי — מי לוקח?"**; "missed/failed" → **"נתקע — מי תופס?"**;
-   the activity log → *what we pulled off*, with props.
-3. **The day is a circle, and it should feel good.** The op-day (08:00→08:00) fills a ring that travels
-   the colour **spectrum** as the group completes the day — red at the start, purple when it's closed.
+Top → bottom:
 
-Convey togetherness; never *say* it — the word **"ביחד" is banned from the UI copy** (see §9).
+1. **Living line** — "מה קורה היום?" + one warm, op-day-phase sentence ending on an invitation. Tappable → jumps to פנוי. Never says "ביחד" (§7).
+2. **Area lens** — `הכל · <area> …` pills focus the ring + sections onto one area. Equal, fixed order — a lens, not a leaderboard.
+3. **The ring** — collective completion. **A single solid colour filling the arc to the done-fraction**, the colour chosen by the % along the spectrum (red→…→purple). Centre = "מה מצבנו?" + the count `X מתוך Y` (**no % digit**). Tapping the ring → **today's day screen**.
+4. **Three live state-sections** — each a list of **parent-collapsible rows**:
+   - **מה פנוי?** — free / no one took it.
+   - **מה בדרך?** — taken, not done yet (stays visible: you see who's on it, and can still step in).
+   - **מה נתקע?** — overdue / missed.
+   Row grammar: a task **with sub-items** is `▸ title · X/Y · time`; expanding shows **only that section's relevant children**. A task **without** sub-items is a single row. **A parent may appear in more than one section**, each showing only its matching items. Per-item actions in §6.
+5. **Week** — seven small **pie-cakes** (each *cut* to that day's done-fraction and *coloured* by it; neutral when the day had no tasks), with weekday letters. Tapping a cake → that day's day screen. *(Trend without a chart.)*
+6. **Accessible list** — an always-present visually-hidden ordered list mirroring the items (a11y, §8).
 
-## 3. Placement & information architecture
+**Relevance filter:** the pulse shows an item only once its relevance window has started (§4). The log/credit feed does **not** live on the pulse — it lives in the day screen.
 
-- **Tab:** `/commons/:workspaceSlug/overview` — the `תמונת מצב` bottom tab (unchanged route; replaces the
-  current `OverviewPage`). Visible to **all members** (decided): it's read-mostly; the few write actions
-  it surfaces are permission-gated exactly as they already are (§8). It is **not** manager-only.
-- **Relation to the other tabs:** **שלי** = my temporal aggregate; **לוח → מרחב** = one area's four
-  temporal bands (the per-area detail surface). **תמונת מצב** = the whole workspace, at a glance.
-- **Areas are lenses, not a breakdown.** A scope row (`הכל · <area> · <area> …`) lets you **focus** the
-  ring + lists + count onto one area. Equal pills, **fixed order, never sorted by performance** — a lens,
-  not a leaderboard. Default = **הכל**. Full per-area detail still lives in **לוח → מרחב**.
+## 3. The day — `תמונת יום`
 
-## 4. The screen (top → bottom, mobile-first)
+The **full record of one op-day**. Reached by tapping the ring (today) or any week-cake (that day). Route: `/commons/:slug/day/:date`.
 
-1. **Header — the living line.** Small label **"מה קורה היום?"** + one warm sentence that re-renders
-   through the op-day and ends on a question (e.g. *"חצי יום ו-14 דברים כבר קרו. נשארו 5 — אחד מהם פנוי.
-   מי לוקח?"*). The line is **tappable → scrolls to "פנוי — מי לוקח?"**. Copy rules in §9.
-2. **Area-lens row** — horizontally scrollable pills: `הכל` (default, active) + one per root area.
-   Selecting focuses the ring, the count, and the lists below. Fixed order.
-3. **The ring** (§6) — collective completion of the selected scope, as a **banded-spectrum** arc. Centre:
-   **"מה מצבנו?"** + a small count (`14 מתוך 19`). **No percentage number.**
-4. **Time-aware sections** (time lives here, not on the ring):
-   - **תכף נגמר הזמן** — open items whose target time is approaching within the op-day (default window:
-     next ~90 min; tunable). Each row shows the time remaining.
-   - **פנוי — מי לוקח?** — actionable-now items with no effective owner. Action: **עליי 🙌** (claim).
-   - **נתקע קצת — מי תופס?** — overdue (past target time today) or missed (past op-day), still open.
-     Actions: **עליי 🙌** · **זה כן קרה 🫢** · **דחה למחר 🙆 / לא צריך 🤷** (§8).
-5. **לאחרונה** — a short, happy **credit** strip: recent *completions* with the doer + an emoji + a warm
-   one-liner (props, never ranking). Capped (~4). A **"כל היומן ←"** link opens the full chronological
-   feed (separate `יומן` view — out of scope here, §11). At 100% a small celebration banner appears
-   (*"סגרתם את כל היום! איזה צוות 🌈🎉"*).
-6. **השבוע** — seven small spectrum rings, one per op-day of the last 7 (today highlighted). The week reads
-   as a little rainbow — trend without a chart. Tapping a day → that day's view (deferred, §11).
-7. **Accessible list (visually hidden, always present)** — an ordered `<ul>` mirroring the ring's items as
-   focusable rows with full `aria-label`s; a visible **"רשימה"** toggle surfaces it. The radial form is an
-   *enhancement* over an accessible linear base (§10).
+- Header: the date; back to the pulse.
+- The same ring for that day.
+- The same parent-▸ row grammar, but grouped to show **everything**: **בוצע** (done — with who + when), **בדרך**, **פנוי / עוד-לא-רלוונטי**, **נתקע**. Relevance filter **off**.
+- The **credit log** ("who did what, when") lives here — this is the record, not the pulse.
+- Handling actions (claim / resolve / defer / skip) available per item, same as the pulse.
 
-The create **FAB** (manager/admin) stays per `docs/commons-standards.md` §1.3.
+## 4. Relevance window (model C)
 
-## 5. Data & derivation (no new queries)
+Tasks become relevant at a time, not at 08:00. "להזמין דגים" matters from ~21:00, not the morning.
 
-`fetchTree(workspaceId)` already loads **every** node (incl. historical runs), and `fetchRoster` gives
-member names — so the whole screen derives from data already in memory. **No new data-layer reads.**
+- Each item has an **optional `show_from`** time-of-day. **Default: none → visible all op-day** (today's behaviour). Only the few time-sensitive items set one.
+- Read on the **op-day clock (08:00→08:00)**, so a window like **21:00→02:00 is one contiguous span** (02:00 is "later" in the same op-day). No wrap-around special-casing.
+- The **pulse** hides an item before its `show_from`; the **day screen** shows it (as "עוד לא רלוונטי"). Rule of thumb: **the clock can bring a task *in*; only a state change takes it *out*** (so things don't vanish under you).
+- **New data + authoring:** `show_from` is a new field on items (and on routine definitions), with an optional **"מופיע מ-"** input in the create/edit form (`לוח`). This touches the schema + `TaskFormPage`, not just the pulse.
 
-A pure, co-located helper **`src/commons/pages/OverviewPage/snapshot.js`** turns
-`(nodes, byParent, roster, opDayStart, scopeAreaId | null)` into the view model. The page stays thin and
-the logic is unit-testable. Shapes (illustrative):
+## 5. Parent / child row grammar
 
-```
-buildSnapshot(...) => {
-  progress: { doneLeaves, totalLeaves, fraction },   // fraction drives the ring + spectrum colour
-  approaching: Item[],   // open, due_time within the window, today
-  free:        Item[],   // actionable today, open, no effective owner
-  stuck:       Item[],   // overdue (past due_time today) or missed (past op-day), still open
-  recent:      Event[],  // completions: { doer, title, at, late } — newest first, capped
-  week:        DayStat[7],            // per op-day: { date, fraction }
-  closedToday: boolean,               // fraction === 1 → celebration
-}
-```
+From `docs/commons-standards.md` (row grammar): a task with sub-items is **made of other things** → caret + `X/Y` progress + time, **no checkbox**; a leaf is **done directly** → its action. Why it matters here: future daily tasks decompose ("סגירת יום", "רשימת הכנות") into many small items; flattening them is clutter. So in every list the parent is one collapsible row; open it for the items.
 
-Definitions (all op-day aware via `src/commons/opDay.js`, never midnight):
+## 6. Actions — mutual aid, not management
 
-- **Leaf** = a `task` node with no task-children **in its own layer** (run items + actionable one-offs;
-  excludes routine *definitions* and run *roots*). Reuses the layer-aware logic already in
-  `useWorkspaceTree.progress` / `hasChildren`.
-- **Progress / partial credit.** `fraction = doneLeaves / totalLeaves` over today's in-scope leaves.
-  Partial credit is automatic: a parent that's 7-of-10 contributes its 7 done leaves. The centre count is
-  `doneLeaves מתוך totalLeaves`.
-- **Scope.** `scopeAreaId = null` → whole workspace; set → restrict every set above to that area's subtree.
-- **completed_by / completed_at / completed_late** (already on `commons.nodes`, already selected by
-  `FIELDS`) power the credit strip and the `late` flag; `completed_by` resolves to a member via the roster.
-- **Generality:** nothing here is restaurant-specific — "areas", "leaves", "completions" hold for a garden
-  or a protest.
-
-## 6. The ring
-
-- **Form:** a thick (~40px stroke) circular arc on a recessed track, a glass centre, and a soft colour
-  glow. The arc fills clockwise from the top (12 o'clock) by `progress.fraction`. Rounded caps on the
-  start and the leading end. **Centre:** "מה מצבנו?" + count — **no % digit**.
-- **Banded spectrum.** The arc's colour travels the spectrum by fraction: **red → orange → yellow → green
-  → blue → purple**. Each hue holds a **plateau** with short transitions (not a smooth mush) so every
-  colour reads as itself. At **100%** the purple bridges through **magenta back to red** at the top — the
-  wheel closes.
-- **Meaning:** colour = progress (reinforced by the count, never colour-only). Red = *just starting*, not
-  alarm. Purple/closed = done.
-- **The week strip** reuses the same colour function per day.
-
-## 7. Colour system (tokens)
-
-Defined in `src/commons/styles/` as a spectrum scale — **no hardcoded colours in the component**. A
-small helper maps `fraction → colour` (and produces the banded conic stops); the component consumes
-tokens / the helper, never literals. The scale (six stops + the magenta closing bridge) lives next to the
-other commons tokens so it's themable and reusable (e.g. the week strip, the celebration banner).
-
-## 8. Actions — mutual aid, not management
-
-The screen surfaces **existing** occurrence operations from a new place — it invents **no new mutations**.
-This is a deliberate, logged deviation from Handoff B's "read-only / no new write paths": the screen is
-read-*mostly*, and the actions are framed as helping, available inline:
+Reuse existing occurrence ops; surface them inline.
 
 | Action | Copy | Maps to | Who |
 |---|---|---|---|
-| Claim a free / stuck item | **עליי 🙌** | `claimNode` | any eligible member |
-| Resolve a missed item | **זה כן קרה 🫢** | `resolveMissed` | any member (logged) |
-| Push to another day | **דחה למחר 🙆** / **תאריך אחר 📅** | `deferOccurrence(id, date)` | manager+ |
-| Not needed this time | **לא צריך 🤷** | `deferOccurrence(id, null)` | manager+ |
+| Take it onto me | **עליי 🙌** | `claimNode` | any eligible member |
+| It did happen (resolve missed) | **זה כן קרה 🫢** | `resolveMissed(id, who, when)` — **who + when picker** | any member |
+| Push to another day | **דחה למחר 🙆 / תאריך אחר 📅** | `deferOccurrence` | manager+ |
+| Not needed | **לא צריך 🤷** | `deferOccurrence(id, null)` | manager+ |
+| Put it on someone | **עליו 🫵** | `assignNode` | **manager/admin only** |
 
-Permission gating is unchanged from the routines/runs model — members see the actions they're allowed to
-take; defer/skip stay manager+. The view itself is for everyone. Tapping an item **title** opens the
-existing item detail (`TaskViewPage`), which already hosts the full occurrence menu + per-item history.
+- **`resolve_missed` gained `done_at`** (migration `20260616100000`, applied) so "זה כן קרה" records *who* + *when*; the who+when picker is `AttributionSheet`.
+- Attribution to **another** person (עליו) is manager/admin-only. "עליי" (self) is everyone.
+- Tapping a title opens the existing item detail (`TaskViewPage`).
 
-## 9. Copy & voice
+## 7. Playful layer & copy
 
-Per `docs/voice.md`: warm, light, **less is more**, **questions land harder than statements**, no
-spoon-feeding.
+- **The ring blooms through the spectrum** as the day fills; 100% = a celebration banner. Colour = progress, always reinforced by the count (never colour-only).
+- **Credit lines are pools** — each completion shows a warm one-liner picked per item, so it's a small surprise (😇🔥🐢…). On-time and late have separate pools. Celebrate the **act and the group**, never an individual tally.
+- **Never say "ביחד"** — convey togetherness via the "we" framing ("מה איתנו", "מה מצבנו", "מי לוקח / תופס"). (Locked in `docs/commons-standards.md`.)
+- All copy in `src/content/commons/{he,en}`. No hardcoded strings.
 
-- **Iron rule — never say "ביחד".** Togetherness is *conveyed* through the "we" framing
-  ("מה איתנו", "מה מצבנו", "מי לוקח", "מי תופס"), never stated. (Recorded in `docs/commons-standards.md`.)
-- **The living line** is generated from `(time-of-day bucket, counts)` — a small set of in-voice
-  templates, always ending on an invitation/question. It tells the truth on a hard day too
-  (*"יום עמוס — כמה דברים נתקעו. שווה מבט?"*), without drama.
-- **Emoji language** (decorative; the words carry meaning — see §10):
-  | Emoji | Meaning |
-  |---|---|
-  | 🙌 | עליי — I took it |
-  | 🫢 | זה כן קרה — late, but it happened |
-  | 🙆 | דחה למחר — *the Naor & Shay classic* |
-  | 🤷 | לא צריך הפעם |
-  | 😇 | done on time · 😎 smooth as always |
-  | 🌈🎉 | day closed (100%) |
-- All strings live in `src/content/commons/{he,en}/` (no hardcoded UI text). The existing `snapshot.*`
-  keys are extended; `en/` is scaffolded in parallel (not implemented now).
+## 8. Accessibility (IS 5568 / WCAG 2.1 AA — legal)
 
-## 10. Accessibility (IS 5568 / WCAG 2.1 AA — legal)
+Number/text carries meaning (colour only reinforces); emoji are `aria-hidden` with meaning in adjacent words; the radial ring is presentational over an always-present hidden ordered list (keyboard + SR); contrast ≥ 4.5:1; visible `focus-visible`; honour `prefers-reduced-motion`.
 
-- **Never colour-only.** The spectrum reinforces; the **count** (`14 מתוך 19`) and the section contents
-  carry the meaning. Status in lists uses text + shape, not hue alone.
-- **Emoji are decorative** — `aria-hidden`, with the meaning in adjacent text (so a screen reader never
-  reads "hand-over-mouth").
-- **Radial over linear.** The ring is presentational; the always-present **hidden ordered list** (with a
-  visible "רשימה" toggle) is the real semantic/keyboard layer — every item a focusable control with a full
-  `aria-label` ("כיריים · ניקוי גריל · הושלם 21:40 ע״י דנה, באיחור").
-- **Contrast** ≥ 4.5:1 for text; glass-centre text is near-white on dark. Verify each spectrum stop behind
-  any text/cap.
-- **Focus-visible** on every interactive element; the header line, lens pills, action buttons, and item
-  rows are all keyboard-reachable.
-- **Reduced motion:** honour `prefers-reduced-motion` — ring fill and reveals settle instantly, no
-  continuous motion.
+## 9. Data & derivation
 
-## 11. Motion
+`fetchTree` already loads every node; `fetchRoster` gives names — the screens derive from memory. **No new *reads*.** Pure helpers `buildSnapshot` / `buildDay` in `OverviewPage/snapshot.js` produce the view models (tested with `node:assert`). The only new *write-path* data is `show_from` (§4) and the already-applied `resolve_missed(done_at)`.
 
-Per `design-taste` (`MOTION_INTENSITY: 6`) — spring physics via `motion/react`, no linear easing:
+## 10. Affected surfaces
 
-- Ring **fills** with a spring on load and when `fraction` changes; a completion springs the count and (at
-  100%) triggers the celebration banner.
-- Lists reveal with the existing `staggerChildren`. Lens switch springs the focused set in.
-- No continuous/ambient animation (kept the clock idea out, so there's no perpetual motion). All gated by
-  `prefers-reduced-motion`.
+- `OverviewPage/` — `OverviewPage` (pulse), `DayPage` (day), `snapshot.js` (`buildSnapshot`/`buildDay`), the section/ring/week/list/sheet components, `overview.css`. *(v1 built; this spec evolves it.)*
+- `styles/spectrum.js` + tokens — colour-by-fraction.
+- `tasks/TaskFormPage.jsx` + schema — the new **`show_from`** field.
+- `data/commons` + `useWorkspaceTree` — `assign`, `resolveMissed(done_at)` *(done)*; a `show_from` column.
+- Docs: `commons-standards.md` (done) + `COMMONS.md` status.
 
-## 12. Affected surfaces
+## 11. Built vs pending
 
-- **`src/commons/pages/OverviewPage/OverviewPage.jsx`** — rewritten around the new model.
-- **`src/commons/pages/OverviewPage/snapshot.js`** — new pure derivation helper.
-- **`src/commons/pages/OverviewPage/overview.css`** — ring, sections, week, lens, log; new spectrum tokens
-  in `src/commons/styles/`.
-- **Content:** `src/content/commons/{he,en}/commonsShell.content.js` — extend `snapshot.*` (living-line
-  templates, section labels, emoji-line copy).
-- **Reuse (no change):** `useWorkspaceTree` (`progress`, `hasChildren`, `claim`, `resolveMissed`,
-  `deferOccurrence`), `fetchRoster`, `opDay.js`, `TaskViewPage`.
-- **Docs:** record the "never say ביחד" rule + the spectrum/credit conventions in
-  `docs/commons-standards.md`; update `src/commons/COMMONS.md` status when built.
+- **Built (v1, on branch):** ring (solid colour by %), area lens, free/stuck sections, credit strip, week pies, accessible list, day screen (basic), who+when picker, manager assign, the `resolve_missed(done_at)` migration.
+- **Pending (this spec's evolution):** the **three-state** model incl. **בדרך**; **parent-collapsible** row grammar in the lists; the **relevance window** (`show_from` + form field); making the **day screen the full record** + moving the credit log into it; the ring/cake tap → day-screen navigation; resolving the open questions below.
 
-## 13. Out of scope / deferred
+## 12. Open questions — under review (decide before building the evolution)
 
-- **The full `יומן` view** (chronological add/edit/done/claim feed behind "כל היומן ←") — its own screen,
-  already anticipated in the work-engine spec §8. This screen ships only the short **לאחרונה** credit strip.
-- **Per-day drill-in** from the week strip — a read-only past-day view; later.
-- **English copy** — keys scaffolded, not authored now.
-- **Realtime live updates** — nice-to-have; first pass renders from the loaded tree on mount.
+These are the genuinely contested points (raised in conversation + flagged for external review):
 
-## 14. Open decisions
+1. **Three states or two?** Keep פנוי / בדרך / נתקע, or collapse "נתקע" into a *warm property* of פנוי ("מחכה ליד" — work re-enters the open pool rather than a standing "overdue" section)? Trade-off: triage clarity vs. the non-hierarchical/circular value.
+2. **Parent in multiple sections vs. one row.** Show a parent once per relevant section (scoped children) — or once, in its most-urgent section, with a mixed-state child list? Risk: the same title appearing 2–3× reads as duplication on a phone.
+3. **"עליו" (assign to another) — keep manager-only, or replace with invite/“call-for-help” anyone can do?** The value tension: any role-gated capability is, by definition, hierarchy.
+4. **"Day" vs "Cycle" for generality.** The 08:00→08:00 op-day fits a kitchen; a garden/protest/NGO may need "cycle" (a day / week / event). How far to abstract now vs. later.
+5. **Relevance legibility.** A persistent "+N מופיעים מאוחר יותר ←" line on the pulse so deferred items never feel hidden; entry-by-clock, exit-by-state only.
+6. **Red-at-zero.** The empty/0% ring shouldn't read as alarm at 08:00 — soften the spectrum's low end to "potential," not "behind."
+7. **Credit lines: ephemeral vs logged**, and context-fit vs pure-random, to avoid tonal misfires and staleness.
 
-- **"Approaching" window** for *תכף נגמר הזמן* — default ~90 min; confirm during build.
-- **Living-line template set** — final strings are a dedicated copy pass with the founder.
-- **Exact spectrum stops / plateau widths** — tune in-browser against real data.
-- **Credit-strip cap** (≈4) and whether claims (🙌) appear there alongside completions.
+## 13. Decision log
 
-## 15. Decision log
-
-- **2026-06-16** — Snapshot reframed from a manager audit/triage console (Handoff B) to a communal,
-  circular, playful "us" view. Ring = completion as a banded colour spectrum (red→purple, magenta close),
-  no % digit. Areas are equal lenses, not a ranked breakdown. Actions reuse existing occurrence ops as
-  *mutual aid* (logged deviation from Handoff B's read-only constraint). "ביחד" banned from UI copy;
-  togetherness conveyed via "we" framing. Emoji language incl. the 🙆 "דחה למחר" classic.
+- **2026-06-16** — Snapshot reframed from a manager audit console to a communal, circular, playful "us" view. Ring = completion spectrum; areas = lenses; actions = mutual aid; "ביחד" banned. (v1 built.)
+- **2026-06-17** — Evolved to **pulse + day-screen** (one list, two filters); added **בדרך** state + **parent-collapsible** grammar; added the **relevance window** (`show_from`, op-day clock); the **day screen becomes the full record** and hosts the credit log; cakes/ring navigate to day screens; `resolve_missed` gained `done_at` + who/when picker; manager "עליו" assign. Open questions (§12) sent to external review before building.
