@@ -180,6 +180,22 @@ Togetherness is **conveyed**, never stated. Do not use the word "ביחד" in UI
 
 > Append a dated entry whenever a standard is added, changed, or an exception is granted. Newest first.
 
+### 2026-06-16 — Recurring task: base vs occurrence
+- **Base declares, occurrence does.** A recurring task's *base* (routine root + order definitions,
+  `occurrence_date` null) declares capability (מי יכול) + cadence (ימים · עד שעה) + an **assignment
+  choice** — never a status. The choice is **"מי שיכול לוקח"** (open, the default → ownerless runs,
+  "פנוי — מי לוקח?") or a **specific person** (inherits to every run + to sub-tasks). A base shows no
+  status chip and no per-day claim; its owner block reads "מי שיכול לוקח" when open.
+- **Sub-task inheritance.** A new sub-task inherits its parent's assignment + skills (+ עד שעה where it
+  applies) as editable defaults.
+- **Note marker** is a circled-**i** (info), never `!` (alert).
+- **Cancellation colour** is the warm `--commons-cancel` (orange-red), not danger red (which stays for
+  destructive delete).
+- **Defer/skip** is one per-item menu (leaf, parent, or run root): "🤷 לא צריך הפעם" always
+  (`cancel_run`, cascades); "🙆 דחה למחר" only on an item that doesn't already recur tomorrow
+  (a daily item never shows it). Backed by the new `commons.defer_run` RPC (cascade-defer + re-create
+  the run subtree on the target day). Spec: `docs/superpowers/specs/2026-06-16-commons-base-vs-occurrence-design.md`.
+
 ### 2026-06-16 — Snapshot copy + spectrum standards (§6)
 - **2026-06-16** — Snapshot (`תמונת מצב`) redesigned as the communal "מה קורה היום?" view (spectrum ring,
   invitation-framed sections, credit log). Locked: "ביחד" banned from UI copy; areas are equal lenses not a
