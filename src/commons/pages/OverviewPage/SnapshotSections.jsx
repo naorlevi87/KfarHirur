@@ -52,23 +52,31 @@ function Btn({ kind, label, emoji, onClick }) {
   );
 }
 
-// One compact line per item: title · (meta beside it) · single inline action. Overdue keeps its
-// extra actions on a second line (too many to fit inline).
-function ItemRow({ item, section, t, locale, canManage, h }) {
-  const meta = section === 'overdue' ? stuckLine(item, t, locale)
-    : section === 'inProgress' && item.owner ? `${t.onPerson} ${item.owner}`
-    : null;
+// One compact line per item. Overdue: title + its "waiting" note sit together (meta hugs the title);
+// free: title + "עד" chip + inline claim (emoji beside the word); in-progress: title + who's on it.
+// `nested` = a child inside an expanded parent → indented with a sub-task elbow marker.
+function ItemRow({ item, section, t, locale, canManage, h, nested }) {
   return (
-    <motion.li className={`commons-snapRow is-${section}`} variants={rowV}>
+    <motion.li className={`commons-snapRow is-${section}${nested ? ' is-sub' : ''}`} variants={rowV}>
       <div className="commons-snapRow__line">
+        {nested && <span className="commons-subMark" aria-hidden="true">↳</span>}
         <span className={`commons-snapDot is-${section}`} aria-hidden="true" />
-        <button type="button" className="commons-snapRow__title" onClick={() => h.onOpen(item.id)}>{item.title}</button>
-        {meta && <span className="commons-snapRow__meta">{meta}</span>}
-        {section === 'free' && item.due && <span className={`commons-untilChip ${tier(item.minsLeft)}`}>{t.until} {whenLabel(item, t, locale)}</span>}
-        {section === 'free' && (
-          <button type="button" className="commons-snapBtn is-claim commons-snapBtn--inline" onClick={() => h.onClaim(item.id)}>
-            {t.claim} <span aria-hidden="true">{t.claimE}</span>
-          </button>
+        {section === 'overdue' ? (
+          <span className="commons-snapRow__lead">
+            <button type="button" className="commons-snapRow__title" onClick={() => h.onOpen(item.id)}>{item.title}</button>
+            <span className="commons-snapRow__meta">{stuckLine(item, t, locale)}</span>
+          </span>
+        ) : (
+          <>
+            <button type="button" className="commons-snapRow__title" onClick={() => h.onOpen(item.id)}>{item.title}</button>
+            {section === 'inProgress' && item.owner && <span className="commons-snapRow__meta">{t.onPerson} {item.owner}</span>}
+            {section === 'free' && item.due && <span className={`commons-untilChip ${tier(item.minsLeft)}`}>{t.until} {whenLabel(item, t, locale)}</span>}
+            {section === 'free' && (
+              <button type="button" className="commons-snapBtn is-claim commons-snapBtn--inline" onClick={() => h.onClaim(item.id)}>
+                {t.claim} <span aria-hidden="true">{t.claimE}</span>
+              </button>
+            )}
+          </>
         )}
       </div>
       {section === 'overdue' && (
@@ -87,24 +95,25 @@ function GroupRow({ group, section, t, locale, canManage, h, expanded, onToggle 
   if (!group.isParent) {
     return <ItemRow item={group.items[0]} section={section} t={t} locale={locale} canManage={canManage} h={h} />;
   }
-  const open = expanded.has(group.id);
+  const key = `${section}:${group.id}`; // section-scoped, so a parent expands independently per section
+  const open = expanded.has(key);
   return (
     <motion.li className="commons-snapGroup" variants={rowV}>
       <div className="commons-snapGroup__head">
-        <button type="button" className="commons-snapGroup__toggle" aria-expanded={open} onClick={() => onToggle(group.id)}>
+        <button type="button" className="commons-snapGroup__toggle" aria-expanded={open} onClick={() => onToggle(key)}>
           <span className={`commons-caret${open ? ' is-open' : ''}`} aria-hidden="true">▾</span>
           <span className="commons-snapGroup__title">{group.title}</span>
           <span className="commons-chip commons-chip--progress">{group.progress.done}/{group.progress.total}</span>
         </button>
         {section === 'free' && (
-          <button type="button" className="commons-snapBtn is-claim commons-snapGroup__take" onClick={() => h.onTakeParent(group.id, group.title)}>
-            <span className="commons-snapBtn__lbl">{t.claim}</span><span className="commons-snapBtn__e" aria-hidden="true">{t.claimE}</span>
+          <button type="button" className="commons-snapBtn is-claim commons-snapBtn--inline commons-snapGroup__take" onClick={() => h.onTakeParent(group.id, group.title)}>
+            {t.claim} <span aria-hidden="true">{t.claimE}</span>
           </button>
         )}
       </div>
       {open && (
         <ul className="commons-snapGroup__items">
-          {group.items.map((it) => <ItemRow key={it.id} item={it} section={section} t={t} locale={locale} canManage={canManage} h={h} />)}
+          {group.items.map((it) => <ItemRow key={it.id} item={it} section={section} t={t} locale={locale} canManage={canManage} h={h} nested />)}
         </ul>
       )}
     </motion.li>
