@@ -258,10 +258,13 @@ export function buildDay({ nodes, roster, dayStr }) {
       id: n.id, title: n.title, status: n.status,
       due: due ? due.toISOString() : null,
       doer: n.status === 'done' ? nameOf(n.completed_by) : null,
+      at: n.completed_at ?? null,
       late: Boolean(n.completed_late),
     };
   };
-  const done = leaves.filter((n) => n.status === 'done').map(toView);
+  const done = leaves.filter((n) => n.status === 'done')
+    .sort((a, b) => new Date(b.completed_at || 0) - new Date(a.completed_at || 0))
+    .map(toView);
   const toHandle = leaves.filter((n) => n.status !== 'done').map(toView);
   const total = leaves.length;
   return {

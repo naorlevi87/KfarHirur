@@ -33,6 +33,21 @@ function nextOpDayStr() {
   const d = new Date(); d.setDate(d.getDate() + 1);
   return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 }
+function relTime(iso, locale) {
+  try {
+    const diff = (new Date(iso).getTime() - Date.now()) / 1000;
+    const rtf = new Intl.RelativeTimeFormat(locale === 'he' ? 'he' : 'en', { numeric: 'auto' });
+    const a = Math.abs(diff);
+    if (a < 3600) return rtf.format(Math.round(diff / 60), 'minute');
+    if (a < 86400) return rtf.format(Math.round(diff / 3600), 'hour');
+    return rtf.format(Math.round(diff / 86400), 'day');
+  } catch { return ''; }
+}
+function pickLine(pool, key) {
+  if (!Array.isArray(pool) || !pool.length) return '';
+  const i = [...String(key)].reduce((a, c) => a + c.charCodeAt(0), 0) % pool.length;
+  return pool[i];
+}
 
 const listV = { hidden: {}, show: { transition: { staggerChildren: 0.04 } } };
 const rowV = { hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 150, damping: 18 } } };
@@ -133,9 +148,8 @@ export function DayPage() {
           <ul className="commons-recent__list">
             {day.done.map((e) => (
               <li key={e.id} className="commons-recent__item">
-                <span className="commons-recent__avatar" aria-hidden="true">{(e.doer ?? '·').slice(0, 1)}</span>
-                <span className="commons-recent__text">{e.doer ? `${e.doer}: ` : ''}{e.title}</span>
-                {e.late && <span className="commons-recent__flavour">{d.lateTag}</span>}
+                <span className="commons-recent__text">{e.title} <span className="commons-recent__flavour">{pickLine(e.late ? t.creditLate : t.creditOnTime, e.id)}</span></span>
+                <span className="commons-recent__time">{e.at ? relTime(e.at, locale) : ''}{e.doer ? ` · ${t.by} ${e.doer}` : ''}</span>
               </li>
             ))}
           </ul>
