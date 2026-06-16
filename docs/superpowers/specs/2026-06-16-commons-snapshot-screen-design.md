@@ -94,16 +94,16 @@ Number/text carries meaning (colour only reinforces); emoji `aria-hidden` with m
 
 `OverviewPage/` (pulse, DayPage, `snapshot.js` build helpers, section/ring/week/list/sheet components, `overview.css`) · `styles/spectrum.js` + tokens (orange→purple, no red, 100% rainbow) · `tasks/TaskFormPage.jsx` + schema (`show_from`) · `data/commons` + `useWorkspaceTree` (proposal accept/pass; `show_from`) · `run_recurrences` (copy `show_from`) · `commons-standards.md` (done) + `COMMONS.md`.
 
-## 11. Build order (built vs pending)
+## 11. Build status
 
-**Built (v1):** ring, area lens, free/stuck sections, credit strip, week pies, accessible list, day screen (basic), who+when picker, the `resolve_missed(done_at)` migration. *(The v1 manager `עליו` assign is superseded by §6 and will be replaced.)*
+**Built — steps 1–4 (on `feat/commons-snapshot`):**
+1. ✅ **Palette** — orange→purple, no red; big ring 100% rainbow; week cakes %-pies ending purple (`spectrum.js`).
+2. ✅ **Three states + order** — `pulse` grouping (overdue/free/in-progress) by parent; **עבר הזמן** first + emphasised; **parent-collapsible** rows with this-block count chips ("2 פנויות") beside the title; **one-line** items + sub-task elbow; **cascade-take** with confirm; **ring → today's day**; per-section expand keys.
+3. ✅ **Day screen** — the done-list is the day's **log** (credit line + who + when).
+4. ✅ **Relevance window** — `show_from` column + `run_recurrences` copy (migration `20260617000000`, applied) + pulse filter + **"+N מופיעים מאוחר יותר"** line + **"מופיע מ-"** input in `TaskFormPage` (orders + one-offs).
 
-**Pending — build in this order:**
-1. **Palette** → orange→purple, no red; big ring 100% rainbow; cakes end purple (`spectrum.js` + test).
-2. **Three states + order** → add **בדרך**; **עבר הזמן** first + emphasised; **parent-collapsible** grammar in every section; **cascade-take** with confirm dialog.
-3. **Day screen = full record** → all states incl. done + not-yet; credit log here; ring/cakes → day navigation.
-4. **Relevance window** → `show_from` column + `run_recurrences` copy + `TaskFormPage` "מופיע מ-" + pulse filter + "+N מופיעים מאוחר יותר" line.
-5. **Invite** → replace manager `עליו` with flat **"מציע ל-X"** (accept/pass) + `proposed_to` marker.
+**Pending — step 5 (deferred to its own window):**
+5. ⏳ **Flat "מציע ל-X" invite**, replacing the manager-only `עליו`. Needs **backend RPCs** (members can't write `owner_id`/`proposed_to` directly): `propose_node`, `respond_proposal` (accept→claim self, pass→clear), a `proposed_to` column, the unified **"מי לוקח? → אני / מציע ל-X"** menu, and a "הוצע ל-X" marker. In-app only at launch; phone push waits for the notifications feature. **Full brief: `docs/superpowers/handoffs/D-snapshot-invite.md`.**
 
 ## 12. Decisions (resolved from review)
 
@@ -119,3 +119,4 @@ Number/text carries meaning (colour only reinforces); emoji `aria-hidden` with m
 
 - **2026-06-16** — Snapshot reframed to a communal, circular, playful "us" view (v1 built).
 - **2026-06-17** — Locked v3 after a two-round external review (designer / standards / values lenses). Founder decisions: keep multi-section parents + take-whole-parent (cascade + confirm); overdue stays its own emphasised first section; flat "מציע ל-X" invite replaces manager "עליו"; spectrum drops red (orange→purple, 100% rainbow); relevance window C with "+N later" legibility; playful shared credit log kept. Notifications design deferred. Pulse + day-screen = one list, two filters.
+- **2026-06-17 (build)** — Shipped steps 1–4 (palette · 3-state pulse · day-log · relevance window incl. `show_from` migration + form input). Step 5 (the flat invite) deferred to `docs/superpowers/handoffs/D-snapshot-invite.md` — it needs member-permission RPCs, so it gets its own focused window. Late-night UI follow-ups still open: the parent chip count copy is per-block; verify the relevance filter against the real seeded "הזמנות יומיות" routine (set a "מופיע מ-"); confirm overdue-meta placement on a phone.
