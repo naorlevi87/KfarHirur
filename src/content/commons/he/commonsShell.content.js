@@ -287,6 +287,8 @@ export const commonsShellContent = {
     orderDays: 'באילו ימים',
     orderDaysHint: 'אפשר רק מתוך הימים של המשימה הקבועה. בלי בחירה = כמו הקבועה.',
     dueTime: 'עד שעה',
+    showFrom: 'מופיע מ-',
+    showFromHint: 'יופיע ב"מה קורה היום" רק מהשעה הזו (לא חובה)',
     nextMorning: 'מחר בבוקר (יום העבודה מסתיים ב־08:00)',
     completionStyle: 'סיום המשימה',
     completionConfirm: 'עם אישור',

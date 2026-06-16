@@ -112,6 +112,7 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
   const [dayMask, setDayMask] = useState(node?.day_mask?.length ? node.day_mask : null);
   const [dueTime, setDueTime] = useState(
     node?.due_time ? node.due_time.slice(0, 5) : (node?.due_date ? toTimeInput(node.due_date) : ''));
+  const [showFrom, setShowFrom] = useState(node?.show_from ? node.show_from.slice(0, 5) : '');
   const [startDate, setStartDate] = useState(toDateInput(node?.start_date));  // "בתאריך" — when it becomes actionable
   const [confirmOnComplete, setConfirmOnComplete] = useState(node?.confirm_on_complete ?? true);
   const [subAdd, setSubAdd] = useState('');          // quick-add a sub-task — commits immediately
@@ -211,7 +212,7 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
       // (that belongs to the series). Its own due_date / occurrence_date stay as generated.
       if (isInstance) return base;
       if (underRoutine) {
-        return { ...base, day_mask: persistMask, due_time: dueTime || null, recurrence: null, due_date: null, next_run: null, start_date: null };
+        return { ...base, day_mask: persistMask, due_time: dueTime || null, show_from: showFrom || null, recurrence: null, due_date: null, next_run: null, start_date: null };
       }
       const rule = normalizeRule(recurrence);
       return {
@@ -220,6 +221,7 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
         due_date: rule ? null : (due ? dueToIso(due, dueTime) : null),
         next_run: rule ? computeFirstNextRun(rule) : null,
         start_date: rule ? null : (startDate || null),
+        show_from: showFrom || null,
       };
     };
 
@@ -355,6 +357,12 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
                       onChange={e => { setDueTime(e.target.value); mark(); }} />
                     {beforeOpDay(dueTime) && <span className="commons-field__hint commons-dueNext">↪ {rcDays.nextDay}</span>}
                   </label>
+                  <label className="commons-field">
+                    <span className="commons-field__label">{f.showFrom}</span>
+                    <input type="time" className="commons-field__input" value={showFrom}
+                      onChange={e => { setShowFrom(e.target.value); mark(); }} />
+                    <span className="commons-field__hint">{f.showFromHint}</span>
+                  </label>
                 </>
               ) : (
                 <>
@@ -373,6 +381,11 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
                         <label className="commons-field">
                           <span className="commons-field__label">{f.dueTime}</span>
                           <input type="time" className="commons-field__input" value={dueTime} onChange={e => { setDueTime(e.target.value); mark(); }} />
+                        </label>
+                        <label className="commons-field">
+                          <span className="commons-field__label">{f.showFrom}</span>
+                          <input type="time" className="commons-field__input" value={showFrom} onChange={e => { setShowFrom(e.target.value); mark(); }} />
+                          <span className="commons-field__hint">{f.showFromHint}</span>
                         </label>
                       </motion.div>
                     )}
