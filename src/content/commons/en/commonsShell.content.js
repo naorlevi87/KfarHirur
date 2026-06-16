@@ -33,6 +33,7 @@ export const commonsShellContent = {
     week: 'Recent days',
     listToggle: 'List',
     empty: 'Nothing to show here yet.',
+    openDayAria: 'Open the day view',
     // actions (reuse occurrence ops) — label + separate decorative emoji (renders on its own line)
     claim: 'On me', claimE: '🙌',
     didHappen: 'It did happen', didHappenE: '🫢',

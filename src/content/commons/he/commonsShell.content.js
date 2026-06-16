@@ -34,6 +34,7 @@ export const commonsShellContent = {
     week: 'בימים האחרונים',
     listToggle: 'רשימה',
     empty: 'עוד אין מה להציג כאן.',
+    openDayAria: 'פתיחת תמונת היום',
     // actions (reuse occurrence ops) — label + separate decorative emoji (renders on its own line)
     claim: 'עליי', claimE: '🙌',
     didHappen: 'זה כן קרה', didHappenE: '🫢',

@@ -11,6 +11,7 @@ import { useAppContext } from '../../../app/appState/useAppContext.js';
 import { useWorkspace } from '../../commonsState/WorkspaceContext.jsx';
 import { useWorkspaceTree } from '../../commonsState/useWorkspaceTree.js';
 import { fetchRoster } from '../../../data/commons/workspaceQueries.js';
+import { currentOpDayStart } from '../../opDay.js';
 import { resolveCommonsShellContent } from '../../resolveCommonsShellContent.js';
 import { CommonsLoading } from '../../CommonsLoading.jsx';
 import { Fab } from '../../Fab.jsx';
@@ -86,8 +87,11 @@ export function OverviewPage() {
 
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                   transition={{ type: 'spring', stiffness: 140, damping: 20 }}>
-        <SnapshotRing fraction={s.progress.fraction} done={s.progress.doneLeaves}
-                      total={s.progress.totalLeaves} centerLabel={t.center} countOf={t.countOf} />
+        <button type="button" className="commons-ringTap" aria-label={t.openDayAria}
+                onClick={() => navigate(`/commons/${workspaceSlug}/day/${todayOpDayStr()}`)}>
+          <SnapshotRing fraction={s.progress.fraction} done={s.progress.doneLeaves}
+                        total={s.progress.totalLeaves} centerLabel={t.center} countOf={t.countOf} />
+        </button>
 
         <SnapshotList items={s.list} t={t} locale={locale} onOpen={open} />
 
@@ -140,5 +144,11 @@ function buildLine(t, s) {
 // Tomorrow's op-day as 'YYYY-MM-DD' (deferOccurrence target).
 function nextOpDayStr() {
   const d = new Date(); d.setDate(d.getDate() + 1);
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+}
+
+// Today's op-day as 'YYYY-MM-DD' (the ring → day-screen target), computed at click time.
+function todayOpDayStr() {
+  const d = currentOpDayStart();
   return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 }
