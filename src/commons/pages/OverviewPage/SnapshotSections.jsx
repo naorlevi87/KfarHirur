@@ -22,9 +22,20 @@ function tier(minsLeft) {
   return '';
 }
 
+// Hebrew-ish duration from minutes overdue.
+function fmtDur(mins, t) {
+  if (mins == null) return '';
+  if (mins >= 120) return `${Math.floor(mins / 60)} ${t.durHours}`;
+  if (mins >= 60) return t.durHour;
+  return `${Math.max(1, mins)} ${t.durMins}`;
+}
+
+// A cute "waiting since…" line, picked deterministically by item id (not random — render stays pure).
 function stuckMeta(n, t, locale) {
-  if (n.due) return `${t.since}${fmtTime(n.due, locale)}`;
-  return t.sincePrev;
+  if (!n.due) return t.sincePrev;
+  const lines = t.stuckLines && t.stuckLines.length ? t.stuckLines : [`${t.since}{time}`];
+  const i = [...String(n.id)].reduce((a, c) => a + c.charCodeAt(0), 0) % lines.length;
+  return lines[i].replace('{time}', fmtTime(n.due, locale)).replace('{dur}', fmtDur(n.overdueMins, t));
 }
 
 // Module-level button (not declared during render) — label on top, decorative emoji beneath.
@@ -64,8 +75,10 @@ export function SnapshotSections({ s, t, locale, canManage, onOpen, onClaim, onR
               <motion.li key={n.id} className="commons-snapRow is-stuck" variants={rowV}>
                 <div className="commons-snapRow__head">
                   <span className="commons-snapDot is-stuck" aria-hidden="true" />
-                  <button type="button" className="commons-snapRow__title" onClick={() => onOpen(n.id)}>{n.title}</button>
-                  <span className="commons-snapRow__meta">{stuckMeta(n, t, locale)}</span>
+                  <div className="commons-snapRow__titleWrap">
+                    <button type="button" className="commons-snapRow__title" onClick={() => onOpen(n.id)}>{n.title}</button>
+                    <span className="commons-snapRow__meta">{stuckMeta(n, t, locale)}</span>
+                  </div>
                 </div>
                 <div className="commons-snapRow__actions">
                   <Btn kind="is-claim" label={t.claim} emoji={t.claimE} onClick={() => onClaim(n.id)} />

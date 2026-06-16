@@ -5,7 +5,7 @@
 
 /* header / living line */
 .commons-snapHeader { margin-bottom: 12px; }
-.commons-snapHeader__kicker { font-size: 13px; color: var(--commons-accent); letter-spacing: .03em; margin-bottom: 6px; }
+.commons-snapHeader__kicker { font-size: 13px; font-weight: 800; color: var(--commons-accent); letter-spacing: .03em; margin-bottom: 6px; }
 .commons-snapHeader__line {
   width: 100%; display: flex; align-items: center; gap: 10px; text-align: start; font: inherit;
   color: var(--commons-text); cursor: pointer; background: var(--commons-surface);
@@ -16,7 +16,7 @@
 .commons-snapHeader__chev { color: var(--commons-accent); flex: none; }
 
 /* unified section heading — purple, bold, used by EVERY block on the page */
-.commons-snapH { font-size: 13px; font-weight: 800; color: var(--commons-spectrum-6); margin: 0 0 8px; letter-spacing: -.01em; }
+.commons-snapH { font-size: 13px; font-weight: 800; color: var(--commons-accent); margin: 0 0 8px; letter-spacing: -.01em; }
 .commons-snapH--row { display: flex; align-items: center; justify-content: space-between; }
 .commons-snapH__link { font: inherit; font-size: 12px; font-weight: 600; color: var(--commons-accent); background: none; border: 0; cursor: pointer; }
 .commons-snapH__link:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
@@ -57,7 +57,8 @@
   border: 1px solid var(--commons-border); border-radius: 12px; padding: 10px 12px;
 }
 .commons-snapRow.is-stuck { flex-direction: column; align-items: stretch; gap: 10px; }
-.commons-snapRow__head { display: flex; align-items: center; gap: 9px; }
+.commons-snapRow__head { display: flex; align-items: flex-start; gap: 9px; }
+.commons-snapRow__titleWrap { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .commons-snapRow__title { flex: 1; text-align: start; font: inherit; font-size: 14px; color: var(--commons-text); background: none; border: 0; cursor: pointer; padding: 0; }
 .commons-snapRow__title:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
 .commons-snapRow__meta { font-size: 12px; color: var(--commons-text-dim); flex: none; }
@@ -97,11 +98,12 @@
 .commons-recent__flavour { color: var(--commons-text-dim); font-size: 11px; }
 .commons-recent__time { font-size: 11px; color: var(--commons-text-dim); flex: none; }
 
-/* week */
-.commons-week { display: flex; align-items: center; justify-content: space-between; margin-top: 20px; padding: 0 2px; }
-.commons-week__dots { display: flex; gap: 8px; }
-.commons-week__dot { width: 18px; height: 18px; border-radius: 50%; }
-.commons-week__dot.is-today { width: 20px; height: 20px; box-shadow: 0 0 0 2px var(--commons-surface-2); }
+/* week ("בימים האחרונים") — a cake per op-day with its weekday letter */
+.commons-week__dots { display: flex; align-items: flex-end; justify-content: space-between; padding: 2px 2px 0; }
+.commons-week__day { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.commons-week__dot { width: 22px; height: 22px; border-radius: 50%; }
+.commons-week__dot.is-today { width: 26px; height: 26px; box-shadow: 0 0 0 2px var(--commons-surface-2); }
+.commons-week__lbl { font-size: 10px; color: var(--commons-text-dim); }
 
 /* full list ("רשימה") — done + open, hidden until toggled (also the a11y linear layer) */
 .commons-snapList { margin-top: 10px; }

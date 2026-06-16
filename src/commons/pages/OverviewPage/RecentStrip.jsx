@@ -3,6 +3,15 @@
 // OUTSIDE the list block, unified with the other section headings. Avatar is neutral (its colour means
 // nothing). Emoji are decorative; the words carry the meaning. "כל היומן ←" links to the full feed.
 
+// Pick one line from a pool, deterministically by key (so it's stable per item, varied across items —
+// no Math.random in render). Falls back gracefully if a plain string is passed.
+function pickLine(pool, key) {
+  if (!Array.isArray(pool)) return pool || '';
+  if (!pool.length) return '';
+  const i = [...String(key)].reduce((a, c) => a + c.charCodeAt(0), 0) % pool.length;
+  return pool[i];
+}
+
 function relTime(iso, locale) {
   try {
     const diff = (new Date(iso).getTime() - Date.now()) / 1000;
@@ -36,7 +45,7 @@ export function RecentStrip({ recent, closed, t, locale, onFullLog }) {
               <li key={e.id} className="commons-recent__item">
                 <span className="commons-recent__avatar" aria-hidden="true">{(e.doer ?? '·').slice(0, 1)}</span>
                 <span className="commons-recent__text">
-                  {e.doer ? `${e.doer}: ` : ''}{e.title} <span className="commons-recent__flavour">{e.late ? t.creditLate : t.creditOnTime}</span>
+                  {e.doer ? `${e.doer}: ` : ''}{e.title} <span className="commons-recent__flavour">{pickLine(e.late ? t.creditLate : t.creditOnTime, e.id)}</span>
                 </span>
                 <span className="commons-recent__time">{relTime(e.at, locale)}</span>
               </li>

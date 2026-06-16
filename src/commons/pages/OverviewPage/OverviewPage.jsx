@@ -95,7 +95,7 @@ export function OverviewPage() {
         />
 
         <RecentStrip recent={s.recent} closed={s.closedToday} t={t} locale={locale} />
-        <WeekStrip week={s.week} label={t.week} />
+        <WeekStrip week={s.week} label={t.week} locale={locale} />
       </motion.div>
 
       {(s.progress.totalLeaves === 0) && <p className="commons-snapshot__empty">{t.empty}</p>}

@@ -30,7 +30,7 @@ export const commonsShellContent = {
     stuck: 'Stuck — who grabs it?',
     recent: 'Lately',
     fullLog: 'Full log →',
-    week: 'This week',
+    week: 'Recent days',
     listToggle: 'List',
     empty: 'Nothing to show here yet.',
     // actions (reuse occurrence ops) — label + separate decorative emoji (renders on its own line)
@@ -46,11 +46,34 @@ export const commonsShellContent = {
     by: 'by',
     listDone: 'done',
     listOpen: 'open',
-    // credit-line flavour (emoji decorative; meaning in the words)
-    creditOnTime: 'On time, champ 😇',
-    creditSmooth: 'Smooth as ever 😎',
-    creditLate: 'Late — but saved the day 🫢',
-    creditClaim: 'Initiative 🙌',
+    durHours: 'hrs',
+    durHour: 'an hour',
+    durMins: 'min',
+    // "stuck" waiting lines — picked per item. {time} = since-clock, {dur} = elapsed.
+    stuckLines: [
+      'waiting since {time} 👀',
+      'abandoned since {time} 🥺',
+      'sitting quietly for {dur} 🤫',
+      'set aside since {time} 🪑',
+      'missing you for {dur} 🫶',
+      'forgotten since {time} 🌵',
+    ],
+    // credit-line pools — picked per completion (the fun part: which one did I get?)
+    creditOnTime: [
+      'on time, champ 😇',
+      'smooth as ever 😎',
+      'nailed it 🔥',
+      'what a beast 🐯',
+      'easy close 💪',
+      'royalty 👑',
+    ],
+    creditLate: [
+      'late — but saved it 🫢',
+      'late but done 🙈',
+      'slow… but done 🐢',
+      'better late than never ⏰',
+      'got there in the end 😮‍💨',
+    ],
     closedTitle: 'You closed the whole day!',
     closedBody: 'What a team 🌈🎉',
     // living-line templates: {done},{left},{free} interpolated by the page

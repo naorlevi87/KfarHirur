@@ -31,7 +31,7 @@ export const commonsShellContent = {
     stuck: 'נתקע קצת — מי תופס?',
     recent: 'לאחרונה',
     fullLog: 'כל היומן ←',
-    week: 'השבוע',
+    week: 'בימים האחרונים',
     listToggle: 'רשימה',
     empty: 'עוד אין מה להציג כאן.',
     // actions (reuse occurrence ops) — label + separate decorative emoji (renders on its own line)
@@ -47,11 +47,34 @@ export const commonsShellContent = {
     by: 'ע״י',
     listDone: 'בוצע',
     listOpen: 'פתוח',
-    // credit-line flavour (emoji decorative; meaning in the words)
-    creditOnTime: 'בזמן, אלוף 😇',
-    creditSmooth: 'חלק כרגיל 😎',
-    creditLate: 'באיחור — אבל הציל/ה 🫢',
-    creditClaim: 'יוזמה 🙌',
+    durHours: 'שעות',
+    durHour: 'שעה',
+    durMins: 'דקות',
+    // "נתקע" waiting lines — picked per item (a little surprise each time). {time} = since-clock, {dur} = elapsed.
+    stuckLines: [
+      'מחכה מאז {time} 👀',
+      'ננטש מאז {time} 🥺',
+      'ממתין בשקט כבר {dur} 🤫',
+      'יושב בצד מאז {time} 🪑',
+      'מתגעגע אליכם כבר {dur} 🫶',
+      'שכוח-אל מאז {time} 🌵',
+    ],
+    // credit-line pools — picked per completion so everyone waits to see which one they got (the fun part)
+    creditOnTime: [
+      'בזמן, אלוף 😇',
+      'חלק כרגיל 😎',
+      'פצצה 🔥',
+      'איזו חיה 🐯',
+      'נסגר בקלות 💪',
+      'מלך/ה 👑',
+    ],
+    creditLate: [
+      'באיחור — אבל הציל/ה 🫢',
+      'מאוחר אבל קרה 🙈',
+      'התעכב… בוצע 🐢',
+      'עדיף מאוחר מאף פעם ⏰',
+      'בסוף הסתדר 😮‍💨',
+    ],
     closedTitle: 'סגרתם את כל היום!',
     closedBody: 'איזה צוות 🌈🎉',
     // living-line templates: {done},{left},{free} interpolated by the page
