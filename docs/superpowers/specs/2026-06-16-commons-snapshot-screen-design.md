@@ -7,126 +7,115 @@
 >
 > *Direction: collective decision-making lives here too, later.*
 
-> Status: **v2 — evolved in conversation 2026-06-16/17, under external review.** Date: 2026-06-17. Module: `src/commons/`.
-> Supersedes Handoff B and the v1 concept below. A first pass (v1: ring + free/stuck/recent + week) is
-> already built on `feat/commons-snapshot`; this spec defines the **target** model and marks what's built
-> vs pending. Builds on the routines/runs model (`docs/superpowers/specs/2026-06-14-commons-recurring-routines-design.md`).
+> Status: **v3 — locked after external review + founder decisions. Building.** Date: 2026-06-17. Module: `src/commons/`.
+> A first pass (v1: ring + free/stuck + week) is built on `feat/commons-snapshot`; this spec is the
+> target and §11 marks built vs pending. Builds on the routines/runs model
+> (`docs/superpowers/specs/2026-06-14-commons-recurring-routines-design.md`).
 
 ---
 
-## 1. The core idea (read this first)
+## 1. The core idea
 
-There is **one list** — an operational day's tasks — shown in **two views that differ only by filters**:
+One **op-day** task list, shown in **two views that differ only by filters**:
 
 | | **תמונת מצב** (the *pulse*) | **תמונת יום** (the *day*) |
 |---|---|---|
 | Question | "what needs us **now**?" | "the **whole** day, in full" |
-| States shown | פנוי · בדרך · נתקע | + בוצע + עוד-לא-רלוונטי (everything) |
-| Relevance filter | **on** (hides not-yet-relevant) | **off** (shows all) |
-| Row grammar | parent ▸ → items | same |
+| Shows | overdue · free · in-progress (action states) | + done + not-yet-relevant (everything) |
+| Relevance filter | on | off |
 | It is | the calm action surface | the record |
 
-**One sentence:** *the pulse is the day with two filters on (only-now + only-needs-hands); remove the filters and you get the full day.* This is an architecture (one source of truth) **and** the mental model.
+*The pulse is the day with two filters on; remove them → the full day.* Tabs: **שלי** (me) · **לוח** (build/edit by area) · **תמונת מצב** (pulse). The **day** screen is reached *from* the pulse (tap the ring or a day-cake).
 
-Three tabs frame it: **שלי** = me · **לוח** = the board where you create/edit/browse by area · **תמונת מצב** = the communal pulse. The **day screen** is reached *from* the pulse (tap the ring or a day-cake), not a tab.
+## 2. The pulse — `תמונת מצב` (top → bottom)
 
-## 2. The pulse — `תמונת מצב`
+1. **Living line** — "מה קורה היום?" + one warm op-day-phase sentence ending on an invitation. Never says "ביחד".
+2. **Area lens** — `הכל · <area> …` focuses everything below onto one area. Equal pills, fixed order.
+3. **The ring** — collective completion: a single arc filled to the done-fraction, coloured along the spectrum (§7). Centre = "מה מצבנו?" + count `X מתוך Y` (no % digit). **Tapping the ring → today's day screen.**
+4. **Three state-sections, in this order:**
+   1. **עבר הזמן** *(overdue/missed)* — **first and visually emphasised; the most urgent.** Warm wording, clear urgency.
+   2. **מה פנוי?** *(free / no one took it)*.
+   3. **מה בדרך?** *(taken, not done yet — you see who's on it and can still step in)*.
+   Row grammar: a task **with sub-items** = `▸ title · X/Y · time`, expanding to that section's relevant children; a task **without** = a single row. **A parent may appear in several sections**, each showing only its matching items — the `X/Y` count makes clear it's one shared task seen from different angles. *(Founder decision: keep multi-section over the reviewers' one-row, because seeing "what's needed here" per state is the point.)*
+5. **"+N מופיעים מאוחר יותר ←"** — a quiet, tappable line when items are hidden by the relevance filter (§4); tap → today's day screen. Nothing is ever silently hidden.
+6. **לאחרונה** — a short playful strip of the last ~4 completions, each with its **random credit line + who + when** (e.g. *"שי סידר את הבר · נסגר בקלות 💪 · לפני 5 דק׳"*). The fun is on the main screen for everyone — *kept playful on purpose*. 100% → a celebration banner.
+7. **Week** — seven small **pie-cakes** (cut + coloured by each day's completion; neutral when empty), weekday letters; tap a cake → that day's screen.
+8. **Accessible list** — always-present visually-hidden ordered list mirroring the items (§8).
 
-Top → bottom:
-
-1. **Living line** — "מה קורה היום?" + one warm, op-day-phase sentence ending on an invitation. Tappable → jumps to פנוי. Never says "ביחד" (§7).
-2. **Area lens** — `הכל · <area> …` pills focus the ring + sections onto one area. Equal, fixed order — a lens, not a leaderboard.
-3. **The ring** — collective completion. **A single solid colour filling the arc to the done-fraction**, the colour chosen by the % along the spectrum (red→…→purple). Centre = "מה מצבנו?" + the count `X מתוך Y` (**no % digit**). Tapping the ring → **today's day screen**.
-4. **Three live state-sections** — each a list of **parent-collapsible rows**:
-   - **מה פנוי?** — free / no one took it.
-   - **מה בדרך?** — taken, not done yet (stays visible: you see who's on it, and can still step in).
-   - **מה נתקע?** — overdue / missed.
-   Row grammar: a task **with sub-items** is `▸ title · X/Y · time`; expanding shows **only that section's relevant children**. A task **without** sub-items is a single row. **A parent may appear in more than one section**, each showing only its matching items. Per-item actions in §6.
-5. **Week** — seven small **pie-cakes** (each *cut* to that day's done-fraction and *coloured* by it; neutral when the day had no tasks), with weekday letters. Tapping a cake → that day's day screen. *(Trend without a chart.)*
-6. **Accessible list** — an always-present visually-hidden ordered list mirroring the items (a11y, §8).
-
-**Relevance filter:** the pulse shows an item only once its relevance window has started (§4). The log/credit feed does **not** live on the pulse — it lives in the day screen.
+Relevance filter (§4) gates what enters the pulse.
 
 ## 3. The day — `תמונת יום`
 
-The **full record of one op-day**. Reached by tapping the ring (today) or any week-cake (that day). Route: `/commons/:slug/day/:date`.
-
-- Header: the date; back to the pulse.
-- The same ring for that day.
-- The same parent-▸ row grammar, but grouped to show **everything**: **בוצע** (done — with who + when), **בדרך**, **פנוי / עוד-לא-רלוונטי**, **נתקע**. Relevance filter **off**.
-- The **credit log** ("who did what, when") lives here — this is the record, not the pulse.
-- Handling actions (claim / resolve / defer / skip) available per item, same as the pulse.
+The **full record of one op-day** (route `/commons/:slug/day/:date`), reached by tapping the ring (today) or a week-cake. Same ring + same row grammar, but **everything**: done (with who + when + its credit line), in-progress, free, **not-yet-relevant**, overdue. It is literally "מה היום with the relevance filter off." The full who-did-what record lives here (the pulse only shows the short לאחרונה strip).
 
 ## 4. Relevance window (model C)
 
-Tasks become relevant at a time, not at 08:00. "להזמין דגים" matters from ~21:00, not the morning.
+- Each item has an **optional `show_from`** time-of-day. **Default none → visible all op-day.** Only time-sensitive items set one ("להזמין דגים" from 21:00).
+- Read on the **op-day clock (08:00→08:00)**, so 21:00 and 02:00 are both inside the same op-day, in order. `show_from` is one-sided (a *from*, no *until*); the deadline (`due_time`) is separate and unchanged.
+- The **pulse hides** an item before its `show_from` and shows the **"+N מופיעים מאוחר יותר"** line instead; the **day screen shows** it as "עוד לא רלוונטי". Rule: **the clock brings a task in; only a state change takes it out** (nothing vanishes under you).
+- **Propagation:** `show_from` is a column on `commons.nodes`; `run_recurrences` copies it from each routine *definition* item to its cloned *run* item at generation (exactly like the per-item target time). Ad-hoc one-offs set it directly.
+- **Authoring:** an optional **"מופיע מ-"** time input in the create/edit form (`TaskFormPage`).
 
-- Each item has an **optional `show_from`** time-of-day. **Default: none → visible all op-day** (today's behaviour). Only the few time-sensitive items set one.
-- Read on the **op-day clock (08:00→08:00)**, so a window like **21:00→02:00 is one contiguous span** (02:00 is "later" in the same op-day). No wrap-around special-casing.
-- The **pulse** hides an item before its `show_from`; the **day screen** shows it (as "עוד לא רלוונטי"). Rule of thumb: **the clock can bring a task *in*; only a state change takes it *out*** (so things don't vanish under you).
-- **New data + authoring:** `show_from` is a new field on items (and on routine definitions), with an optional **"מופיע מ-"** input in the create/edit form (`לוח`). This touches the schema + `TaskFormPage`, not just the pulse.
+## 5. Parent / child grammar & taking a whole task
 
-## 5. Parent / child row grammar
-
-From `docs/commons-standards.md` (row grammar): a task with sub-items is **made of other things** → caret + `X/Y` progress + time, **no checkbox**; a leaf is **done directly** → its action. Why it matters here: future daily tasks decompose ("סגירת יום", "רשימת הכנות") into many small items; flattening them is clutter. So in every list the parent is one collapsible row; open it for the items.
+Per `docs/commons-standards.md`: a parent (has sub-items) = caret + `X/Y` + time, no checkbox; a leaf = its action. **Taking a parent** uses the **same "מי לוקח?" action**; taking the whole thing cascades ownership to all its sub-items (already how `effectiveOwner` works), **behind a confirm dialog**: *"לקחת את כל סגירת יום? כל תת-המשימות יעברו עליך."* Most of the time people take the whole parent; taking a single child is also fine.
 
 ## 6. Actions — mutual aid, not management
 
-Reuse existing occurrence ops; surface them inline.
-
-| Action | Copy | Maps to | Who |
+| Action | Copy | Behaviour | Who |
 |---|---|---|---|
-| Take it onto me | **עליי 🙌** | `claimNode` | any eligible member |
-| It did happen (resolve missed) | **זה כן קרה 🫢** | `resolveMissed(id, who, when)` — **who + when picker** | any member |
-| Push to another day | **דחה למחר 🙆 / תאריך אחר 📅** | `deferOccurrence` | manager+ |
-| Not needed | **לא צריך 🤷** | `deferOccurrence(id, null)` | manager+ |
-| Put it on someone | **עליו 🫵** | `assignNode` | **manager/admin only** |
+| Take it | **מי לוקח? → אני 🙌** | claim onto me (parent cascades, with confirm §5) | anyone eligible |
+| Suggest it to someone | **מי לוקח? → מציע ל-X** | marks **"הוצע ל-X"**; X taps **accept** (becomes theirs) or **pass** (back to open) | **anyone** (flat — no manager push) |
+| It did happen | **זה כן קרה 🫢** | resolve missed → who + when picker | any member |
+| Push to another day | **דחה למחר 🙆 / תאריך אחר 📅** | defer | manager+ |
+| Not needed | **לא צריך 🤷** | skip | manager+ |
 
-- **`resolve_missed` gained `done_at`** (migration `20260616100000`, applied) so "זה כן קרה" records *who* + *when*; the who+when picker is `AttributionSheet`.
-- Attribution to **another** person (עליו) is manager/admin-only. "עליי" (self) is everyone.
-- Tapping a title opens the existing item detail (`TaskViewPage`).
+- **Founder decision:** the old manager-only **"עליו" (direct assign) is removed**, replaced by the flat **"מציע ל-X"** invite that the person accepts — same for everyone, no hierarchy. (Supersedes the v1 `assign`/`עליו` built in Phase 2.)
+- "מציע ל-X" at launch shows an **in-app "הוצע ל-X" marker**; a real phone/notification nudge comes with the future **notifications** feature.
+- `resolve_missed` already takes `done_at` (migration applied) for the who+when picker.
 
-## 7. Playful layer & copy
+## 7. Colour, ring & playful layer
 
-- **The ring blooms through the spectrum** as the day fills; 100% = a celebration banner. Colour = progress, always reinforced by the count (never colour-only).
-- **Credit lines are pools** — each completion shows a warm one-liner picked per item, so it's a small surprise (😇🔥🐢…). On-time and late have separate pools. Celebrate the **act and the group**, never an individual tally.
-- **Never say "ביחד"** — convey togetherness via the "we" framing ("מה איתנו", "מה מצבנו", "מי לוקח / תופס"). (Locked in `docs/commons-standards.md`.)
-- All copy in `src/content/commons/{he,en}`. No hardcoded strings.
+- **Spectrum: orange → yellow → green → blue → purple. No red at all.** Low/empty = warm **orange** (friendly, never "you're behind"). The arc fills and travels the spectrum as completion rises.
+- **Big ring at 100%** → a **full rainbow** across the whole wheel 🌈 (celebration). **Small week-cakes** fill the same spectrum and **end at purple** at 100%.
+- Colour reinforces; the **count always carries the meaning** (never colour-only — §8).
+- **Credit lines stay playful and shared** — random per completion from big pools (split on-time vs late so a line never lands cruelly), shown in לאחרונה and at the completion moment. The jokes are a feature, not noise.
+- **Never say "ביחד"** — convey togetherness via the "we" framing. All copy in `src/content/commons/{he,en}`.
 
 ## 8. Accessibility (IS 5568 / WCAG 2.1 AA — legal)
 
-Number/text carries meaning (colour only reinforces); emoji are `aria-hidden` with meaning in adjacent words; the radial ring is presentational over an always-present hidden ordered list (keyboard + SR); contrast ≥ 4.5:1; visible `focus-visible`; honour `prefers-reduced-motion`.
+Number/text carries meaning (colour only reinforces); emoji `aria-hidden` with meaning in adjacent words; the ring is presentational over an always-present hidden ordered list (keyboard + SR); state sections distinguished by text + label, not hue alone; contrast ≥ 4.5:1; visible `focus-visible`; honour `prefers-reduced-motion`.
 
 ## 9. Data & derivation
 
-`fetchTree` already loads every node; `fetchRoster` gives names — the screens derive from memory. **No new *reads*.** Pure helpers `buildSnapshot` / `buildDay` in `OverviewPage/snapshot.js` produce the view models (tested with `node:assert`). The only new *write-path* data is `show_from` (§4) and the already-applied `resolve_missed(done_at)`.
+`fetchTree` + `fetchRoster` already load everything — the screens derive in memory via pure `buildSnapshot` / `buildDay` (`OverviewPage/snapshot.js`, `node:assert` tested). New write-path data: **`show_from`** (column + `run_recurrences` copy + form field) and the in-app **"הוצע ל-X"** proposal marker (a `proposed_to` member ref on the node, cleared on accept/pass). `resolve_missed(done_at)` is done.
 
 ## 10. Affected surfaces
 
-- `OverviewPage/` — `OverviewPage` (pulse), `DayPage` (day), `snapshot.js` (`buildSnapshot`/`buildDay`), the section/ring/week/list/sheet components, `overview.css`. *(v1 built; this spec evolves it.)*
-- `styles/spectrum.js` + tokens — colour-by-fraction.
-- `tasks/TaskFormPage.jsx` + schema — the new **`show_from`** field.
-- `data/commons` + `useWorkspaceTree` — `assign`, `resolveMissed(done_at)` *(done)*; a `show_from` column.
-- Docs: `commons-standards.md` (done) + `COMMONS.md` status.
+`OverviewPage/` (pulse, DayPage, `snapshot.js` build helpers, section/ring/week/list/sheet components, `overview.css`) · `styles/spectrum.js` + tokens (orange→purple, no red, 100% rainbow) · `tasks/TaskFormPage.jsx` + schema (`show_from`) · `data/commons` + `useWorkspaceTree` (proposal accept/pass; `show_from`) · `run_recurrences` (copy `show_from`) · `commons-standards.md` (done) + `COMMONS.md`.
 
-## 11. Built vs pending
+## 11. Build order (built vs pending)
 
-- **Built (v1, on branch):** ring (solid colour by %), area lens, free/stuck sections, credit strip, week pies, accessible list, day screen (basic), who+when picker, manager assign, the `resolve_missed(done_at)` migration.
-- **Pending (this spec's evolution):** the **three-state** model incl. **בדרך**; **parent-collapsible** row grammar in the lists; the **relevance window** (`show_from` + form field); making the **day screen the full record** + moving the credit log into it; the ring/cake tap → day-screen navigation; resolving the open questions below.
+**Built (v1):** ring, area lens, free/stuck sections, credit strip, week pies, accessible list, day screen (basic), who+when picker, the `resolve_missed(done_at)` migration. *(The v1 manager `עליו` assign is superseded by §6 and will be replaced.)*
 
-## 12. Open questions — under review (decide before building the evolution)
+**Pending — build in this order:**
+1. **Palette** → orange→purple, no red; big ring 100% rainbow; cakes end purple (`spectrum.js` + test).
+2. **Three states + order** → add **בדרך**; **עבר הזמן** first + emphasised; **parent-collapsible** grammar in every section; **cascade-take** with confirm dialog.
+3. **Day screen = full record** → all states incl. done + not-yet; credit log here; ring/cakes → day navigation.
+4. **Relevance window** → `show_from` column + `run_recurrences` copy + `TaskFormPage` "מופיע מ-" + pulse filter + "+N מופיעים מאוחר יותר" line.
+5. **Invite** → replace manager `עליו` with flat **"מציע ל-X"** (accept/pass) + `proposed_to` marker.
 
-These are the genuinely contested points (raised in conversation + flagged for external review):
+## 12. Decisions (resolved from review)
 
-1. **Three states or two?** Keep פנוי / בדרך / נתקע, or collapse "נתקע" into a *warm property* of פנוי ("מחכה ליד" — work re-enters the open pool rather than a standing "overdue" section)? Trade-off: triage clarity vs. the non-hierarchical/circular value.
-2. **Parent in multiple sections vs. one row.** Show a parent once per relevant section (scoped children) — or once, in its most-urgent section, with a mixed-state child list? Risk: the same title appearing 2–3× reads as duplication on a phone.
-3. **"עליו" (assign to another) — keep manager-only, or replace with invite/“call-for-help” anyone can do?** The value tension: any role-gated capability is, by definition, hierarchy.
-4. **"Day" vs "Cycle" for generality.** The 08:00→08:00 op-day fits a kitchen; a garden/protest/NGO may need "cycle" (a day / week / event). How far to abstract now vs. later.
-5. **Relevance legibility.** A persistent "+N מופיעים מאוחר יותר ←" line on the pulse so deferred items never feel hidden; entry-by-clock, exit-by-state only.
-6. **Red-at-zero.** The empty/0% ring shouldn't read as alarm at 08:00 — soften the spectrum's low end to "potential," not "behind."
-7. **Credit lines: ephemeral vs logged**, and context-fit vs pure-random, to avoid tonal misfires and staleness.
+1. **Parent in multiple sections — kept** (founder), with `X/Y` to signal it's one task; plus take-the-whole-parent (cascade + confirm).
+2. **Overdue kept as its own section, emphasised, first** (founder) — the urgency signal the crew needs; wording stays warm.
+3. **"מציע ל-X" flat invite replaces manager assign** — non-hierarchical; anyone can suggest, the person accepts.
+4. **"Day" kept now**; op-day boundary stays a single constant + per-workspace label later; variable-length "cycle" deferred (YAGNI until a second, non-kitchen workspace exists).
+5. **"+N later" line locked**; relevance is entry-by-clock, exit-by-state.
+6. **No red**; spectrum starts orange, 100% rainbow.
+7. **Credit lines stay playful & shared** in לאחרונה (big, split pools); the day record keeps them too.
 
 ## 13. Decision log
 
-- **2026-06-16** — Snapshot reframed from a manager audit console to a communal, circular, playful "us" view. Ring = completion spectrum; areas = lenses; actions = mutual aid; "ביחד" banned. (v1 built.)
-- **2026-06-17** — Evolved to **pulse + day-screen** (one list, two filters); added **בדרך** state + **parent-collapsible** grammar; added the **relevance window** (`show_from`, op-day clock); the **day screen becomes the full record** and hosts the credit log; cakes/ring navigate to day screens; `resolve_missed` gained `done_at` + who/when picker; manager "עליו" assign. Open questions (§12) sent to external review before building.
+- **2026-06-16** — Snapshot reframed to a communal, circular, playful "us" view (v1 built).
+- **2026-06-17** — Locked v3 after a two-round external review (designer / standards / values lenses). Founder decisions: keep multi-section parents + take-whole-parent (cascade + confirm); overdue stays its own emphasised first section; flat "מציע ל-X" invite replaces manager "עליו"; spectrum drops red (orange→purple, 100% rainbow); relevance window C with "+N later" legibility; playful shared credit log kept. Notifications design deferred. Pulse + day-screen = one list, two filters.
