@@ -55,7 +55,7 @@ export function useWorkspaceTree(workspaceId) {
 
   // Create a node. occurrenceDate/dayMask/dueTime are optional: occurrenceDate makes it an
   // ad-hoc run instance (e.g. "+ הוסף משימה" on a run); dayMask/dueTime belong to definition items.
-  const addNode = useCallback(async ({ parentId = null, kind, title, occurrenceDate, dayMask, dueTime }) => {
+  const addNode = useCallback(async ({ parentId = null, kind, title, occurrenceDate, dayMask, dueTime, ownerId, roleIds }) => {
     const input = {
       workspace_id: workspaceId,
       parent_id: parentId,
@@ -68,6 +68,8 @@ export function useWorkspaceTree(workspaceId) {
     if (occurrenceDate) input.occurrence_date = occurrenceDate;
     if (dayMask) input.day_mask = dayMask;
     if (dueTime) input.due_time = dueTime;
+    if (ownerId) input.owner_id = ownerId;
+    if (roleIds && roleIds.length) input.role_ids = roleIds;
     const created = await createNode(input);
     setNodes(prev => [...prev, created]);
     return created;

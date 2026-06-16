@@ -24,6 +24,7 @@ import { ConfirmDialog } from '../ConfirmDialog.jsx';
 import { CommonsLoading } from '../CommonsLoading.jsx';
 import { IconTrash, IconPlus } from '../icons.jsx';
 import { normalizeRule, computeFirstNextRun, effectiveDaysFor } from './recurrence.js';
+import { inheritedSubDefaults } from './subDefaults.js';
 
 function toDateInput(due) {
   if (!due) return '';
@@ -160,6 +161,7 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
 
   // A task with no required skills means "anyone" (כל עובד). We represent that in the picker as
   // all skills checked, so a new task (or an "anyone" task) defaults to every skill selected.
+  const seedInited = useRef(false);
   const skillInited = useRef(false);
   useEffect(() => {
     if (!workspace?.id) return;
@@ -174,6 +176,23 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
     });
     return () => { cancelled = true; };
   }, [workspace?.id, node]);
+
+  // Create-with-parent: seed owner/skills/עד-שעה from the parent as editable defaults (once the
+  // parent node is in the tree). Programmatic — does NOT mark dirty. Sets skillInited so the
+  // all-skills default cannot clobber an inherited skill set.
+  useEffect(() => {
+    if (editing || !parentId || seedInited.current) return;
+    const parent = tree.nodes.find(n => n.id === parentId);
+    if (!parent) return;
+    seedInited.current = true;
+    const inh = inheritedSubDefaults(parent);
+    // Defer updates out of the synchronous effect body to satisfy react-hooks/set-state-in-effect.
+    Promise.resolve().then(() => {
+      setOwnerId(prev => prev || inh.ownerId);
+      if (inh.roleIds.length) { setRoleIds(inh.roleIds); skillInited.current = true; }
+      setDueTime(prev => prev || inh.dueTime);
+    });
+  }, [editing, parentId, tree.nodes]);
 
   // Commit the form's fields. Returns true on success, false if it can't save (empty title) — the
   // leave-guard uses the boolean to decide whether to proceed. Does not navigate.
@@ -241,8 +260,14 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
   async function quickAddSub() {
     const t = subAdd.trim();
     if (!t) return;
-    // Inside an occurrence the new item belongs to that day's run (one-off); a definition adds a definition.
-    await tree.addNode({ parentId: node.id, kind: 'task', title: t, occurrenceDate: node.occurrence_date ?? undefined });
+    // Inherit the parent's assignment + who-can; due_time only applies to a definition (not an occurrence).
+    const inh = inheritedSubDefaults(node);
+    await tree.addNode({
+      parentId: node.id, kind: 'task', title: t,
+      occurrenceDate: node.occurrence_date ?? undefined,
+      ownerId: inh.ownerId, roleIds: inh.roleIds,
+      dueTime: node.occurrence_date ? undefined : inh.dueTime,
+    });
     setSubAdd('');
   }
   function detailedAddSub() {
@@ -289,8 +314,8 @@ function TaskForm({ mode, node, kind, initialParent, initialTitle, tree }) {
                   ariaLabel={f.owner}
                   value={ownerId}
                   onChange={(v) => { setOwnerId(v); mark(); }}
-                  placeholder={f.unassigned}
-                  options={[{ value: '', label: f.unassigned }, ...roster.map(mb => ({ value: mb.id, label: mb.display_name ?? '—' }))]}
+                  placeholder={f.ownerOpen}
+                  options={[{ value: '', label: f.ownerOpen }, ...roster.map(mb => ({ value: mb.id, label: mb.display_name ?? '—' }))]}
                 />
               </label>
               <div className="commons-field commons-field--grow">
