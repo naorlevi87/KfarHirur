@@ -20,9 +20,15 @@ export function SnapshotList({ items, t, locale, onOpen }) {
       <ul className="commons-snapList__ul">
         {items.map((n) => {
           const done = n.status === 'done';
-          const meta = done
-            ? (n.doer ? `${t.by} ${n.doer}` : t.listDone)
-            : (n.due ? `${t.until} ${fmtTime(n.due, locale)}` : t.listOpen);
+          let meta;
+          if (done) {
+            meta = n.doer ? `${t.by} ${n.doer}` : t.listDone;
+          } else {
+            const parts = [];
+            if (n.owner) parts.push(`${t.onPerson} ${n.owner}`);          // already taken → by whom
+            if (n.due) parts.push(`${t.until} ${fmtTime(n.due, locale)}`);
+            meta = parts.length ? parts.join(' · ') : t.listOpen;
+          }
           return (
             <li key={n.id}>
               <button type="button" onClick={() => onOpen(n.id)}

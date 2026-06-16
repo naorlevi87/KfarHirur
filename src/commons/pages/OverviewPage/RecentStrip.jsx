@@ -43,11 +43,10 @@ export function RecentStrip({ recent, closed, t, locale, onFullLog }) {
           <ul className="commons-recent__list">
             {recent.map((e) => (
               <li key={e.id} className="commons-recent__item">
-                <span className="commons-recent__avatar" aria-hidden="true">{(e.doer ?? '·').slice(0, 1)}</span>
                 <span className="commons-recent__text">
-                  {e.doer ? `${e.doer}: ` : ''}{e.title} <span className="commons-recent__flavour">{pickLine(e.late ? t.creditLate : t.creditOnTime, e.id)}</span>
+                  {e.title} <span className="commons-recent__flavour">{pickLine(e.late ? t.creditLate : t.creditOnTime, e.id)}</span>
                 </span>
-                <span className="commons-recent__time">{relTime(e.at, locale)}</span>
+                <span className="commons-recent__time">{relTime(e.at, locale)}{e.doer ? ` · ${t.by} ${e.doer}` : ''}</span>
               </li>
             ))}
           </ul>

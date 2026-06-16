@@ -104,10 +104,12 @@ export function buildSnapshot({ nodes, roster, now = new Date(), scopeAreaId = n
   const list = leaves
     .map((n) => {
       const due = dueAt(n);
+      const ownerId = n.status === 'done' ? null : effectiveOwner(n);
       return {
         id: n.id, title: n.title, status: n.status,
         due: due ? due.toISOString() : null,
         doer: n.status === 'done' ? nameOf(n.completed_by) : null,
+        owner: ownerId ? nameOf(ownerId) : null,   // open item already taken → show by whom
         late: Boolean(n.completed_late),
       };
     })
@@ -130,7 +132,7 @@ export function buildSnapshot({ nodes, roster, now = new Date(), scopeAreaId = n
     const dayLeaves = nodes.filter((n) =>
       n.kind === 'task' && n.occurrence_date === dayStr && !taskChildren(n.id, true).length && inScope(n));
     const dn = dayLeaves.filter((n) => n.status === 'done').length;
-    week.push({ date: dayStr, fraction: dayLeaves.length ? dn / dayLeaves.length : 0, isToday: dayStr === todayStr });
+    week.push({ date: dayStr, fraction: dayLeaves.length ? dn / dayLeaves.length : 0, total: dayLeaves.length, isToday: dayStr === todayStr });
   }
 
   return {

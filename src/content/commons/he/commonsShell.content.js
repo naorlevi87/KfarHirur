@@ -45,6 +45,7 @@ export const commonsShellContent = {
     since: 'מאז ',
     sincePrev: 'מיום קודם',
     by: 'ע״י',
+    onPerson: 'על',
     listDone: 'בוצע',
     listOpen: 'פתוח',
     durHours: 'שעות',

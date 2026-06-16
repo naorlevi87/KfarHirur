@@ -3,7 +3,7 @@
 // its weekday letter. Colour = that day's completion fraction. Tapping a day opens its handling screen
 // (DayPage) — the nudge to go finish what's left.
 
-import { spectrumConic } from '../../styles/spectrum.js';
+import { spectrumHex } from '../../styles/spectrum.js';
 
 function dayLetter(date, locale) {
   try {
@@ -27,7 +27,7 @@ export function WeekStrip({ week, label, locale, onPick }) {
           >
             <span
               className={`commons-week__dot${d.isToday ? ' is-today' : ''}`}
-              style={{ background: spectrumConic(d.fraction) }}
+              style={{ background: d.total === 0 ? 'var(--commons-ring-track)' : spectrumHex(d.fraction) }}
               aria-hidden="true"
             />
             <span className="commons-week__lbl">{dayLetter(d.date, locale)}</span>

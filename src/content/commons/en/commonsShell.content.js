@@ -44,6 +44,7 @@ export const commonsShellContent = {
     since: 'since ',
     sincePrev: 'from a previous day',
     by: 'by',
+    onPerson: 'on',
     listDone: 'done',
     listOpen: 'open',
     durHours: 'hrs',
