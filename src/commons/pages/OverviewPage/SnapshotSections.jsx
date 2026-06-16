@@ -52,38 +52,32 @@ function Btn({ kind, label, emoji, onClick }) {
   );
 }
 
-// The action buttons under a single item, depending on which state-section it's in.
-function ItemActions({ section, item, t, canManage, h }) {
-  if (section === 'free') {
-    return <Btn kind="is-claim" label={t.claim} emoji={t.claimE} onClick={() => h.onClaim(item.id)} />;
-  }
-  if (section === 'overdue') {
-    return (
-      <>
-        <Btn kind="is-claim" label={t.claim} emoji={t.claimE} onClick={() => h.onClaim(item.id)} />
-        <Btn kind="is-did" label={t.didHappen} emoji={t.didHappenE} onClick={() => h.onResolve(item.id)} />
-        {canManage && <Btn kind="is-defer" label={t.deferTomorrow} emoji={t.deferTomorrowE} onClick={() => h.onDefer(item.id)} />}
-        {canManage && <Btn kind="is-skip" label={t.skip} emoji={t.skipE} onClick={() => h.onSkip(item.id)} />}
-      </>
-    );
-  }
-  return null; // in-progress: no action, just shows who's on it
-}
-
+// One compact line per item: title · (meta beside it) · single inline action. Overdue keeps its
+// extra actions on a second line (too many to fit inline).
 function ItemRow({ item, section, t, locale, canManage, h }) {
+  const meta = section === 'overdue' ? stuckLine(item, t, locale)
+    : section === 'inProgress' && item.owner ? `${t.onPerson} ${item.owner}`
+    : null;
   return (
-    <motion.li className={`commons-snapRow${section === 'overdue' ? ' is-stuck' : ''}`} variants={rowV}>
-      <div className="commons-snapRow__head">
+    <motion.li className={`commons-snapRow is-${section}`} variants={rowV}>
+      <div className="commons-snapRow__line">
         <span className={`commons-snapDot is-${section}`} aria-hidden="true" />
-        <div className="commons-snapRow__titleWrap">
-          <button type="button" className="commons-snapRow__title" onClick={() => h.onOpen(item.id)}>{item.title}</button>
-          {section === 'overdue' && <span className="commons-snapRow__meta">{stuckLine(item, t, locale)}</span>}
-          {section === 'inProgress' && item.owner && <span className="commons-snapRow__meta">{t.onPerson} {item.owner}</span>}
-        </div>
+        <button type="button" className="commons-snapRow__title" onClick={() => h.onOpen(item.id)}>{item.title}</button>
+        {meta && <span className="commons-snapRow__meta">{meta}</span>}
         {section === 'free' && item.due && <span className={`commons-untilChip ${tier(item.minsLeft)}`}>{t.until} {whenLabel(item, t, locale)}</span>}
+        {section === 'free' && (
+          <button type="button" className="commons-snapBtn is-claim commons-snapBtn--inline" onClick={() => h.onClaim(item.id)}>
+            {t.claim} <span aria-hidden="true">{t.claimE}</span>
+          </button>
+        )}
       </div>
-      {section !== 'inProgress' && (
-        <div className="commons-snapRow__actions"><ItemActions section={section} item={item} t={t} canManage={canManage} h={h} /></div>
+      {section === 'overdue' && (
+        <div className="commons-snapRow__actions">
+          <Btn kind="is-claim" label={t.claim} emoji={t.claimE} onClick={() => h.onClaim(item.id)} />
+          <Btn kind="is-did" label={t.didHappen} emoji={t.didHappenE} onClick={() => h.onResolve(item.id)} />
+          {canManage && <Btn kind="is-defer" label={t.deferTomorrow} emoji={t.deferTomorrowE} onClick={() => h.onDefer(item.id)} />}
+          {canManage && <Btn kind="is-skip" label={t.skip} emoji={t.skipE} onClick={() => h.onSkip(item.id)} />}
+        </div>
       )}
     </motion.li>
   );
