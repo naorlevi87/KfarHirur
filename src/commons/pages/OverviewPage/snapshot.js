@@ -128,6 +128,15 @@ export function buildSnapshot({ nodes, roster, now = new Date(), scopeAreaId = n
     const diff = Math.round((opStart.getTime() - opDayStartFor(due).getTime()) / 86400000);
     return diff <= 0 ? 'today' : diff === 1 ? 'yesterday' : 'older';
   };
+  // Relevance window: a show_from time-of-day placed on the current op-day (hours < 8 → the night tail).
+  const showFromTs = (sf) => {
+    if (!sf) return null;
+    const [h, m, s] = String(sf).split(':').map(Number);
+    const d = new Date(opStart);
+    d.setHours(h, m, s || 0, 0);
+    if (h < 8) d.setDate(d.getDate() + 1);
+    return d;
+  };
   const itemView = (n) => {
     const due = dueAt(n);
     const o = effectiveOwner(n);
@@ -170,8 +179,11 @@ export function buildSnapshot({ nodes, roster, now = new Date(), scopeAreaId = n
     return out;
   };
   const buckets = { overdue: [], free: [], inProgress: [] };
+  let notYet = 0; // open items hidden by their relevance window (shown as "+N appear later")
   for (const n of leaves) {
     if (n.status === 'done') continue;
+    const sf = showFromTs(n.show_from);
+    if (sf && n.status !== 'missed' && now.getTime() < sf.getTime()) { notYet += 1; continue; }
     const s = classify(n);
     if (s) buckets[s].push(n);
   }
@@ -179,6 +191,7 @@ export function buildSnapshot({ nodes, roster, now = new Date(), scopeAreaId = n
     overdue: groupBucket(buckets.overdue),
     free: groupBucket(buckets.free),
     inProgress: groupBucket(buckets.inProgress),
+    notYet,
   };
 
   // Full list (the "רשימה"): every leaf, done + open, with status / due / who. Not-done first, done last.

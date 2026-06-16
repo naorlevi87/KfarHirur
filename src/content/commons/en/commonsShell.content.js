@@ -112,6 +112,7 @@ export const commonsShellContent = {
     countFree: '{n} free',
     countInProgress: '{n} in motion',
     countOverdue: '{n} overdue',
+    laterCount: '{n} appear later →',
     takeAllTitle: 'Take the whole thing?',
     takeAllBody: 'All sub-tasks of "{title}" become yours.',
   },

@@ -73,4 +73,15 @@ assert.equal(ps.pulse.free[0].id, 'P');
 assert.deepEqual(ps.pulse.free[0].items.map((x) => x.id), ['c1']);
 assert.deepEqual(ps.pulse.free[0].progress, { done: 1, total: 2 });
 
+// relevance window: an item with show_from in the future is hidden from the pulse (notYet), one that's
+// already past its show_from shows normally. now = 12:00 on the op-day.
+const rNodes = [
+  { id: 'A', kind: 'container', parent_id: null, title: 'מטבח' },
+  { id: 'r1', kind: 'task', parent_id: 'A', title: 'דגים', status: 'open', show_from: '21:00:00' }, // not yet
+  { id: 'r2', kind: 'task', parent_id: 'A', title: 'לחם', status: 'open', show_from: '09:00:00' },  // already relevant
+];
+const rs = buildSnapshot({ nodes: rNodes, roster, now, scopeAreaId: null });
+assert.equal(rs.pulse.notYet, 1);
+assert.deepEqual(rs.pulse.free.flatMap((g) => g.items.map((i) => i.id)), ['r2']);
+
 console.log('snapshot.test.mjs OK');

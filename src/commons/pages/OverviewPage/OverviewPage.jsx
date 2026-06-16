@@ -104,6 +104,13 @@ export function OverviewPage() {
           onTakeParent={(id, title) => setCascade({ id, title })}
         />
 
+        {s.pulse.notYet > 0 && (
+          <button type="button" className="commons-laterLine"
+                  onClick={() => navigate(`/commons/${workspaceSlug}/day/${todayOpDayStr()}`)}>
+            {t.laterCount.replace('{n}', s.pulse.notYet)}
+          </button>
+        )}
+
         <RecentStrip recent={s.recent} closed={s.closedToday} t={t} locale={locale} />
         <WeekStrip week={s.week} label={t.week} locale={locale}
                    onPick={(date) => navigate(`/commons/${workspaceSlug}/day/${date}`)} />
