@@ -117,34 +117,39 @@ choice decides every future day.)
 When a node has no description, **omit the description block entirely** (no "אין תיאור" placeholder).
 Applies anywhere the description is empty — surfaced by the occurrence view but not occurrence-only.
 
-## 8. Whole-day cancel → two clear choices
+## 8. Defer / skip — one per-item menu, with a conditional "דחה למחר"
 
-Replace the single **בטל את היום** action (and its bare confirm dialog) on a run root with a small
-branded sheet — the same pattern as the per-item defer menu, lifted to the day level — offering two
-choices, each with the snapshot's credit emoji (`docs/commons-standards.md` §6; emoji decorative /
-`aria-hidden`, the text label carries the meaning per IS 5568):
+Unify the two existing controls — the per-item **דחה / דלג** menu and the run-root **בטל את היום** —
+into **one** defer/skip menu shown on **any** run item a manager can act on (leaf, parent, *or* the run
+root): `isRun && canManage && status ∈ {open, in_progress}`. Each option carries the snapshot credit
+emoji (`docs/commons-standards.md` §6; emoji decorative / `aria-hidden`, the Hebrew label carries the
+meaning per IS 5568):
 
-```
-לבטל את היום?
-[ 🙆  דחה למחר ]
-[ 🤷  לא צריך הפעם ]
-```
+- **🤷 לא צריך הפעם** — **always present** → `cancelRun(item.id)`. `cancel_run` cascades the item's
+  subtree to `cancelled`, so it is correct for a leaf, a parent branch, **and** the whole-day root
+  alike. It replaces both the old root-only `בטל את היום` *and* the old leaf `defer_occurrence(null)`
+  skip — one primitive for "not needed", at any level.
+- **🙆 דחה למחר** — present **only** when the item does **not** already recur tomorrow **and** it is a
+  **leaf** (a single occurrence `defer_occurrence` can cleanly respawn) → `deferOccurrence(item.id,
+  tomorrowStr())`.
+  - *Recurs tomorrow* = tomorrow's op-day weekday ∈ the item's definition effective days
+    (`effectiveDaysFor(nodes, item.template_id)`). A **daily** item always recurs tomorrow → **no defer
+    button** (it returns on its own; nothing to defer). This is the user's corollary.
+  - Non-leaf items (a parent, or the run root) never show defer: `defer_occurrence` cannot cascade a
+    subtree, and the only case it would otherwise arise (a non-daily parent on an off-day) needs a
+    backend `defer_run` — deferred to a future change (§14).
+- **📅 דחה לתאריך אחר…** — kept for **leaf** items (existing functionality) →
+  `deferOccurrence(item.id, chosenDate)`.
 
-- **🙆 דחה למחר** → `deferOccurrence(runRoot.id, tomorrowStr())` — defer the whole day to tomorrow's
-  op-day. Same call the per-item menu already uses, applied to the run root (the routine spec §4.1
-  scopes defer/skip to "run item/**root**").
-- **🤷 לא צריך הפעם** → `deferOccurrence(runRoot.id, null)` — skip today, no respawn; a deliberate
-  "not needed today", distinct from `missed`.
-- Backdrop = cancel.
+Backdrop = cancel. **No backend change** — `cancel_run` and `defer_occurrence` are used strictly within
+their proven scope (cascade-cancel any subtree; single-occurrence respawn for a leaf). The separate
+`cancelDay` / `confirmCancel` path is removed; a daily routine's run root simply shows the one
+meaningful action (🤷 לא צריך הפעם) in the unified menu.
 
-This unifies the day-level action with the per-item defer menu (one code path, `deferOccurrence`).
-`cancelRun` is superseded for this surface; the implementation plan verifies the defer RPC treats a
-run-root id the same as `cancelRun` did before retiring it.
-
-**Retone the cancellation indication.** Replace the stark `--commons-danger` on the skip/cancel
-affordance with a new warm **reddish-orange** token `--commons-cancel` (orange-red, e.g. ~`#d9663a`,
-verified ≥ 4.5:1 against the surface for any text use) — reads as "called off", not "error/danger".
-Hard-danger red stays reserved for true destructive delete.
+**Retone the cancellation indication.** Replace the stark `--commons-danger` on the skip affordance
+with a new warm **reddish-orange** token `--commons-cancel` (orange-red, ~`#ff8a4d`, verified ≥ 4.5:1
+against the surface for any text use) — reads as "called off", not "error/danger". Hard-danger red
+stays reserved for true destructive delete.
 
 ## 9. "Has a note" marker — circled-i, not `!`
 
@@ -175,16 +180,18 @@ no longer sits flush against "בטל".
   "לא משויך" placeholder/first option on the owner picker (form) and the open-state owner label (view).
 - Base settings line: `view.settingsDays` ("ימים"), `view.settingsUntil` (reuse `recurrence.until` /
   "עד"), `view.everyDay` ("כל יום") — reuse existing recurrence day labels (`rc.dayShort`).
-- Day-cancel sheet: reuse `view.deferTomorrow` ("דחה למחר") and `view.deferSkip` ("לא צריך הפעם");
-  new `view.cancelDayQ` ("לבטל את היום?"). Emoji are literals in the component, not content.
+- Defer/skip menu: reuse `view.deferTitle` ("דחה / דלג"), `view.deferTomorrow` ("דחה למחר"),
+  `view.deferDate` ("דחה לתאריך אחר…"), `view.deferSkip` ("לא צריך הפעם"). The old `view.cancelDay` /
+  `cancelDayTitle` / `cancelDayBody` keys fall out of use (leave them in content; no new key needed).
+  Emoji are literals in the component, not content.
 - Note marker keeps `view.hasNote`.
 
 ## 13. Affected files
 
 - `src/commons/tasks/TaskViewPage.jsx` — base detection (`underRoutine`), hide status on base + frame
   the owner as the assignment choice ("מי שיכול לוקח" when open, no per-day claim), settings line,
-  row `עד שעה` everywhere, empty-description omission, day-cancel sheet, `IconInfo` marker, doc-box
-  separation.
+  row `עד שעה` everywhere, empty-description omission, unified per-item defer/skip menu (conditional
+  "דחה למחר"), `IconInfo` marker, doc-box separation.
 - `src/commons/tasks/TaskFormPage.jsx` — reframe the owner picker's open option as "מי שיכול לוקח";
   seed שיוך + skills + עד שעה from parent on detailed-add; use `inheritedSubDefaults` for quick-add.
 - `src/commons/commonsState/useWorkspaceTree.js` — `addNode` accepts `ownerId` + `roleIds` (passes to
@@ -202,6 +209,9 @@ no longer sits flush against "בטל".
 ## 14. Out of scope
 
 - Re-syncing today's run after a series edit ("apply to today too", routines spec §4.3).
+- A backend `defer_run` RPC (cascade-defer a whole run/parent + regenerate it on a chosen off-schedule
+  day). Until it exists, "דחה למחר" is offered only on leaf items that don't already recur tomorrow
+  (§8); parents and the run root get "לא צריך הפעם" only.
 - Replacing `DocumentationBox`'s `window.prompt` link entry (a pre-existing standards §2.2 violation —
   tracked separately, not part of this change).
 - Any schema / RLS / generation change. Run generation already inherits the routine root's owner
