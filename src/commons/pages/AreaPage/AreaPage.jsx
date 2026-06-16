@@ -142,40 +142,51 @@ export function AreaPage() {
   const open = (id) => navigate(`/commons/${workspaceSlug}/task/${id}`);
   const goNew = () => navigate(`/commons/${workspaceSlug}/task/new${isRoot ? '' : `?parent=${containerId}`}`);
 
-  // a routine's today-run row (progress + open) — plain render helper (not a component)
-  const renderRunRow = (r, withDate) => {
-    const p = tree.progress(r.id);
+  // Uniform band row: [checkbox/circle] · name · [done/total for parents] · [time-or-date chip].
+  // A leaf toggles done inline; a parent (a run, or a task with sub-items) opens to complete there.
+  const timeChip = (n) => {
+    if (!n.due_date) return null;
+    const overdue = (n.status === 'open' || n.status === 'in_progress') && isOverdue(n.due_date);
     return (
-      <motion.li key={r.id} className="commons-bandRow" variants={rowV}>
-        <span className="commons-chip commons-chip--progress">{p.done}/{p.total}</span>
-        <button type="button" className="commons-bandRow__title" onClick={() => open(r.id)}>
-          {r.title}
-          {withDate && <span className="commons-bandRow__meta">{dayLabel(r.occurrence_date, locale)}</span>}
-        </button>
-      </motion.li>
+      <span className={overdue ? 'commons-chip commons-chip--due' : 'commons-chip'}>
+        {rc.until} {isToday(n.due_date) ? timeOf(n.due_date, locale) : dayMonth(n.due_date, locale)}
+      </span>
     );
   };
-  // a one-off dated task row (checkbox + open)
-  const renderOffRow = (t) => {
-    const done = t.status === 'done';
-    const overdue = (t.status === 'open' || t.status === 'in_progress') && isOverdue(t.due_date);
+  const dateChip = (ds) => <span className="commons-chip">{dayLabel(ds, locale)}</span>;
+
+  const bandRow = (n, trailing) => {
+    const kids = tree.hasChildren(n.id);
+    const p = kids ? tree.progress(n.id) : null;
+    const done = kids ? (p.total > 0 && p.done === p.total) : n.status === 'done';
+    const missed = n.status === 'missed';
     return (
-      <motion.li key={t.id} className="commons-bandRow" variants={rowV}>
-        <button type="button" className={done ? 'commons-check is-on' : 'commons-check'} role="checkbox"
-          aria-checked={done} aria-label={shell.tasks.toggleDoneAria} onClick={() => tree.toggleDone(t)}>
-          {done && <IconCheck size={14} />}
-        </button>
-        <button type="button" className={done ? 'commons-bandRow__title is-done' : 'commons-bandRow__title'} onClick={() => open(t.id)}>
-          {t.title}
-        </button>
-        {t.due_date && (
-          <span className={overdue ? 'commons-chip commons-chip--due' : 'commons-chip'}>
-            {rc.until} {isToday(t.due_date) ? timeOf(t.due_date, locale) : dayMonth(t.due_date, locale)}
-          </span>
+      <motion.li key={n.id} className="commons-bandRow" variants={rowV}>
+        {kids ? (
+          <button type="button" className={done ? 'commons-check is-on' : 'commons-check'}
+            aria-label={shell.tasks.openTaskAria} onClick={() => open(n.id)}>
+            {done && <IconCheck size={14} />}
+          </button>
+        ) : (
+          <button type="button" className={`commons-check${done ? ' is-on' : ''}${missed ? ' commons-check--missed' : ''}`}
+            role="checkbox" aria-checked={done} aria-label={shell.tasks.toggleDoneAria} onClick={() => tree.toggleDone(n)}>
+            {done && <IconCheck size={14} />}
+          </button>
         )}
+        <button type="button" className={`commons-bandRow__title${done && !kids ? ' is-done' : ''}`} onClick={() => open(n.id)}>{n.title}</button>
+        {kids && <span className="commons-chip commons-chip--progress">{p.done}/{p.total}</span>}
+        {trailing}
       </motion.li>
     );
   };
+  // Future preview (next occurrence, not yet materialized): leading empty circle · name · date.
+  const previewRow = (e) => (
+    <motion.li key={e.id} className="commons-bandRow" variants={rowV}>
+      <span className="commons-check" aria-hidden="true" />
+      <button type="button" className="commons-bandRow__title" onClick={() => open(e.openId)}>{e.title}</button>
+      {dateChip(e.date)}
+    </motion.li>
+  );
 
   const renderBand = (label, empty, isEmpty, rows) => (
     <section className="commons-band">
@@ -201,11 +212,11 @@ export function AreaPage() {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ type: 'spring', stiffness: 140, damping: 20 }}>
           {renderBand(v.bandToday, v.bandTodayEmpty,
             bands.todayRuns.length === 0 && bands.todayOff.length === 0,
-            [...bands.todayRuns.map(r => renderRunRow(r, false)), ...bands.todayOff.map(renderOffRow)])}
+            [...bands.todayRuns.map(r => bandRow(r, timeChip(r))), ...bands.todayOff.map(t => bandRow(t, timeChip(t)))])}
 
           {renderBand(v.bandPast, v.noPast,
             bands.pastRuns.length === 0 && bands.pastOff.length === 0,
-            [...bands.pastRuns.map(r => renderRunRow(r, true)), ...bands.pastOff.map(renderOffRow)])}
+            [...bands.pastRuns.map(r => bandRow(r, dateChip(r.occurrence_date))), ...bands.pastOff.map(t => bandRow(t, timeChip(t)))])}
 
           <section className="commons-band">
             <h2 className="commons-band__label">{v.bandFuture}</h2>
@@ -213,13 +224,7 @@ export function AreaPage() {
               <p className="commons-band__empty">{v.noFuture}</p>
             ) : (
               <motion.ul className="commons-band__list" variants={listV} initial="hidden" animate="show">
-                {futureRows.map(e => (e.kind === 'routine' ? (
-                  <motion.li key={e.id} className="commons-bandRow" variants={rowV}>
-                    <span className="commons-check" aria-hidden="true" />
-                    <button type="button" className="commons-bandRow__title" onClick={() => open(e.openId)}>{e.title}</button>
-                    <span className="commons-chip">{dayLabel(e.date, locale)}</span>
-                  </motion.li>
-                ) : renderOffRow(e.node)))}
+                {futureRows.map(e => (e.kind === 'routine' ? previewRow(e) : bandRow(e.node, dateChip(e.date))))}
               </motion.ul>
             )}
           </section>
