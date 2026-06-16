@@ -9,18 +9,18 @@ assert.equal(SPECTRUM[5], '#9a6bff');
 // fraction clamps to [0,1]
 assert.equal(spectrumHex(-1), SPECTRUM[0]);
 assert.equal(spectrumHex(2), SPECTRUM[5]);
-// 0 → red, 1 → purple, 0.5 → a middle band (green-ish, index 2 or 3)
 assert.equal(spectrumHex(0), '#ff5a5a');
 assert.equal(spectrumHex(1), '#9a6bff');
+assert.equal(spectrumHex(0.76), '#46c0ff'); // blue band at 76%
 
-// partial conic: filled portion ends at the fraction, rest transparent
+// partial: a SOLID hue fills up to the fraction, the rest transparent
 const partial = spectrumConic(0.76);
-assert.ok(partial.includes('transparent 76%'), 'partial ends in transparent at the fraction');
 assert.ok(partial.startsWith('conic-gradient('));
+assert.ok(partial.includes('#46c0ff 0 76%'), 'solid hue fills up to the fraction');
+assert.ok(partial.includes('transparent 76%'), 'rest is transparent');
 
-// full conic: closes the wheel through magenta back to red, no transparent
-const full = spectrumConic(1);
-assert.ok(full.includes('#e85ac0'), 'full ring bridges through magenta');
-assert.ok(!full.includes('transparent'), 'full ring has no gap');
+// full: solid purple, no gap, no transparent
+assert.equal(spectrumConic(1), 'conic-gradient(#9a6bff 0 100%)');
+assert.ok(!spectrumConic(1).includes('transparent'));
 
 console.log('spectrum.test.mjs OK');

@@ -1,7 +1,7 @@
 // src/commons/pages/OverviewPage/RecentStrip.jsx
-// "לאחרונה": a short, happy credit log of recent completions (props, never ranking). Emoji are
-// decorative; the words carry the meaning. At 100% a celebration banner sits on top. "כל היומן ←"
-// links to the full feed (deferred — onFullLog is optional).
+// "לאחרונה": a short, happy credit log of recent completions (props, never ranking). The heading sits
+// OUTSIDE the list block, unified with the other section headings. Avatar is neutral (its colour means
+// nothing). Emoji are decorative; the words carry the meaning. "כל היומן ←" links to the full feed.
 
 function relTime(iso, locale) {
   try {
@@ -26,10 +26,10 @@ export function RecentStrip({ recent, closed, t, locale, onFullLog }) {
         </div>
       )}
       {recent.length > 0 && (
-        <section className="commons-recent">
-          <div className="commons-recent__head">
-            <span className="commons-recent__label">{t.recent}</span>
-            {onFullLog && <button type="button" className="commons-recent__more" onClick={onFullLog}>{t.fullLog}</button>}
+        <section className="commons-snapSection">
+          <div className="commons-snapH commons-snapH--row">
+            <span>{t.recent}</span>
+            {onFullLog && <button type="button" className="commons-snapH__link" onClick={onFullLog}>{t.fullLog}</button>}
           </div>
           <ul className="commons-recent__list">
             {recent.map((e) => (

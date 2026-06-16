@@ -34,12 +34,19 @@ export const commonsShellContent = {
     week: 'השבוע',
     listToggle: 'רשימה',
     empty: 'עוד אין מה להציג כאן.',
-    // actions (reuse occurrence ops)
-    claim: 'עליי 🙌',
-    didHappen: 'זה כן קרה 🫢',
-    deferTomorrow: 'דחה למחר 🙆',
-    deferDate: 'תאריך אחר 📅',
-    skip: 'לא צריך 🤷',
+    // actions (reuse occurrence ops) — label + separate decorative emoji (renders on its own line)
+    claim: 'עליי', claimE: '🙌',
+    didHappen: 'זה כן קרה', didHappenE: '🫢',
+    deferTomorrow: 'דחה למחר', deferTomorrowE: '🙆',
+    deferDate: 'תאריך אחר', deferDateE: '📅',
+    skip: 'לא צריך', skipE: '🤷',
+    // open / stuck row meta + full-list words
+    until: 'עד',
+    since: 'מאז ',
+    sincePrev: 'מיום קודם',
+    by: 'ע״י',
+    listDone: 'בוצע',
+    listOpen: 'פתוח',
     // credit-line flavour (emoji decorative; meaning in the words)
     creditOnTime: 'בזמן, אלוף 😇',
     creditSmooth: 'חלק כרגיל 😎',

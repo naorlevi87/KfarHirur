@@ -1,19 +1,25 @@
 /* src/commons/pages/OverviewPage/overview.css */
 /* "מה קורה היום?" snapshot — spectrum ring, invitation sections, credit log, rainbow week. Mobile-first. */
 
-.commons-snapshot { position: relative; min-height: 60dvh; padding-bottom: 24px; }
+.commons-snapshot { position: relative; min-height: 60dvh; padding-bottom: 96px; } /* buffer so content clears the FAB */
 
 /* header / living line */
 .commons-snapHeader { margin-bottom: 12px; }
 .commons-snapHeader__kicker { font-size: 13px; color: var(--commons-accent); letter-spacing: .03em; margin-bottom: 6px; }
 .commons-snapHeader__line {
-  width: 100%; display: flex; align-items: center; gap: 8px; text-align: start; font: inherit;
+  width: 100%; display: flex; align-items: center; gap: 10px; text-align: start; font: inherit;
   color: var(--commons-text); cursor: pointer; background: var(--commons-surface);
   border: 1px solid var(--commons-border); border-radius: 12px; padding: 11px 12px; font-size: 16px;
 }
 .commons-snapHeader__line:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
 .commons-snapHeader__line > span:first-child { flex: 1; }
-.commons-snapHeader__chev { color: var(--commons-accent); }
+.commons-snapHeader__chev { color: var(--commons-accent); flex: none; }
+
+/* unified section heading — purple, bold, used by EVERY block on the page */
+.commons-snapH { font-size: 13px; font-weight: 800; color: var(--commons-spectrum-6); margin: 0 0 8px; letter-spacing: -.01em; }
+.commons-snapH--row { display: flex; align-items: center; justify-content: space-between; }
+.commons-snapH__link { font: inherit; font-size: 12px; font-weight: 600; color: var(--commons-accent); background: none; border: 0; cursor: pointer; }
+.commons-snapH__link:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
 
 /* area lens */
 .commons-lens { display: flex; gap: 7px; overflow-x: auto; padding: 2px 0 14px; scrollbar-width: none; }
@@ -43,9 +49,8 @@
 .commons-ring__count { font-size: 18px; font-weight: 700; color: var(--commons-text); margin-top: 4px; font-variant-numeric: tabular-nums; }
 
 /* sections */
-.commons-snapSection { margin-top: 14px; }
-.commons-snapSection__label { font-size: 12px; color: var(--commons-text-dim); font-weight: 700; margin-bottom: 8px; }
-.commons-snapSection.is-free .commons-snapSection__label { color: var(--commons-accent); }
+.commons-snapSection { margin-top: 18px; }
+.commons-snapSection.is-free { scroll-margin-top: 96px; } /* clear the sticky shell header when the living line jumps here */
 .commons-snapSection__list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
 .commons-snapRow {
   display: flex; align-items: center; gap: 9px; background: var(--commons-surface);
@@ -55,50 +60,64 @@
 .commons-snapRow__head { display: flex; align-items: center; gap: 9px; }
 .commons-snapRow__title { flex: 1; text-align: start; font: inherit; font-size: 14px; color: var(--commons-text); background: none; border: 0; cursor: pointer; padding: 0; }
 .commons-snapRow__title:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
-.commons-snapRow__meta { font-size: 12px; color: var(--commons-spectrum-3); flex: none; }
+.commons-snapRow__meta { font-size: 12px; color: var(--commons-text-dim); flex: none; }
 .commons-snapRow__actions { display: flex; gap: 7px; }
 .commons-snapDot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
-.commons-snapDot.is-soon { background: var(--commons-spectrum-3); }
 .commons-snapDot.is-free { background: transparent; border: 2px dashed var(--commons-accent); }
 .commons-snapDot.is-stuck { background: var(--commons-spectrum-2); }
+
+/* "עד <time>" chip on open rows, with urgency tiers */
+.commons-untilChip { flex: none; font-size: 11px; color: var(--commons-text-dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.commons-untilChip.is-soon { color: var(--commons-spectrum-3); font-weight: 700; }                 /* ≤ 2h */
+.commons-untilChip.is-last { color: var(--commons-danger); font-weight: 800; }                       /* ≤ 1h — last hour */
+
+/* action buttons — label on top, decorative emoji on its own line (uniform across all) */
 .commons-snapBtn {
-  flex: 1; font: inherit; font-size: 12.5px; cursor: pointer; border-radius: 9px; padding: 7px 6px;
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  font: inherit; font-size: 12px; cursor: pointer; border-radius: 9px; padding: 6px 5px;
   background: var(--commons-surface-2); border: 1px solid var(--commons-border); color: var(--commons-text);
 }
+.commons-snapBtn__lbl { line-height: 1.1; }
+.commons-snapBtn__e { font-size: 15px; line-height: 1; }
 .commons-snapBtn.is-claim { color: var(--commons-spectrum-4); }
 .commons-snapBtn:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
+/* free-row claim button is single, sits inline — keep it compact */
+.commons-snapRow:not(.is-stuck) .commons-snapBtn { flex: none; min-width: 64px; }
 
 /* recent / closed */
-.commons-closed { text-align: center; background: var(--commons-surface); border: 1px solid var(--commons-border); border-radius: 14px; padding: 14px; margin-top: 16px; }
+.commons-closed { text-align: center; background: var(--commons-surface); border: 1px solid var(--commons-border); border-radius: 14px; padding: 14px; margin-top: 18px; }
 .commons-closed__emoji { font-size: 26px; }
 .commons-closed__title { font-size: 15px; margin-top: 4px; }
 .commons-closed__body { font-size: 12px; color: var(--commons-text-dim); margin-top: 2px; }
-.commons-recent { margin-top: 16px; background: var(--commons-surface); border: 1px solid var(--commons-border); border-radius: 14px; padding: 11px 12px; }
-.commons-recent__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-.commons-recent__label { font-size: 12px; color: var(--commons-text-dim); }
-.commons-recent__more { font: inherit; font-size: 12px; color: var(--commons-accent); background: none; border: 0; cursor: pointer; }
 .commons-recent__list { list-style: none; }
-.commons-recent__item { display: flex; align-items: center; gap: 9px; padding: 6px 0; border-top: 1px solid var(--commons-border); }
+.commons-recent__item { display: flex; align-items: center; gap: 9px; padding: 7px 0; border-top: 1px solid var(--commons-border); }
 .commons-recent__item:first-child { border-top: 0; }
-.commons-recent__avatar { width: 24px; height: 24px; border-radius: 50%; background: var(--commons-spectrum-4); color: #06281b; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex: none; }
+.commons-recent__avatar { width: 24px; height: 24px; border-radius: 50%; background: var(--commons-surface-2); color: var(--commons-text); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex: none; }
 .commons-recent__text { flex: 1; min-width: 0; font-size: 13px; }
 .commons-recent__flavour { color: var(--commons-text-dim); font-size: 11px; }
 .commons-recent__time { font-size: 11px; color: var(--commons-text-dim); flex: none; }
 
 /* week */
-.commons-week { display: flex; align-items: center; justify-content: space-between; padding: 16px 4px 2px; }
-.commons-week__label { font-size: 11px; color: var(--commons-text-dim); }
+.commons-week { display: flex; align-items: center; justify-content: space-between; margin-top: 20px; padding: 0 2px; }
 .commons-week__dots { display: flex; gap: 8px; }
 .commons-week__dot { width: 18px; height: 18px; border-radius: 50%; }
 .commons-week__dot.is-today { width: 20px; height: 20px; box-shadow: 0 0 0 2px var(--commons-surface-2); }
 
-/* accessible list — hidden until toggled */
-.commons-snapList { margin-top: 6px; }
+/* full list ("רשימה") — done + open, hidden until toggled (also the a11y linear layer) */
+.commons-snapList { margin-top: 10px; }
 .commons-snapList__toggle { font: inherit; font-size: 12px; color: var(--commons-text-dim); background: none; border: 0; cursor: pointer; text-decoration: underline; }
 .commons-snapList__toggle:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
 .commons-snapList__ul { list-style: none; position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 .commons-snapList.is-visible .commons-snapList__ul { position: static; width: auto; height: auto; clip: auto; display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
-.commons-snapList.is-visible .commons-snapList__ul button { font: inherit; font-size: 13px; color: var(--commons-text); background: var(--commons-surface); border: 1px solid var(--commons-border); border-radius: 10px; padding: 9px 12px; width: 100%; text-align: start; cursor: pointer; }
+.commons-snapList.is-visible .commons-snapList__ul button {
+  display: flex; align-items: center; gap: 9px; width: 100%; text-align: start; font: inherit; font-size: 13px;
+  color: var(--commons-text); background: var(--commons-surface); border: 1px solid var(--commons-border);
+  border-radius: 10px; padding: 9px 12px; cursor: pointer;
+}
+.commons-snapList__mark { flex: none; color: var(--commons-text-dim); }
+.commons-snapList__mark.is-done { color: var(--commons-spectrum-4); }
+.commons-snapList__title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.commons-snapList__meta { flex: none; font-size: 11px; color: var(--commons-text-dim); }
 
 .commons-snapshot__empty { color: var(--commons-text-dim); text-align: center; margin-top: 40px; }
 

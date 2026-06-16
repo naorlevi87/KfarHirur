@@ -22,6 +22,16 @@ import { RecentStrip } from './RecentStrip.jsx';
 import { WeekStrip } from './WeekStrip.jsx';
 import { SnapshotList } from './SnapshotList.jsx';
 
+// Bold down-chevron for the living line (taps to jump to the open items).
+function ChevDown() {
+  return (
+    <svg className="commons-snapHeader__chev" width="24" height="24" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M6 9l6 6 6-6" />
+    </svg>
+  );
+}
+
 export function OverviewPage() {
   const { locale } = useAppContext();
   const { workspace, permissionLevel } = useWorkspace();
@@ -56,8 +66,6 @@ export function OverviewPage() {
 
   const open = (id) => navigate(`/commons/${workspaceSlug}/task/${id}`);
   const line = buildLine(t, s);
-  const allLeaves = [...s.approaching, ...s.free, ...s.stuck];
-  const statusLabel = (n) => (n.status === 'done' ? t.center : (n.status === 'missed' ? t.stuck : t.free));
 
   return (
     <section className="commons-snapshot">
@@ -65,7 +73,7 @@ export function OverviewPage() {
         <div className="commons-snapHeader__kicker">{t.heading}</div>
         <button type="button" className="commons-snapHeader__line"
                 onClick={() => freeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
-          <span>{line}</span><span aria-hidden="true" className="commons-snapHeader__chev">↓</span>
+          <span>{line}</span><ChevDown />
         </button>
       </header>
 
@@ -76,10 +84,10 @@ export function OverviewPage() {
         <SnapshotRing fraction={s.progress.fraction} done={s.progress.doneLeaves}
                       total={s.progress.totalLeaves} centerLabel={t.center} countOf={t.countOf} />
 
-        <SnapshotList items={allLeaves} statusLabel={statusLabel} toggleLabel={t.listToggle} onOpen={open} />
+        <SnapshotList items={s.list} t={t} locale={locale} onOpen={open} />
 
         <SnapshotSections
-          s={s} t={t} canManage={canManage} onOpen={open} anchorRef={freeRef}
+          s={s} t={t} locale={locale} canManage={canManage} onOpen={open} anchorRef={freeRef}
           onClaim={(id) => tree.claim(id)}
           onResolve={(id) => tree.resolveMissed(id, null)}
           onDefer={(id) => { const d = nextOpDayStr(); tree.deferOccurrence(id, d); }}

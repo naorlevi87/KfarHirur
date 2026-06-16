@@ -33,12 +33,19 @@ export const commonsShellContent = {
     week: 'This week',
     listToggle: 'List',
     empty: 'Nothing to show here yet.',
-    // actions (reuse occurrence ops)
-    claim: 'On me 🙌',
-    didHappen: 'It did happen 🫢',
-    deferTomorrow: 'Push to tomorrow 🙆',
-    deferDate: 'Another day 📅',
-    skip: 'Not needed 🤷',
+    // actions (reuse occurrence ops) — label + separate decorative emoji (renders on its own line)
+    claim: 'On me', claimE: '🙌',
+    didHappen: 'It did happen', didHappenE: '🫢',
+    deferTomorrow: 'To tomorrow', deferTomorrowE: '🙆',
+    deferDate: 'Another day', deferDateE: '📅',
+    skip: 'Not needed', skipE: '🤷',
+    // open / stuck row meta + full-list words
+    until: 'by',
+    since: 'since ',
+    sincePrev: 'from a previous day',
+    by: 'by',
+    listDone: 'done',
+    listOpen: 'open',
     // credit-line flavour (emoji decorative; meaning in the words)
     creditOnTime: 'On time, champ 😇',
     creditSmooth: 'Smooth as ever 😎',

@@ -63,8 +63,7 @@ export function buildSnapshot({ nodes, roster, now = new Date(), scopeAreaId = n
       if (n.recurrence) continue;                                // routine root
       if (hasRecurringAncestor(n)) continue;                     // routine definition item
       if (taskChildren(n.id, false).length) continue;            // parent, not a leaf
-      // actionable today: no future start_date
-      if (n.start_date && n.start_date > todayStr && n.status !== 'done') continue;
+      if (n.start_date && n.start_date > todayStr && n.status !== 'done') continue; // future start
     }
     if (!inScope(n)) continue;
     leaves.push(n);
@@ -80,31 +79,47 @@ export function buildSnapshot({ nodes, roster, now = new Date(), scopeAreaId = n
     return null;
   };
 
-  const APPROACH_MS = 90 * 60 * 1000;
-  const approaching = [];
+  // free = open + unclaimed (carries due ISO + minsLeft for the "עד" chip + urgency tiers).
+  // stuck = overdue (past its time today) or missed (past op-day) — carries overdueMins for "waiting since".
   const free = [];
   const stuck = [];
   for (const n of leaves) {
+    if (n.status === 'done') continue;
     if (!isOpen(n) && n.status !== 'missed') continue;
     const due = dueAt(n);
     const overdue = (isOpen(n) && due && due.getTime() < now.getTime()) || n.status === 'missed';
-    if (overdue) { stuck.push(n); continue; }
-    if (isOpen(n) && !effectiveOwner(n)) free.push(n);
-    if (isOpen(n) && due && due.getTime() - now.getTime() <= APPROACH_MS) {
-      approaching.push({ ...n, minsLeft: Math.max(0, Math.round((due.getTime() - now.getTime()) / 60000)) });
+    if (overdue) {
+      stuck.push({ ...n, due: due ? due.toISOString() : null,
+        overdueMins: due ? Math.max(0, Math.round((now.getTime() - due.getTime()) / 60000)) : null });
+      continue;
+    }
+    if (isOpen(n) && !effectiveOwner(n)) {
+      free.push({ ...n, due: due ? due.toISOString() : null,
+        minsLeft: due ? Math.round((due.getTime() - now.getTime()) / 60000) : null });
     }
   }
+
+  // Full list (the "רשימה"): every leaf, done + open, with status / due / who. Not-done first, done last.
+  const nameOf = (id) => rosterById.get(id)?.name ?? null;
+  const list = leaves
+    .map((n) => {
+      const due = dueAt(n);
+      return {
+        id: n.id, title: n.title, status: n.status,
+        due: due ? due.toISOString() : null,
+        doer: n.status === 'done' ? nameOf(n.completed_by) : null,
+        late: Boolean(n.completed_late),
+      };
+    })
+    .sort((a, b) => (a.status === 'done' ? 1 : 0) - (b.status === 'done' ? 1 : 0));
 
   const recent = nodes
     .filter((n) => n.kind === 'task' && n.status === 'done' && n.completed_at && inScope(n))
     .sort((a, b) => new Date(b.completed_at) - new Date(a.completed_at))
     .slice(0, 4)
     .map((n) => ({
-      id: n.id,
-      title: n.title,
-      at: n.completed_at,
-      late: Boolean(n.completed_late),
-      doer: rosterById.get(n.completed_by)?.name ?? null,
+      id: n.id, title: n.title, at: n.completed_at,
+      late: Boolean(n.completed_late), doer: nameOf(n.completed_by),
     }));
 
   // 7-day week: completion fraction per op-day (instance leaves dated that day).
@@ -120,7 +135,7 @@ export function buildSnapshot({ nodes, roster, now = new Date(), scopeAreaId = n
 
   return {
     progress: { doneLeaves, totalLeaves, fraction },
-    approaching, free, stuck, recent, week,
+    free, stuck, recent, week, list,
     closedToday: totalLeaves > 0 && doneLeaves === totalLeaves,
   };
 }
