@@ -15,6 +15,15 @@
   --commons-danger:    #ff6b6b;
   --commons-border:    #2a2e3a;
   --commons-radius:    12px;
+  /* Progress spectrum (keep in sync with src/commons/styles/spectrum.js) */
+  --commons-spectrum-1: #ff5a5a; /* red    — just starting */
+  --commons-spectrum-2: #ff9a3d; /* orange */
+  --commons-spectrum-3: #ffce4d; /* yellow */
+  --commons-spectrum-4: #5cd66e; /* green  */
+  --commons-spectrum-5: #46c0ff; /* blue   */
+  --commons-spectrum-6: #9a6bff; /* purple — closed */
+  --commons-spectrum-bridge: #e85ac0; /* magenta — closes the wheel */
+  --commons-ring-track: #14161f;
 }
 
 .commons-root {
