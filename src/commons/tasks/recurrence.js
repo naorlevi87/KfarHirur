@@ -15,6 +15,21 @@ export function routineDays(rule) {
   return ALL_DAYS;
 }
 
+// The next op-day this routine runs on, strictly after `fromOpDay` and within `withinDays`, or null if
+// none in the window. Drives the "מה יהיה" preview — derived from the schedule, so the next occurrence
+// shows even before its run is generated. Weekday-accurate for daily / weekly-on-days (interval 1); an
+// every-N interval is treated as every matching weekday (close enough for a short look-ahead).
+export function nextOccurrenceWithin(rule, fromOpDay, withinDays = 3) {
+  if (!rule) return null;
+  const days = routineDays(rule);
+  const d = new Date(fromOpDay);
+  for (let i = 0; i < withinDays; i++) {
+    d.setDate(d.getDate() + 1);
+    if (days.includes(d.getDay())) return new Date(d);
+  }
+  return null;
+}
+
 // Weekdays a node participates on: the routine root's days intersected with every day_mask up the
 // chain (mirror of SQL commons.effective_days). `nodes` is the flat node list; returns all 7 if the
 // node is not under a routine. Used by the editor to constrain a child's day picker to its parent's days.

@@ -20,6 +20,7 @@ import { TaskTree } from '../../tasks/TaskTree.jsx';
 import { Fab } from '../../Fab.jsx';
 import { IconChevronStart, IconCheck } from '../../icons.jsx';
 import { currentOpDayStart, isToday, isOverdue } from '../../opDay.js';
+import { nextOccurrenceWithin } from '../../tasks/recurrence.js';
 
 function dateStr(d) {
   const x = new Date(d);
@@ -112,23 +113,31 @@ export function AreaPage() {
     const futureOff = oneOffs.filter(t => t.status !== 'done' && startsFuture(t));
     const pastOff = oneOffs.filter(t => t.status === 'done');
 
-    return { todayRuns, pastRuns, futureRuns, todayOff, pastOff, futureOff };
+    // Routines living in this area (definitions with a recurrence) — drive the "מה יהיה" preview.
+    const routines = [...inArea].map(id => tree.nodes.find(n => n.id === id)).filter(n => n && n.recurrence);
+
+    return { todayRuns, pastRuns, futureRuns, todayOff, pastOff, futureOff, routines };
   }, [tree.byParent, tree.nodes, containerId]);
 
-  // מה יהיה, grouped by date. A recurring routine contributes only its FIRST upcoming run.
-  const futureByDate = useMemo(() => {
-    const firstRunPerRoutine = new Map();
-    for (const r of bands.futureRuns) {
-      const cur = firstRunPerRoutine.get(r.template_id);
-      if (!cur || r.occurrence_date < cur.occurrence_date) firstRunPerRoutine.set(r.template_id, r);
-    }
+  // מה יהיה: each routine's NEXT occurrence, only within the next 3 days, top-level (no sub-tasks).
+  // Derived from the schedule so it shows even before the run is generated; if the run is already
+  // materialized for that day, the row opens it (editable), otherwise it opens the routine.
+  const futureRows = useMemo(() => {
+    const opDay = currentOpDayStart();
+    const maxStr = dateStr(new Date(opDay.getFullYear(), opDay.getMonth(), opDay.getDate() + 3));
     const entries = [];
-    for (const r of firstRunPerRoutine.values()) entries.push({ date: r.occurrence_date, kind: 'run', node: r });
-    for (const t of bands.futureOff) entries.push({ date: t.start_date, kind: 'off', node: t });
-    const byDate = new Map();
-    for (const e of entries) { if (!byDate.has(e.date)) byDate.set(e.date, []); byDate.get(e.date).push(e); }
-    return [...byDate.entries()].sort((a, b) => a[0].localeCompare(b[0]));
-  }, [bands.futureRuns, bands.futureOff]);
+    for (const r of bands.routines) {
+      const next = nextOccurrenceWithin(r.recurrence, opDay, 3);
+      if (!next) continue;
+      const ds = dateStr(next);
+      const run = bands.futureRuns.find(x => x.template_id === r.id && x.occurrence_date === ds);
+      entries.push({ date: ds, kind: 'routine', id: r.id, openId: run ? run.id : r.id, title: r.title });
+    }
+    for (const t of bands.futureOff) {
+      if (t.start_date && t.start_date <= maxStr) entries.push({ date: t.start_date, kind: 'off', node: t });
+    }
+    return entries.sort((a, b) => a.date.localeCompare(b.date));
+  }, [bands.routines, bands.futureRuns, bands.futureOff]);
 
   const open = (id) => navigate(`/commons/${workspaceSlug}/task/${id}`);
   const goNew = () => navigate(`/commons/${workspaceSlug}/task/new${isRoot ? '' : `?parent=${containerId}`}`);
@@ -200,17 +209,18 @@ export function AreaPage() {
 
           <section className="commons-band">
             <h2 className="commons-band__label">{v.bandFuture}</h2>
-            {futureByDate.length === 0 ? (
+            {futureRows.length === 0 ? (
               <p className="commons-band__empty">{v.noFuture}</p>
             ) : (
-              futureByDate.map(([date, entries]) => (
-                <div key={date} className="commons-futureDay">
-                  <div className="commons-band__day">{dayLabel(date, locale)}</div>
-                  <motion.ul className="commons-band__list" variants={listV} initial="hidden" animate="show">
-                    {entries.map(e => (e.kind === 'run' ? renderRunRow(e.node, false) : renderOffRow(e.node)))}
-                  </motion.ul>
-                </div>
-              ))
+              <motion.ul className="commons-band__list" variants={listV} initial="hidden" animate="show">
+                {futureRows.map(e => (e.kind === 'routine' ? (
+                  <motion.li key={e.id} className="commons-bandRow" variants={rowV}>
+                    <span className="commons-check" aria-hidden="true" />
+                    <button type="button" className="commons-bandRow__title" onClick={() => open(e.openId)}>{e.title}</button>
+                    <span className="commons-chip">{dayLabel(e.date, locale)}</span>
+                  </motion.li>
+                ) : renderOffRow(e.node)))}
+              </motion.ul>
             )}
           </section>
 
