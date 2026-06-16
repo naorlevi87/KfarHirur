@@ -1,5 +1,12 @@
 # Community Work Engine — Design Spec
 
+<!-- COMMONS-VISION · canonical source -->
+> **Commons — why this exists.** Commons helps any group of people acting together for a shared purpose run itself. The Joz ve Loz crew is the first, not the last — it must replicate to a community garden, a social project, a protest, an עמותה. The long arc is a *network* of these projects.
+>
+> **This is not another org/management tool — and it must never feel like one.** Communal, circular, non-hierarchical, and *playful*. You're part of it like everyone else; no one drops tasks on you from above. Surface the shared work, celebrate what we did together, never rank people — "פנוי — מי לוקח?", not "unassigned". If a choice wouldn't fit a community garden as well as a kitchen — or makes someone feel *managed* instead of *part of it* — it's wrong.
+>
+> *Direction: collective decision-making lives here too, later.*
+
 > Source of truth for the Work Engine. Created 2026-06-09 via the brainstorming process.
 > Architecture decision pressure-tested through the llm-council.
 > This is the product/design spec. Each build increment (§12) gets its own implementation plan.
@@ -8,9 +15,18 @@
 
 ## 1. Overview & purpose
 
-The **Community Work Engine** is a task/project coordination tool that lives *alongside* the Kfar Hirur site and shares its login. It is built around **responsibility, execution, and coordination** — not content or social interaction.
+### Vision (the north star — governs every decision)
 
-First real users: the **Joz ve Loz** restaurant crew, on their phones, during shifts. The architecture is intentionally generic so additional independent workspaces (other businesses/communities) can be added later without a rewrite.
+Commons exists to help **any group of people acting together for a shared purpose run itself** — without a boss, without anyone dropping tasks on anyone from above. The **Joz ve Loz** restaurant crew is the **first** community, not the last: the tool must replicate, with no rewrite, to a **community garden, a social project, a protest, an עמותה**, and any other collective that shares work. The long arc is a **network** of these projects.
+
+Two commitments bind the whole product:
+
+- **It is not another org/management tool — and it must never feel like one.** It is **communal, circular, non-hierarchical, and playful**. Every member is *part of it* like everyone else. Surface the shared work and celebrate what we did **together**; never rank people. "פנוי — מי לוקח?" (free — who's taking it?), not "unassigned"; "זה כן קרה" (it did happen — who?), not "who failed". A choice that wouldn't fit a community garden as well as a kitchen — or that makes someone feel *managed* instead of *part of it* — is wrong.
+- **Generality is a feature, not a someday.** Vocabulary, data model, and UI are judged against fitting many community types, not just a restaurant. *(Direction: collective decision-making mechanisms live here too, later.)*
+
+### What it is, concretely
+
+A task/project coordination tool that lives *alongside* the Kfar Hirur site and shares its login. Built around **shared responsibility, execution, and coordination** — not content or social interaction. First real users: the Joz ve Loz crew, on their phones, during shifts. The architecture is intentionally generic so additional independent workspaces (other communities) can be added later without a rewrite.
 
 The engine is a **self-contained module inside the existing app** (`src/work/`, mounted at `/work`), reusing only four shared primitives: the Supabase client, the auth session, the design-token system, and the deploy pipeline. Everything else is its own.
 

@@ -1,4 +1,12 @@
 # Commons — persistent shell + user-protection guards
+
+<!-- COMMONS-VISION · canonical: docs/superpowers/specs/2026-06-09-community-work-engine-design.md -->
+> **Commons — why this exists.** Commons helps any group of people acting together for a shared purpose run itself. The Joz ve Loz crew is the first, not the last — it must replicate to a community garden, a social project, a protest, an עמותה. The long arc is a *network* of these projects.
+>
+> **This is not another org/management tool — and it must never feel like one.** Communal, circular, non-hierarchical, and *playful*. You're part of it like everyone else; no one drops tasks on you from above. Surface the shared work, celebrate what we did together, never rank people — "פנוי — מי לוקח?", not "unassigned". If a choice wouldn't fit a community garden as well as a kitchen — or makes someone feel *managed* instead of *part of it* — it's wrong.
+>
+> *Direction: collective decision-making lives here too, later.*
+
 > 2026-06-12. Keep the header + hamburger + bottom tabs present on every Commons screen, and make
 > that safe by protecting the user from accidental loss of work.
 
