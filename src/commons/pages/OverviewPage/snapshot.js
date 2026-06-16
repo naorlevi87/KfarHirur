@@ -89,8 +89,14 @@ export function buildSnapshot({ nodes, roster, now = new Date(), scopeAreaId = n
     const due = dueAt(n);
     const overdue = (isOpen(n) && due && due.getTime() < now.getTime()) || n.status === 'missed';
     if (overdue) {
+      let dueDayKind = null;
+      if (due) {
+        const diff = Math.round((opStart.getTime() - opDayStartFor(due).getTime()) / 86400000);
+        dueDayKind = diff <= 0 ? 'today' : diff === 1 ? 'yesterday' : 'older';
+      }
       stuck.push({ ...n, due: due ? due.toISOString() : null,
-        overdueMins: due ? Math.max(0, Math.round((now.getTime() - due.getTime()) / 60000)) : null });
+        overdueMins: due ? Math.max(0, Math.round((now.getTime() - due.getTime()) / 60000)) : null,
+        dueDayKind });
       continue;
     }
     if (isOpen(n) && !effectiveOwner(n)) {

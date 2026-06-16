@@ -13,6 +13,17 @@ function fmtTime(iso, locale) {
   try { return new Intl.DateTimeFormat(locale === 'he' ? 'he-IL' : 'en-US', { hour: '2-digit', minute: '2-digit' }).format(new Date(iso)); }
   catch { return ''; }
 }
+function dayMonth(iso, locale) {
+  try { return new Intl.DateTimeFormat(locale === 'he' ? 'he-IL' : 'en-US', { day: 'numeric', month: 'numeric' }).format(new Date(iso)); }
+  catch { return ''; }
+}
+// "since" with a day indicator: today → clock only; yesterday → "אתמול HH:MM"; older → "DD/MM HH:MM".
+function whenLabel(n, t, locale) {
+  const time = fmtTime(n.due, locale);
+  if (n.dueDayKind === 'yesterday') return `${t.yesterday} ${time}`;
+  if (n.dueDayKind === 'older') return `${dayMonth(n.due, locale)} ${time}`;
+  return time;
+}
 
 // Urgency tint from minutes-left: '' normal · 'is-soon' ≤2h · 'is-last' ≤1h (last hour).
 function tier(minsLeft) {
@@ -35,7 +46,7 @@ function stuckMeta(n, t, locale) {
   if (!n.due) return t.sincePrev;
   const lines = t.stuckLines && t.stuckLines.length ? t.stuckLines : [`${t.since}{time}`];
   const i = [...String(n.id)].reduce((a, c) => a + c.charCodeAt(0), 0) % lines.length;
-  return lines[i].replace('{time}', fmtTime(n.due, locale)).replace('{dur}', fmtDur(n.overdueMins, t));
+  return lines[i].replace('{time}', whenLabel(n, t, locale)).replace('{dur}', fmtDur(n.overdueMins, t));
 }
 
 // Module-level button (not declared during render) — label on top, decorative emoji beneath.

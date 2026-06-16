@@ -12,6 +12,14 @@ function dayLetter(date, locale) {
   } catch { return ''; }
 }
 
+// A pie cut to the day's completion: coloured wedge (hue by %) up to the fraction, track for the rest.
+// Empty days (no tasks) are a flat neutral disc.
+function cakeBg(d) {
+  if (d.total === 0) return 'var(--commons-ring-track)';
+  const pct = Math.round(d.fraction * 100);
+  return `conic-gradient(${spectrumHex(d.fraction)} 0 ${pct}%, var(--commons-ring-track) ${pct}% 100%)`;
+}
+
 export function WeekStrip({ week, label, locale, onPick }) {
   return (
     <section className="commons-snapSection">
@@ -27,7 +35,7 @@ export function WeekStrip({ week, label, locale, onPick }) {
           >
             <span
               className={`commons-week__dot${d.isToday ? ' is-today' : ''}`}
-              style={{ background: d.total === 0 ? 'var(--commons-ring-track)' : spectrumHex(d.fraction) }}
+              style={{ background: cakeBg(d) }}
               aria-hidden="true"
             />
             <span className="commons-week__lbl">{dayLetter(d.date, locale)}</span>
