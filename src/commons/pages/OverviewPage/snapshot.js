@@ -32,6 +32,7 @@ export function buildSnapshot({ nodes, roster, now = new Date(), scopeAreaId = n
     byParent.get(k).push(n);
   }
   const rosterById = new Map((roster ?? []).map((m) => [m.id, m]));
+  const nameOf = (id) => rosterById.get(id)?.display_name ?? null;
   const opStart = currentOpDayStart(now);
   const todayStr = ymd(opStart);
 
@@ -105,8 +106,82 @@ export function buildSnapshot({ nodes, roster, now = new Date(), scopeAreaId = n
     }
   }
 
+  // --- Pulse: the same open items, classified into three states, grouped by parent task ---
+  // (parent-collapsible rows; a parent can appear in several states with only its matching children).
+  const progressOf = (id) => {
+    const start = byId.get(id);
+    const layer = Boolean(start?.occurrence_date);
+    let done = 0, total = 0;
+    const walk = (pid) => {
+      for (const c of byParent.get(pid) ?? []) {
+        if (c.kind !== 'task' || Boolean(c.occurrence_date) !== layer) continue;
+        const kids = (byParent.get(c.id) ?? []).filter((k) => k.kind === 'task' && Boolean(k.occurrence_date) === layer);
+        if (kids.length === 0) { total += 1; if (c.status === 'done') done += 1; }
+        else walk(c.id);
+      }
+    };
+    walk(id);
+    return { done, total };
+  };
+  const dueKind = (due) => {
+    if (!due) return null;
+    const diff = Math.round((opStart.getTime() - opDayStartFor(due).getTime()) / 86400000);
+    return diff <= 0 ? 'today' : diff === 1 ? 'yesterday' : 'older';
+  };
+  const itemView = (n) => {
+    const due = dueAt(n);
+    const o = effectiveOwner(n);
+    return {
+      id: n.id, title: n.title, status: n.status,
+      due: due ? due.toISOString() : null,
+      dueDayKind: dueKind(due),
+      minsLeft: due ? Math.round((due.getTime() - now.getTime()) / 60000) : null,
+      overdueMins: due ? Math.max(0, Math.round((now.getTime() - due.getTime()) / 60000)) : null,
+      owner: o ? nameOf(o) : null,
+    };
+  };
+  const classify = (n) => {
+    const due = dueAt(n);
+    if ((isOpen(n) && due && due.getTime() < now.getTime()) || n.status === 'missed') return 'overdue';
+    if (isOpen(n) && !effectiveOwner(n)) return 'free';
+    if (isOpen(n)) return 'inProgress';
+    return null;
+  };
+  const groupBucket = (arr) => {
+    const byParentTask = new Map();
+    const out = [];
+    for (const n of arr) {
+      const parent = byId.get(n.parent_id);
+      if (parent && parent.kind === 'task') {
+        if (!byParentTask.has(parent.id)) {
+          const due = dueAt(parent);
+          const g = { id: parent.id, title: parent.title, isParent: true,
+            due: due ? due.toISOString() : null, dueDayKind: dueKind(due),
+            progress: progressOf(parent.id), items: [] };
+          byParentTask.set(parent.id, g);
+          out.push(g);
+        }
+        byParentTask.get(parent.id).items.push(itemView(n));
+      } else {
+        const v = itemView(n);
+        out.push({ ...v, isParent: false, progress: null, items: [v] });
+      }
+    }
+    return out;
+  };
+  const buckets = { overdue: [], free: [], inProgress: [] };
+  for (const n of leaves) {
+    if (n.status === 'done') continue;
+    const s = classify(n);
+    if (s) buckets[s].push(n);
+  }
+  const pulse = {
+    overdue: groupBucket(buckets.overdue),
+    free: groupBucket(buckets.free),
+    inProgress: groupBucket(buckets.inProgress),
+  };
+
   // Full list (the "רשימה"): every leaf, done + open, with status / due / who. Not-done first, done last.
-  const nameOf = (id) => rosterById.get(id)?.display_name ?? null;
   const list = leaves
     .map((n) => {
       const due = dueAt(n);
@@ -143,7 +218,7 @@ export function buildSnapshot({ nodes, roster, now = new Date(), scopeAreaId = n
 
   return {
     progress: { doneLeaves, totalLeaves, fraction },
-    free, stuck, recent, week, list,
+    pulse, free, stuck, recent, week, list,
     closedToday: totalLeaves > 0 && doneLeaves === totalLeaves,
   };
 }

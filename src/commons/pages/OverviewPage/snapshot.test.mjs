@@ -50,4 +50,27 @@ assert.deepEqual(day.toHandle.map((x) => x.id), ['t3']);
 assert.equal(day.done.length, 0);
 assert.equal(day.progress.totalLeaves, 1);
 
+// pulse: classify the open leaves into the three states, grouped (standalone here — no task parents)
+assert.equal(s.pulse.free.length, 1);
+assert.equal(s.pulse.free[0].isParent, false);
+assert.equal(s.pulse.free[0].items[0].id, 't2');
+assert.equal(s.pulse.overdue.length, 1);
+assert.equal(s.pulse.overdue[0].items[0].id, 't3');
+assert.equal(s.pulse.inProgress.length, 0);
+
+// pulse grouping under a parent task: one collapsible group, parent progress = whole parent, only the
+// matching (free) child inside.
+const pNodes = [
+  { id: 'A', kind: 'container', parent_id: null, title: 'מטבח' },
+  { id: 'P', kind: 'task', parent_id: 'A', title: 'סגירת יום' },
+  { id: 'c1', kind: 'task', parent_id: 'P', title: 'כיבוי', status: 'open' },
+  { id: 'c2', kind: 'task', parent_id: 'P', title: 'ניקוי', status: 'done' },
+];
+const ps = buildSnapshot({ nodes: pNodes, roster, now, scopeAreaId: null });
+assert.equal(ps.pulse.free.length, 1);
+assert.equal(ps.pulse.free[0].isParent, true);
+assert.equal(ps.pulse.free[0].id, 'P');
+assert.deepEqual(ps.pulse.free[0].items.map((x) => x.id), ['c1']);
+assert.deepEqual(ps.pulse.free[0].progress, { done: 1, total: 2 });
+
 console.log('snapshot.test.mjs OK');
