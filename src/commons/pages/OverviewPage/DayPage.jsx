@@ -16,6 +16,8 @@ import { CommonsLoading } from '../../CommonsLoading.jsx';
 import { IconChevronStart } from '../../icons.jsx';
 import { spectrumConic, spectrumHex } from '../../styles/spectrum.js';
 import { buildDay } from './snapshot.js';
+import { AttributionSheet } from './AttributionSheet.jsx';
+import { useAttribution } from './useAttribution.js';
 
 function dateLabel(dayStr, locale) {
   try {
@@ -54,6 +56,7 @@ export function DayPage() {
     return () => { cancelled = true; };
   }, [workspace?.id]);
 
+  const attrib = useAttribution(tree);
   const day = useMemo(() => buildDay({ nodes: tree.nodes, roster, dayStr: date }), [tree.nodes, roster, date]);
 
   if (tree.loading) return <section className="commons-snapshot"><CommonsLoading /></section>;
@@ -99,9 +102,14 @@ export function DayPage() {
                   <button type="button" className="commons-snapBtn is-claim" onClick={() => tree.claim(n.id)}>
                     <span className="commons-snapBtn__lbl">{t.claim}</span><span className="commons-snapBtn__e" aria-hidden="true">{t.claimE}</span>
                   </button>
-                  <button type="button" className="commons-snapBtn is-did" onClick={() => tree.resolveMissed(n.id, null)}>
+                  <button type="button" className="commons-snapBtn is-did" onClick={() => attrib.openResolve(n.id)}>
                     <span className="commons-snapBtn__lbl">{t.didHappen}</span><span className="commons-snapBtn__e" aria-hidden="true">{t.didHappenE}</span>
                   </button>
+                  {canManage && (
+                    <button type="button" className="commons-snapBtn is-assign" onClick={() => attrib.openAssign(n.id)}>
+                      <span className="commons-snapBtn__lbl">{t.assign}</span><span className="commons-snapBtn__e" aria-hidden="true">{t.assignE}</span>
+                    </button>
+                  )}
                   {canManage && (
                     <button type="button" className="commons-snapBtn is-defer" onClick={() => tree.deferOccurrence(n.id, nextOpDayStr())}>
                       <span className="commons-snapBtn__lbl">{t.deferTomorrow}</span><span className="commons-snapBtn__e" aria-hidden="true">{t.deferTomorrowE}</span>
@@ -135,6 +143,9 @@ export function DayPage() {
       )}
 
       {day.progress.totalLeaves === 0 && <p className="commons-snapshot__empty">{t.empty}</p>}
+
+      <AttributionSheet open={!!attrib.sheet} mode={attrib.sheet?.mode} members={roster}
+                        t={t} onConfirm={attrib.confirm} onCancel={attrib.close} />
     </section>
   );
 }

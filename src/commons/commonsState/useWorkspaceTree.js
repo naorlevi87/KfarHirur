@@ -14,6 +14,7 @@ import {
   claimNode as claimNodeQuery,
   unclaimNode as unclaimNodeQuery,
   resolveMissed as resolveMissedQuery,
+  assignNode as assignNodeQuery,
   deferOccurrence as deferOccurrenceQuery,
   cloneNode as cloneNodeQuery,
   cancelRun as cancelRunQuery,
@@ -100,9 +101,17 @@ export function useWorkspaceTree(workspaceId) {
     return updated;
   }, []);
 
-  // "זה כן קרה" — resolve a missed occurrence as a late completion by `didBy` (a member id, or null).
-  const resolveMissed = useCallback(async (id, didBy) => {
-    const updated = await resolveMissedQuery(id, didBy);
+  // "זה כן קרה" — resolve a missed occurrence as a late completion by `didBy` (a member id, or null),
+  // optionally with when it happened (`doneAt`, an ISO string; defaults to now server-side).
+  const resolveMissed = useCallback(async (id, didBy, doneAt) => {
+    const updated = await resolveMissedQuery(id, didBy, doneAt);
+    setNodes(prev => prev.map(n => (n.id === id ? updated : n)));
+    return updated;
+  }, []);
+
+  // "עליו" — manager/admin assigns a task to a specific member (or null to clear ownership).
+  const assign = useCallback(async (id, memberId) => {
+    const updated = await assignNodeQuery(id, memberId);
     setNodes(prev => prev.map(n => (n.id === id ? updated : n)));
     return updated;
   }, []);
@@ -173,5 +182,5 @@ export function useWorkspaceTree(workspaceId) {
     await reload();
   }, [reload]);
 
-  return { nodes, byParent, loading, addNode, toggleDone, saveTask, removeNode, reload, completeSubtree, claim, unclaim, resolveMissed, deferOccurrence, cloneNode, cancelRun, progress, hasChildren, effectiveOwner };
+  return { nodes, byParent, loading, addNode, toggleDone, saveTask, removeNode, reload, completeSubtree, claim, unclaim, assign, resolveMissed, deferOccurrence, cloneNode, cancelRun, progress, hasChildren, effectiveOwner };
 }

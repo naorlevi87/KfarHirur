@@ -6,7 +6,7 @@ const now = new Date('2026-06-16T12:00:00');
 const today = '2026-06-16';
 
 // roster
-const roster = [{ id: 'm1', name: 'דנה' }, { id: 'm2', name: 'שי' }];
+const roster = [{ id: 'm1', display_name: 'דנה' }, { id: 'm2', display_name: 'שי' }];
 
 // area container + a one-off leaf done + a one-off leaf open (unclaimed) + an overdue open leaf
 const nodes = [

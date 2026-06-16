@@ -84,12 +84,21 @@ export async function unclaimNode(id) {
   return data;
 }
 
-// "זה כן קרה" — record a missed occurrence as a late completion attributed to a member (didBy).
-// Member-allowed; the row keeps completed_late = true. didBy is a workspace_members.id (or null).
-export async function resolveMissed(id, didBy) {
-  const { data, error } = await commonsDb.rpc('resolve_missed', { node_id: id, did_by: didBy ?? null });
+// "זה כן קרה" — record a missed occurrence as a late completion attributed to a member (didBy) and,
+// optionally, when it actually happened (doneAt, an ISO string; defaults to now server-side).
+// Member-allowed; the row keeps completed_late computed against doneAt. didBy is a workspace_members.id.
+export async function resolveMissed(id, didBy, doneAt) {
+  const { data, error } = await commonsDb.rpc('resolve_missed', {
+    node_id: id, did_by: didBy ?? null, done_at: doneAt ?? null,
+  });
   if (error) throw error;
   return data;
+}
+
+// Assign a task's owner to a specific member ("עליו"). Direct table write — RLS gates this to
+// managers/admins. memberId is a workspace_members.id (or null to clear).
+export async function assignNode(id, memberId) {
+  return updateNode(id, { owner_id: memberId });
 }
 
 // Defer/skip a single occurrence (manager+). toDate null → skip ('cancelled'); else mark this one

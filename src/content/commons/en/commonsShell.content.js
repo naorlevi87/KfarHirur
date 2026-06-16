@@ -84,6 +84,15 @@ export const commonsShellContent = {
     lineAllDone: 'All closed. Well done 🌈',
     timeLeftMin: '{n} min left',
     noOwner: 'No owner',
+    // attribution picker (resolve "it did happen" → who + when; manager assign → who)
+    assign: 'On them', assignE: '🫵',
+    whoTitle: 'Who did it?',
+    whoAssign: 'Put it on whom?',
+    whenNow: 'Now',
+    whenEarlier: 'Earlier',
+    nobody: 'Not sure',
+    confirm: 'Record',
+    cancel: 'Cancel',
   },
   day: {
     back: 'Back',
@@ -370,8 +379,8 @@ export const commonsShellContent = {
       roles: 'skills', schedule: 'schedule', days: 'days', start: 'start date',
     },
     activityEmoji: {
-      created: '➕', edited: '✏️', claimed: '🙌', unclaimed: '↩️', reassigned: '🔄',
-      completed: '😎', reopened: '↺', missed: '⏰', resolved: '🫢', deferred: '🙆', cancelled: '🤷',
+      created: '✨', edited: '✏️', claimed: '🙌', unclaimed: '🤲', reassigned: '🔄',
+      completed: '😎', reopened: '🔁', missed: '🫠', resolved: '🫢', deferred: '🙆', cancelled: '🤷',
     },
   },
   tasks: {

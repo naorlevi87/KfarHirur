@@ -100,7 +100,7 @@ export function buildSnapshot({ nodes, roster, now = new Date(), scopeAreaId = n
   }
 
   // Full list (the "רשימה"): every leaf, done + open, with status / due / who. Not-done first, done last.
-  const nameOf = (id) => rosterById.get(id)?.name ?? null;
+  const nameOf = (id) => rosterById.get(id)?.display_name ?? null;
   const list = leaves
     .map((n) => {
       const due = dueAt(n);
@@ -167,7 +167,7 @@ export function buildDay({ nodes, roster, dayStr }) {
     return n.due_date ? ymd(opDayStartFor(new Date(n.due_date))) === dayStr : false;
   });
 
-  const nameOf = (id) => rosterById.get(id)?.name ?? null;
+  const nameOf = (id) => rosterById.get(id)?.display_name ?? null;
   const toView = (n) => {
     const due = n.due_date ? new Date(n.due_date)
       : (n.due_time && n.occurrence_date ? new Date(`${n.occurrence_date}T${n.due_time}`) : null);

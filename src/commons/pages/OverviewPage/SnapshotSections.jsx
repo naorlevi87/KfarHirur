@@ -48,7 +48,7 @@ function Btn({ kind, label, emoji, onClick }) {
   );
 }
 
-export function SnapshotSections({ s, t, locale, canManage, onOpen, onClaim, onResolve, onDefer, onSkip, anchorRef }) {
+export function SnapshotSections({ s, t, locale, canManage, onOpen, onClaim, onAssign, onResolve, onDefer, onSkip, anchorRef }) {
   return (
     <>
       {s.free.length > 0 && (
@@ -61,6 +61,7 @@ export function SnapshotSections({ s, t, locale, canManage, onOpen, onClaim, onR
                 <button type="button" className="commons-snapRow__title" onClick={() => onOpen(n.id)}>{n.title}</button>
                 {n.due && <span className={`commons-untilChip ${tier(n.minsLeft)}`}>{t.until} {fmtTime(n.due, locale)}</span>}
                 <Btn kind="is-claim" label={t.claim} emoji={t.claimE} onClick={() => onClaim(n.id)} />
+                {canManage && <Btn kind="is-assign" label={t.assign} emoji={t.assignE} onClick={() => onAssign(n.id)} />}
               </motion.li>
             ))}
           </motion.ul>
@@ -83,6 +84,7 @@ export function SnapshotSections({ s, t, locale, canManage, onOpen, onClaim, onR
                 <div className="commons-snapRow__actions">
                   <Btn kind="is-claim" label={t.claim} emoji={t.claimE} onClick={() => onClaim(n.id)} />
                   <Btn kind="is-did" label={t.didHappen} emoji={t.didHappenE} onClick={() => onResolve(n.id)} />
+                  {canManage && <Btn kind="is-assign" label={t.assign} emoji={t.assignE} onClick={() => onAssign(n.id)} />}
                   {canManage && <Btn kind="is-defer" label={t.deferTomorrow} emoji={t.deferTomorrowE} onClick={() => onDefer(n.id)} />}
                   {canManage && <Btn kind="is-skip" label={t.skip} emoji={t.skipE} onClick={() => onSkip(n.id)} />}
                 </div>

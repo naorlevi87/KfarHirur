@@ -129,6 +129,25 @@
 .commons-snapList__title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .commons-snapList__meta { flex: none; font-size: 11px; color: var(--commons-text-dim); }
 
+/* attribution sheet — resolve (who + when) / assign (who) */
+.commons-sheetBackdrop { position: fixed; inset: 0; z-index: 60; background: rgba(0, 0, 0, .5); display: flex; align-items: flex-end; justify-content: center; }
+.commons-attrib { width: 100%; max-width: 480px; background: var(--commons-surface); border: 1px solid var(--commons-border); border-radius: 18px 18px 0 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); }
+.commons-attrib__title { font-size: 16px; font-weight: 800; color: var(--commons-text); margin-bottom: 14px; }
+.commons-attrib__members { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.commons-attrib__member { font: inherit; font-size: 14px; cursor: pointer; color: var(--commons-text); background: var(--commons-surface-2); border: 1px solid var(--commons-border); border-radius: 999px; padding: 8px 15px; }
+.commons-attrib__member.is-on { border-color: var(--commons-accent); color: var(--commons-accent); }
+.commons-attrib__member:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
+.commons-attrib__when { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+.commons-attrib__chip { font: inherit; font-size: 13px; cursor: pointer; color: var(--commons-text-dim); background: var(--commons-surface-2); border: 1px solid var(--commons-border); border-radius: 999px; padding: 7px 14px; }
+.commons-attrib__chip.is-on { border-color: var(--commons-accent); color: var(--commons-text); }
+.commons-attrib__time { font: inherit; background: var(--commons-surface-2); color: var(--commons-text); border: 1px solid var(--commons-border); border-radius: 10px; padding: 7px 10px; }
+.commons-attrib__actions { display: flex; gap: 10px; }
+.commons-attrib__btn { flex: 1; font: inherit; font-size: 14px; cursor: pointer; border-radius: 12px; padding: 12px; background: var(--commons-surface-2); border: 1px solid var(--commons-border); color: var(--commons-text); }
+.commons-attrib__btn.is-primary { background: var(--commons-accent); border-color: var(--commons-accent); color: var(--commons-on-accent); }
+.commons-attrib__btn:disabled { opacity: .5; cursor: not-allowed; }
+.commons-attrib__btn:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
+.commons-snapBtn.is-assign { color: var(--commons-role-4); }
+
 .commons-snapshot__empty { color: var(--commons-text-dim); text-align: center; margin-top: 40px; }
 
 @media (prefers-reduced-motion: reduce) {

@@ -21,6 +21,8 @@ import { SnapshotSections } from './SnapshotSections.jsx';
 import { RecentStrip } from './RecentStrip.jsx';
 import { WeekStrip } from './WeekStrip.jsx';
 import { SnapshotList } from './SnapshotList.jsx';
+import { AttributionSheet } from './AttributionSheet.jsx';
+import { useAttribution } from './useAttribution.js';
 
 // Bold down-chevron for the living line (taps to jump to the open items).
 function ChevDown() {
@@ -53,6 +55,7 @@ export function OverviewPage() {
 
   const [scope, setScope] = useState(null);
   const freeRef = useRef(null);
+  const attrib = useAttribution(tree);
 
   const areas = useMemo(
     () => (tree.byParent.get('root') ?? []).filter((n) => n.kind === 'container'),
@@ -89,7 +92,8 @@ export function OverviewPage() {
         <SnapshotSections
           s={s} t={t} locale={locale} canManage={canManage} onOpen={open} anchorRef={freeRef}
           onClaim={(id) => tree.claim(id)}
-          onResolve={(id) => tree.resolveMissed(id, null)}
+          onAssign={attrib.openAssign}
+          onResolve={attrib.openResolve}
           onDefer={(id) => { const d = nextOpDayStr(); tree.deferOccurrence(id, d); }}
           onSkip={(id) => tree.deferOccurrence(id, null)}
         />
@@ -102,6 +106,9 @@ export function OverviewPage() {
       {(s.progress.totalLeaves === 0) && <p className="commons-snapshot__empty">{t.empty}</p>}
 
       {canTask && <Fab onClick={() => navigate(`/commons/${workspaceSlug}/task/new`)} label={shell.fab.newTaskAria} />}
+
+      <AttributionSheet open={!!attrib.sheet} mode={attrib.sheet?.mode} members={roster}
+                        t={t} onConfirm={attrib.confirm} onCancel={attrib.close} />
     </section>
   );
 }

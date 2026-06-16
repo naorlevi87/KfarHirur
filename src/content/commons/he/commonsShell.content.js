@@ -85,6 +85,15 @@ export const commonsShellContent = {
     lineAllDone: 'הכל סגור. כל הכבוד 🌈',
     timeLeftMin: 'עוד {n} דק׳',
     noOwner: 'אין אחראי',
+    // attribution picker (resolve "זה כן קרה" → who + when; manager assign → who)
+    assign: 'עליו', assignE: '🫵',
+    whoTitle: 'מי עשה את זה?',
+    whoAssign: 'על מי לשים?',
+    whenNow: 'עכשיו',
+    whenEarlier: 'מוקדם יותר',
+    nobody: 'לא בטוח',
+    confirm: 'רישום',
+    cancel: 'ביטול',
   },
   day: {
     back: 'חזרה',
@@ -373,8 +382,8 @@ export const commonsShellContent = {
       roles: 'כישורים', schedule: 'תדירות', days: 'ימים', start: 'תאריך התחלה',
     },
     activityEmoji: {
-      created: '➕', edited: '✏️', claimed: '🙌', unclaimed: '↩️', reassigned: '🔄',
-      completed: '😎', reopened: '↺', missed: '⏰', resolved: '🫢', deferred: '🙆', cancelled: '🤷',
+      created: '✨', edited: '✏️', claimed: '🙌', unclaimed: '🤲', reassigned: '🔄',
+      completed: '😎', reopened: '🔁', missed: '🫠', resolved: '🫢', deferred: '🙆', cancelled: '🤷',
     },
   },
   tasks: {
