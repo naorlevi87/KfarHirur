@@ -43,6 +43,12 @@ function tier(minsLeft) {
   return '';
 }
 
+// The chip beside a parent = how many of its sub-items are in THIS block ("2 פנויות" / "1 בדרך").
+const COUNT_KEY = { overdue: 'countOverdue', free: 'countFree', inProgress: 'countInProgress' };
+function countLabel(section, n, t) {
+  return (t[COUNT_KEY[section]] || '{n}').replace('{n}', n);
+}
+
 function Btn({ kind, label, emoji, onClick }) {
   return (
     <button type="button" className={`commons-snapBtn ${kind}`} onClick={onClick}>
@@ -103,7 +109,7 @@ function GroupRow({ group, section, t, locale, canManage, h, expanded, onToggle 
         <button type="button" className="commons-snapGroup__toggle" aria-expanded={open} onClick={() => onToggle(key)}>
           <span className={`commons-caret${open ? ' is-open' : ''}`} aria-hidden="true">▾</span>
           <span className="commons-snapGroup__title">{group.title}</span>
-          <span className="commons-chip commons-chip--progress">{group.progress.done}/{group.progress.total}</span>
+          <span className="commons-chip commons-chip--count">{countLabel(section, group.items.length, t)}</span>
         </button>
         {section === 'free' && (
           <button type="button" className="commons-snapBtn is-claim commons-snapBtn--inline commons-snapGroup__take" onClick={() => h.onTakeParent(group.id, group.title)}>
