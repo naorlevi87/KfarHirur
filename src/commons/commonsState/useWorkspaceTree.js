@@ -16,6 +16,7 @@ import {
   resolveMissed as resolveMissedQuery,
   assignNode as assignNodeQuery,
   deferOccurrence as deferOccurrenceQuery,
+  deferRun as deferRunQuery,
   cloneNode as cloneNodeQuery,
   cancelRun as cancelRunQuery,
 } from '../../data/commons/nodeQueries.js';
@@ -122,6 +123,12 @@ export function useWorkspaceTree(workspaceId) {
     await reload();
   }, [reload]);
 
+  // Defer a whole run subtree to a target op-day (manager+). Cascades to 'deferred' and re-creates on toDate.
+  const deferRun = useCallback(async (id, toDate) => {
+    await deferRunQuery(id, toDate);
+    await reload();
+  }, [reload]);
+
   // Clone a definition subtree (returns the new root id); cancel a whole run for its day.
   const cloneNode = useCallback(async (id) => {
     const newId = await cloneNodeQuery(id);
@@ -182,5 +189,5 @@ export function useWorkspaceTree(workspaceId) {
     await reload();
   }, [reload]);
 
-  return { nodes, byParent, loading, addNode, toggleDone, saveTask, removeNode, reload, completeSubtree, claim, unclaim, assign, resolveMissed, deferOccurrence, cloneNode, cancelRun, progress, hasChildren, effectiveOwner };
+  return { nodes, byParent, loading, addNode, toggleDone, saveTask, removeNode, reload, completeSubtree, claim, unclaim, assign, resolveMissed, deferOccurrence, deferRun, cloneNode, cancelRun, progress, hasChildren, effectiveOwner };
 }

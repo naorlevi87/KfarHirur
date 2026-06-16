@@ -108,3 +108,11 @@ export async function deferOccurrence(id, toDate) {
   if (error) throw error;
   return data;
 }
+
+// Defer a whole run subtree (run root, parent item, or leaf) to a target op-day (manager+). Cascades
+// the subtree to 'deferred' and re-creates it on to_date with structure preserved. 'YYYY-MM-DD'.
+export async function deferRun(id, toDate) {
+  const { data, error } = await commonsDb.rpc('defer_run', { node_id: id, to_date: toDate });
+  if (error) throw error;
+  return data;
+}
