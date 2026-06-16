@@ -23,6 +23,7 @@ import { WeekStrip } from './WeekStrip.jsx';
 import { SnapshotList } from './SnapshotList.jsx';
 import { AttributionSheet } from './AttributionSheet.jsx';
 import { useAttribution } from './useAttribution.js';
+import { ConfirmDialog } from '../../ConfirmDialog.jsx';
 
 // Bold down-chevron for the living line (taps to jump to the open items).
 function ChevDown() {
@@ -56,6 +57,7 @@ export function OverviewPage() {
   const [scope, setScope] = useState(null);
   const freeRef = useRef(null);
   const attrib = useAttribution(tree);
+  const [cascade, setCascade] = useState(null); // { id, title } — confirm taking a whole parent
 
   const areas = useMemo(
     () => (tree.byParent.get('root') ?? []).filter((n) => n.kind === 'container'),
@@ -90,12 +92,12 @@ export function OverviewPage() {
         <SnapshotList items={s.list} t={t} locale={locale} onOpen={open} />
 
         <SnapshotSections
-          s={s} t={t} locale={locale} canManage={canManage} onOpen={open} anchorRef={freeRef}
+          pulse={s.pulse} t={t} locale={locale} canManage={canManage} onOpen={open} anchorRef={freeRef}
           onClaim={(id) => tree.claim(id)}
-          onAssign={attrib.openAssign}
           onResolve={attrib.openResolve}
-          onDefer={(id) => { const d = nextOpDayStr(); tree.deferOccurrence(id, d); }}
+          onDefer={(id) => tree.deferOccurrence(id, nextOpDayStr())}
           onSkip={(id) => tree.deferOccurrence(id, null)}
+          onTakeParent={(id, title) => setCascade({ id, title })}
         />
 
         <RecentStrip recent={s.recent} closed={s.closedToday} t={t} locale={locale} />
@@ -109,6 +111,17 @@ export function OverviewPage() {
 
       <AttributionSheet open={!!attrib.sheet} mode={attrib.sheet?.mode} members={roster}
                         t={t} onConfirm={attrib.confirm} onCancel={attrib.close} />
+
+      {cascade && (
+        <ConfirmDialog
+          title={t.takeAllTitle}
+          body={t.takeAllBody.replace('{title}', cascade.title)}
+          confirmLabel={t.claim}
+          cancelLabel={t.cancel}
+          onConfirm={() => { tree.claim(cascade.id); setCascade(null); }}
+          onCancel={() => setCascade(null)}
+        />
+      )}
     </section>
   );
 }

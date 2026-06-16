@@ -59,10 +59,9 @@
 .commons-snapSection.is-free { scroll-margin-top: 96px; } /* clear the sticky shell header when the living line jumps here */
 .commons-snapSection__list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
 .commons-snapRow {
-  display: flex; align-items: center; gap: 9px; background: var(--commons-surface);
+  display: flex; flex-direction: column; align-items: stretch; gap: 8px; background: var(--commons-surface);
   border: 1px solid var(--commons-border); border-radius: 12px; padding: 10px 12px;
 }
-.commons-snapRow.is-stuck { flex-direction: column; align-items: stretch; gap: 10px; }
 .commons-snapRow__head { display: flex; align-items: flex-start; gap: 9px; }
 .commons-snapRow__titleWrap { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .commons-snapRow__title { flex: 1; text-align: start; font: inherit; font-size: 14px; color: var(--commons-text); background: none; border: 0; cursor: pointer; padding: 0; }
@@ -71,7 +70,26 @@
 .commons-snapRow__actions { display: flex; gap: 7px; }
 .commons-snapDot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
 .commons-snapDot.is-free { background: transparent; border: 2px dashed var(--commons-accent); }
-.commons-snapDot.is-stuck { background: var(--commons-spectrum-2); }
+.commons-snapDot.is-stuck, .commons-snapDot.is-overdue { background: var(--commons-spectrum-2); }
+.commons-snapDot.is-inProgress { background: var(--commons-accent); }
+
+/* emphasised overdue section (first, most urgent) */
+.commons-snapSection.is-urgent .commons-snapH { color: var(--commons-spectrum-2); }
+.commons-snapSection.is-urgent > .commons-snapSection__list > .commons-snapRow { border-color: #3a2a40; }
+
+/* collapsible parent group */
+.commons-snapGroup { list-style: none; background: var(--commons-surface); border: 1px solid var(--commons-border); border-radius: 12px; padding: 2px 6px; }
+.commons-snapGroup__head { display: flex; align-items: center; gap: 8px; }
+.commons-snapGroup__toggle { flex: 1; display: flex; align-items: center; gap: 8px; background: none; border: 0; cursor: pointer; font: inherit; color: var(--commons-text); padding: 9px 4px; text-align: start; min-width: 0; }
+.commons-snapGroup__toggle:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
+.commons-snapGroup__title { flex: 1; font-size: 14px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.commons-snapGroup__take { flex: none; }
+.commons-snapGroup__items { list-style: none; display: flex; flex-direction: column; gap: 8px; padding: 2px 2px 8px; }
+.commons-snapGroup__items .commons-snapRow { background: transparent; border: 0; padding: 4px 2px; }
+.commons-caret { color: var(--commons-text-dim); display: inline-block; transition: transform .2s cubic-bezier(.16, 1, .3, 1); flex: none; }
+.commons-caret:not(.is-open) { transform: rotate(-90deg); }
+.commons-chip { font-size: 11px; color: var(--commons-text-dim); background: var(--commons-surface-2); border-radius: 999px; padding: 2px 8px; font-variant-numeric: tabular-nums; flex: none; }
+.commons-chip--progress { color: var(--commons-text); }
 
 /* "עד <time>" chip on open rows, with urgency tiers */
 .commons-untilChip { flex: none; font-size: 11px; color: var(--commons-text-dim); font-variant-numeric: tabular-nums; white-space: nowrap; }

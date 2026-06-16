@@ -107,6 +107,10 @@ export const commonsShellContent = {
     nobody: 'לא בטוח',
     confirm: 'רישום',
     cancel: 'ביטול',
+    overdueTitle: 'עבר הזמן — מי תופס?',
+    inProgressTitle: 'מה בדרך?',
+    takeAllTitle: 'לקחת את הכל?',
+    takeAllBody: 'כל תת-המשימות של "{title}" יעברו עליך.',
   },
   day: {
     back: 'חזרה',

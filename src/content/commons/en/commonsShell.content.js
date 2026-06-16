@@ -106,6 +106,10 @@ export const commonsShellContent = {
     nobody: 'Not sure',
     confirm: 'Record',
     cancel: 'Cancel',
+    overdueTitle: 'Past time — who grabs it?',
+    inProgressTitle: "What's in motion?",
+    takeAllTitle: 'Take the whole thing?',
+    takeAllBody: 'All sub-tasks of "{title}" become yours.',
   },
   day: {
     back: 'Back',

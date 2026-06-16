@@ -1,9 +1,10 @@
 // src/commons/pages/OverviewPage/SnapshotSections.jsx
-// The invitation-framed lists. Actions reuse existing occurrence ops — no new mutations.
-// "פנוי" → claim (each row shows "עד <time>" with an urgency tint); "נתקע" → claim / resolve-missed /
-// defer / skip (defer & skip manager+) with "since <time>". Emoji on buttons are decorative
-// (aria-hidden) and render on their own line so every button reads the same.
+// The pulse's three live states, in order: עבר הזמן (overdue, emphasised, first) · מה פנוי? · מה בדרך?.
+// Each is a list of groups: a task with sub-items is a collapsible parent (▸ title · X/Y · time) that
+// expands to only that state's children; a task without sub-items is a single row. A parent can appear
+// in several sections. Actions reuse existing occurrence ops; taking a whole parent cascades (confirm).
 
+import { useState } from 'react';
 import { motion } from 'motion/react';
 
 const listV = { hidden: {}, show: { transition: { staggerChildren: 0.04 } } };
@@ -17,15 +18,24 @@ function dayMonth(iso, locale) {
   try { return new Intl.DateTimeFormat(locale === 'he' ? 'he-IL' : 'en-US', { day: 'numeric', month: 'numeric' }).format(new Date(iso)); }
   catch { return ''; }
 }
-// "since" with a day indicator: today → clock only; yesterday → "אתמול HH:MM"; older → "DD/MM HH:MM".
-function whenLabel(n, t, locale) {
-  const time = fmtTime(n.due, locale);
-  if (n.dueDayKind === 'yesterday') return `${t.yesterday} ${time}`;
-  if (n.dueDayKind === 'older') return `${dayMonth(n.due, locale)} ${time}`;
+function whenLabel(it, t, locale) {
+  const time = fmtTime(it.due, locale);
+  if (it.dueDayKind === 'yesterday') return `${t.yesterday} ${time}`;
+  if (it.dueDayKind === 'older') return `${dayMonth(it.due, locale)} ${time}`;
   return time;
 }
-
-// Urgency tint from minutes-left: '' normal · 'is-soon' ≤2h · 'is-last' ≤1h (last hour).
+function fmtDur(mins, t) {
+  if (mins == null) return '';
+  if (mins >= 120) return `${Math.floor(mins / 60)} ${t.durHours}`;
+  if (mins >= 60) return t.durHour;
+  return `${Math.max(1, mins)} ${t.durMins}`;
+}
+function stuckLine(it, t, locale) {
+  if (!it.due) return t.sincePrev;
+  const lines = t.stuckLines?.length ? t.stuckLines : [`${t.since}{time}`];
+  const i = [...String(it.id)].reduce((a, c) => a + c.charCodeAt(0), 0) % lines.length;
+  return lines[i].replace('{time}', whenLabel(it, t, locale)).replace('{dur}', fmtDur(it.overdueMins, t));
+}
 function tier(minsLeft) {
   if (minsLeft == null) return '';
   if (minsLeft <= 60) return 'is-last';
@@ -33,23 +43,6 @@ function tier(minsLeft) {
   return '';
 }
 
-// Hebrew-ish duration from minutes overdue.
-function fmtDur(mins, t) {
-  if (mins == null) return '';
-  if (mins >= 120) return `${Math.floor(mins / 60)} ${t.durHours}`;
-  if (mins >= 60) return t.durHour;
-  return `${Math.max(1, mins)} ${t.durMins}`;
-}
-
-// A cute "waiting since…" line, picked deterministically by item id (not random — render stays pure).
-function stuckMeta(n, t, locale) {
-  if (!n.due) return t.sincePrev;
-  const lines = t.stuckLines && t.stuckLines.length ? t.stuckLines : [`${t.since}{time}`];
-  const i = [...String(n.id)].reduce((a, c) => a + c.charCodeAt(0), 0) % lines.length;
-  return lines[i].replace('{time}', whenLabel(n, t, locale)).replace('{dur}', fmtDur(n.overdueMins, t));
-}
-
-// Module-level button (not declared during render) — label on top, decorative emoji beneath.
 function Btn({ kind, label, emoji, onClick }) {
   return (
     <button type="button" className={`commons-snapBtn ${kind}`} onClick={onClick}>
@@ -59,51 +52,97 @@ function Btn({ kind, label, emoji, onClick }) {
   );
 }
 
-export function SnapshotSections({ s, t, locale, canManage, onOpen, onClaim, onAssign, onResolve, onDefer, onSkip, anchorRef }) {
+// The action buttons under a single item, depending on which state-section it's in.
+function ItemActions({ section, item, t, canManage, h }) {
+  if (section === 'free') {
+    return <Btn kind="is-claim" label={t.claim} emoji={t.claimE} onClick={() => h.onClaim(item.id)} />;
+  }
+  if (section === 'overdue') {
+    return (
+      <>
+        <Btn kind="is-claim" label={t.claim} emoji={t.claimE} onClick={() => h.onClaim(item.id)} />
+        <Btn kind="is-did" label={t.didHappen} emoji={t.didHappenE} onClick={() => h.onResolve(item.id)} />
+        {canManage && <Btn kind="is-defer" label={t.deferTomorrow} emoji={t.deferTomorrowE} onClick={() => h.onDefer(item.id)} />}
+        {canManage && <Btn kind="is-skip" label={t.skip} emoji={t.skipE} onClick={() => h.onSkip(item.id)} />}
+      </>
+    );
+  }
+  return null; // in-progress: no action, just shows who's on it
+}
+
+function ItemRow({ item, section, t, locale, canManage, h }) {
+  return (
+    <motion.li className={`commons-snapRow${section === 'overdue' ? ' is-stuck' : ''}`} variants={rowV}>
+      <div className="commons-snapRow__head">
+        <span className={`commons-snapDot is-${section}`} aria-hidden="true" />
+        <div className="commons-snapRow__titleWrap">
+          <button type="button" className="commons-snapRow__title" onClick={() => h.onOpen(item.id)}>{item.title}</button>
+          {section === 'overdue' && <span className="commons-snapRow__meta">{stuckLine(item, t, locale)}</span>}
+          {section === 'inProgress' && item.owner && <span className="commons-snapRow__meta">{t.onPerson} {item.owner}</span>}
+        </div>
+        {section === 'free' && item.due && <span className={`commons-untilChip ${tier(item.minsLeft)}`}>{t.until} {whenLabel(item, t, locale)}</span>}
+      </div>
+      {section !== 'inProgress' && (
+        <div className="commons-snapRow__actions"><ItemActions section={section} item={item} t={t} canManage={canManage} h={h} /></div>
+      )}
+    </motion.li>
+  );
+}
+
+function GroupRow({ group, section, t, locale, canManage, h, expanded, onToggle }) {
+  if (!group.isParent) {
+    return <ItemRow item={group.items[0]} section={section} t={t} locale={locale} canManage={canManage} h={h} />;
+  }
+  const open = expanded.has(group.id);
+  return (
+    <motion.li className="commons-snapGroup" variants={rowV}>
+      <div className="commons-snapGroup__head">
+        <button type="button" className="commons-snapGroup__toggle" aria-expanded={open} onClick={() => onToggle(group.id)}>
+          <span className={`commons-caret${open ? ' is-open' : ''}`} aria-hidden="true">▾</span>
+          <span className="commons-snapGroup__title">{group.title}</span>
+          <span className="commons-chip commons-chip--progress">{group.progress.done}/{group.progress.total}</span>
+        </button>
+        {section === 'free' && (
+          <button type="button" className="commons-snapBtn is-claim commons-snapGroup__take" onClick={() => h.onTakeParent(group.id, group.title)}>
+            <span className="commons-snapBtn__lbl">{t.claim}</span><span className="commons-snapBtn__e" aria-hidden="true">{t.claimE}</span>
+          </button>
+        )}
+      </div>
+      {open && (
+        <ul className="commons-snapGroup__items">
+          {group.items.map((it) => <ItemRow key={it.id} item={it} section={section} t={t} locale={locale} canManage={canManage} h={h} />)}
+        </ul>
+      )}
+    </motion.li>
+  );
+}
+
+function Section({ label, groups, section, emphasised, t, locale, canManage, h, expanded, onToggle, anchorRef }) {
+  if (!groups.length) return null;
+  return (
+    <section ref={anchorRef} className={`commons-snapSection${emphasised ? ' is-urgent' : ''}${section === 'free' ? ' is-free' : ''}`}>
+      <h2 className="commons-snapH">{label}</h2>
+      <motion.ul className="commons-snapSection__list" variants={listV} initial="hidden" animate="show">
+        {groups.map((g) => <GroupRow key={g.id} group={g} section={section} t={t} locale={locale} canManage={canManage} h={h} expanded={expanded} onToggle={onToggle} />)}
+      </motion.ul>
+    </section>
+  );
+}
+
+export function SnapshotSections({ pulse, t, locale, canManage, onOpen, onClaim, onResolve, onDefer, onSkip, onTakeParent, anchorRef }) {
+  const [expanded, setExpanded] = useState(() => new Set());
+  const onToggle = (id) => setExpanded((prev) => {
+    const next = new Set(prev);
+    next.has(id) ? next.delete(id) : next.add(id);
+    return next;
+  });
+  const h = { onOpen, onClaim, onResolve, onDefer, onSkip, onTakeParent };
+  const common = { t, locale, canManage, h, expanded, onToggle };
   return (
     <>
-      {s.free.length > 0 && (
-        <section ref={anchorRef} className="commons-snapSection is-free">
-          <h2 className="commons-snapH">{t.free}</h2>
-          <motion.ul className="commons-snapSection__list" variants={listV} initial="hidden" animate="show">
-            {s.free.map((n) => (
-              <motion.li key={n.id} className="commons-snapRow" variants={rowV}>
-                <span className="commons-snapDot is-free" aria-hidden="true" />
-                <button type="button" className="commons-snapRow__title" onClick={() => onOpen(n.id)}>{n.title}</button>
-                {n.due && <span className={`commons-untilChip ${tier(n.minsLeft)}`}>{t.until} {fmtTime(n.due, locale)}</span>}
-                <Btn kind="is-claim" label={t.claim} emoji={t.claimE} onClick={() => onClaim(n.id)} />
-                {canManage && <Btn kind="is-assign" label={t.assign} emoji={t.assignE} onClick={() => onAssign(n.id)} />}
-              </motion.li>
-            ))}
-          </motion.ul>
-        </section>
-      )}
-
-      {s.stuck.length > 0 && (
-        <section className="commons-snapSection">
-          <h2 className="commons-snapH">{t.stuck}</h2>
-          <motion.ul className="commons-snapSection__list" variants={listV} initial="hidden" animate="show">
-            {s.stuck.map((n) => (
-              <motion.li key={n.id} className="commons-snapRow is-stuck" variants={rowV}>
-                <div className="commons-snapRow__head">
-                  <span className="commons-snapDot is-stuck" aria-hidden="true" />
-                  <div className="commons-snapRow__titleWrap">
-                    <button type="button" className="commons-snapRow__title" onClick={() => onOpen(n.id)}>{n.title}</button>
-                    <span className="commons-snapRow__meta">{stuckMeta(n, t, locale)}</span>
-                  </div>
-                </div>
-                <div className="commons-snapRow__actions">
-                  <Btn kind="is-claim" label={t.claim} emoji={t.claimE} onClick={() => onClaim(n.id)} />
-                  <Btn kind="is-did" label={t.didHappen} emoji={t.didHappenE} onClick={() => onResolve(n.id)} />
-                  {canManage && <Btn kind="is-assign" label={t.assign} emoji={t.assignE} onClick={() => onAssign(n.id)} />}
-                  {canManage && <Btn kind="is-defer" label={t.deferTomorrow} emoji={t.deferTomorrowE} onClick={() => onDefer(n.id)} />}
-                  {canManage && <Btn kind="is-skip" label={t.skip} emoji={t.skipE} onClick={() => onSkip(n.id)} />}
-                </div>
-              </motion.li>
-            ))}
-          </motion.ul>
-        </section>
-      )}
+      <Section label={t.overdueTitle} groups={pulse.overdue} section="overdue" emphasised {...common} />
+      <Section label={t.free} groups={pulse.free} section="free" anchorRef={anchorRef} {...common} />
+      <Section label={t.inProgressTitle} groups={pulse.inProgress} section="inProgress" {...common} />
     </>
   );
 }
