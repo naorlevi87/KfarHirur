@@ -15,7 +15,7 @@ const isOpen = (n) => n.status === 'open' || n.status === 'in_progress';
 
 // The moment an item is "due": one-offs carry due_date; run items may carry due_date or a due_time
 // applied to their op-day. Returns a Date or null.
-function dueAt(node, opDayStartDate) {
+function dueAt(node) {
   if (node.due_date) return new Date(node.due_date);
   if (node.due_time && node.occurrence_date) {
     return new Date(`${node.occurrence_date}T${node.due_time}`);
@@ -86,7 +86,7 @@ export function buildSnapshot({ nodes, roster, now = new Date(), scopeAreaId = n
   const stuck = [];
   for (const n of leaves) {
     if (!isOpen(n) && n.status !== 'missed') continue;
-    const due = dueAt(n, opStart);
+    const due = dueAt(n);
     const overdue = (isOpen(n) && due && due.getTime() < now.getTime()) || n.status === 'missed';
     if (overdue) { stuck.push(n); continue; }
     if (isOpen(n) && !effectiveOwner(n)) free.push(n);
