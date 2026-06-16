@@ -1,5 +1,12 @@
 # Commons — Design & Interaction Standards
 
+<!-- COMMONS-VISION · canonical: docs/superpowers/specs/2026-06-09-community-work-engine-design.md -->
+> **Commons — why this exists.** Commons helps any group of people acting together for a shared purpose run itself. The Joz ve Loz crew is the first, not the last — it must replicate to a community garden, a social project, a protest, an עמותה. The long arc is a *network* of these projects.
+>
+> **This is not another org/management tool — and it must never feel like one.** Communal, circular, non-hierarchical, and *playful*. You're part of it like everyone else; no one drops tasks on you from above. Surface the shared work, celebrate what we did together, never rank people — "פנוי — מי לוקח?", not "unassigned". If a choice wouldn't fit a community garden as well as a kitchen — or makes someone feel *managed* instead of *part of it* — it's wrong.
+>
+> *Direction: collective decision-making lives here too, later.*
+
 > **Living document.** This is the iron-rules / format-rules registry for the Commons module. It is
 > not a dated spec — it is updated whenever a new standard is locked. Every existing and future
 > Commons screen is measured against it.
@@ -155,9 +162,29 @@ principle. Restated here as an interaction standard.)
 
 ---
 
+## 6. Copy & snapshot standards
+
+### Copy — never say "ביחד"
+Togetherness is **conveyed**, never stated. Do not use the word "ביחד" in UI copy. Lean on "we" framing:
+"מה איתנו", "מה מצבנו", "מי לוקח", "מי תופס". Surface the shared work and credit who did it; never rank people.
+
+### Snapshot — spectrum & credit
+- Progress is shown as a **completion ring** whose colour travels the spectrum (red→purple, magenta close)
+  by fraction. Colour reinforces; a **count/number always carries the meaning** (IS 5568) — never colour-only.
+- "unassigned" → **"פנוי — מי לוקח?"**; "missed/failed" → **"נתקע — מי תופס?"**.
+- Completion credit may use emoji (decorative, `aria-hidden`): 🙌 עליי · 🫢 זה כן קרה · 🙆 דחה למחר · 🤷 לא צריך · 😇/😎 done · 🌈🎉 closed.
+
+---
+
 ## Decision Log
 
 > Append a dated entry whenever a standard is added, changed, or an exception is granted. Newest first.
+
+### 2026-06-16 — Snapshot copy + spectrum standards (§6)
+- **2026-06-16** — Snapshot (`תמונת מצב`) redesigned as the communal "מה קורה היום?" view (spectrum ring,
+  invitation-framed sections, credit log). Locked: "ביחד" banned from UI copy; areas are equal lenses not a
+  ranked breakdown; progress ring colour = completion spectrum with the count carrying the meaning.
+  Spec: `docs/superpowers/specs/2026-06-16-commons-snapshot-screen-design.md`.
 
 ### 2026-06-15 — Unsaved-changes guard: Save option + hardware-back coverage (§4)
 - The leave prompt now offers **Save · Discard · Stay** (was Stay/Discard only) — a dirty back is no
