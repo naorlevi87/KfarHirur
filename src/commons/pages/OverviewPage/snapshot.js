@@ -137,6 +137,8 @@ export function buildSnapshot({ nodes, roster, now = new Date(), scopeAreaId = n
     if (h < 8) d.setDate(d.getDate() + 1);
     return d;
   };
+  // A pending "מציע ל-X" invite, only while the item has no (effective) owner — a taken task never shows it.
+  const proposed = (n, o) => (!o && n.proposed_to ? { proposedToId: n.proposed_to, proposedTo: nameOf(n.proposed_to) } : { proposedToId: null, proposedTo: null });
   const itemView = (n) => {
     const due = dueAt(n);
     const o = effectiveOwner(n);
@@ -147,6 +149,7 @@ export function buildSnapshot({ nodes, roster, now = new Date(), scopeAreaId = n
       minsLeft: due ? Math.round((due.getTime() - now.getTime()) / 60000) : null,
       overdueMins: due ? Math.max(0, Math.round((now.getTime() - due.getTime()) / 60000)) : null,
       owner: o ? nameOf(o) : null,
+      ...proposed(n, o),
     };
   };
   const classify = (n) => {
@@ -166,7 +169,8 @@ export function buildSnapshot({ nodes, roster, now = new Date(), scopeAreaId = n
           const due = dueAt(parent);
           const g = { id: parent.id, title: parent.title, isParent: true,
             due: due ? due.toISOString() : null, dueDayKind: dueKind(due),
-            progress: progressOf(parent.id), items: [] };
+            progress: progressOf(parent.id), items: [],
+            ...proposed(parent, effectiveOwner(parent)) };
           byParentTask.set(parent.id, g);
           out.push(g);
         }
@@ -273,6 +277,8 @@ export function buildDay({ nodes, roster, dayStr }) {
       doer: n.status === 'done' ? nameOf(n.completed_by) : null,
       at: n.completed_at ?? null,
       late: Boolean(n.completed_late),
+      proposedToId: !n.owner_id && n.proposed_to ? n.proposed_to : null,
+      proposedTo: !n.owner_id && n.proposed_to ? nameOf(n.proposed_to) : null,
     };
   };
   const done = leaves.filter((n) => n.status === 'done')

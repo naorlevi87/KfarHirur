@@ -45,6 +45,10 @@ export function buildActivityLog({ nodes, nodeId, events, roster, max = 30 }) {
   const kept = (events ?? [])
     .filter((e) => inScope.has(e.node_id))
     .filter((e) => (e.node_id === nodeId ? true : DESCENDANT_TYPES.has(e.type)))
+    // An automatic creation (the recurrence generating a run + its sub-tasks) carries no actor.
+    // The log credits deliberate human acts — so a 'created' with no actor is noise, not activity.
+    // A sub-task a person adds by hand keeps its actor and still shows.
+    .filter((e) => !(e.type === 'created' && !e.actor))
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
   const rows = kept.slice(0, max).map((e) => ({

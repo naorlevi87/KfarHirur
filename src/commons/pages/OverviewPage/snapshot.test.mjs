@@ -84,4 +84,19 @@ const rs = buildSnapshot({ nodes: rNodes, roster, now, scopeAreaId: null });
 assert.equal(rs.pulse.notYet, 1);
 assert.deepEqual(rs.pulse.free.flatMap((g) => g.items.map((i) => i.id)), ['r2']);
 
+// proposal marker: a free item proposed to m2 surfaces proposedTo/proposedToId; an OWNED item never does
+// (the invite is moot once taken), so the marker can't linger on a taken task.
+const propNodes = [
+  { id: 'A', kind: 'container', parent_id: null, title: 'מטבח' },
+  { id: 'q1', kind: 'task', parent_id: 'A', title: 'מקרר', status: 'open', proposed_to: 'm2' },          // free + proposed
+  { id: 'q2', kind: 'task', parent_id: 'A', title: 'תנור', status: 'open', owner_id: 'm1', proposed_to: 'm2' }, // owned → no marker
+];
+const props = buildSnapshot({ nodes: propNodes, roster, now, scopeAreaId: null });
+const q1view = props.pulse.free.find((g) => g.id === 'q1');
+assert.equal(q1view.items[0].proposedToId, 'm2');
+assert.equal(q1view.items[0].proposedTo, 'שי');
+const q2view = props.pulse.inProgress.find((g) => g.id === 'q2');
+assert.equal(q2view.items[0].proposedToId, null);
+assert.equal(q2view.items[0].proposedTo, null);
+
 console.log('snapshot.test.mjs OK');

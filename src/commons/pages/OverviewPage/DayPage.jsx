@@ -17,6 +17,7 @@ import { IconChevronStart } from '../../icons.jsx';
 import { spectrumConic, spectrumHex } from '../../styles/spectrum.js';
 import { buildDay } from './snapshot.js';
 import { AttributionSheet } from './AttributionSheet.jsx';
+import { InviteSheet } from './InviteSheet.jsx';
 import { useAttribution } from './useAttribution.js';
 
 function dateLabel(dayStr, locale) {
@@ -54,7 +55,8 @@ const rowV = { hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0, transitio
 
 export function DayPage() {
   const { locale } = useAppContext();
-  const { workspace, permissionLevel } = useWorkspace();
+  const { workspace, permissionLevel, membership } = useWorkspace();
+  const myMemberId = membership?.id ?? null;
   const { workspaceSlug, date } = useParams();
   const navigate = useNavigate();
   const shell = resolveCommonsShellContent(locale);
@@ -72,6 +74,8 @@ export function DayPage() {
   }, [workspace?.id]);
 
   const attrib = useAttribution(tree);
+  const [invite, setInvite] = useState(null); // { id } — the "מי לוקח?" sheet (day items are leaves)
+  const inviteMembers = useMemo(() => roster.filter((m) => m.id !== myMemberId), [roster, myMemberId]);
   const day = useMemo(() => buildDay({ nodes: tree.nodes, roster, dayStr: date }), [tree.nodes, roster, date]);
 
   if (tree.loading) return <section className="commons-snapshot"><CommonsLoading /></section>;
@@ -104,27 +108,38 @@ export function DayPage() {
         <section className="commons-snapSection">
           <h2 className="commons-snapH">{d.toHandle}</h2>
           <motion.ul className="commons-snapSection__list" variants={listV} initial="hidden" animate="show">
-            {day.toHandle.map((n) => (
+            {day.toHandle.map((n) => {
+              const mine = n.proposedToId && n.proposedToId === myMemberId;
+              const proposedElse = !mine && n.proposedTo;
+              return (
               <motion.li key={n.id} className="commons-snapRow is-stuck" variants={rowV}>
                 <div className="commons-snapRow__head">
                   <span className="commons-snapDot is-stuck" aria-hidden="true" />
                   <div className="commons-snapRow__titleWrap">
                     <button type="button" className="commons-snapRow__title" onClick={() => open(n.id)}>{n.title}</button>
                     {n.due && <span className="commons-snapRow__meta">{t.since}{fmtTime(n.due, locale)}</span>}
+                    {proposedElse && <span className="commons-proposedMark">{t.proposedTo.replace('{name}', n.proposedTo)}</span>}
+                    {mine && <span className="commons-proposedMark">{t.proposedToYou}</span>}
                   </div>
                 </div>
                 <div className="commons-snapRow__actions">
-                  <button type="button" className="commons-snapBtn is-claim" onClick={() => tree.claim(n.id)}>
-                    <span className="commons-snapBtn__lbl">{t.claim}</span><span className="commons-snapBtn__e" aria-hidden="true">{t.claimE}</span>
-                  </button>
+                  {mine ? (
+                    <>
+                      <button type="button" className="commons-snapBtn is-accept" onClick={() => tree.respondProposal(n.id, true)}>
+                        <span className="commons-snapBtn__lbl">{t.accept}</span><span className="commons-snapBtn__e" aria-hidden="true">{t.acceptE}</span>
+                      </button>
+                      <button type="button" className="commons-snapBtn is-pass" onClick={() => tree.respondProposal(n.id, false)}>
+                        <span className="commons-snapBtn__lbl">{t.pass}</span><span className="commons-snapBtn__e" aria-hidden="true">{t.passE}</span>
+                      </button>
+                    </>
+                  ) : (
+                    <button type="button" className="commons-snapBtn is-claim" onClick={() => setInvite({ id: n.id })}>
+                      <span className="commons-snapBtn__lbl">{t.claim}</span><span className="commons-snapBtn__e" aria-hidden="true">{t.claimE}</span>
+                    </button>
+                  )}
                   <button type="button" className="commons-snapBtn is-did" onClick={() => attrib.openResolve(n.id)}>
                     <span className="commons-snapBtn__lbl">{t.didHappen}</span><span className="commons-snapBtn__e" aria-hidden="true">{t.didHappenE}</span>
                   </button>
-                  {canManage && (
-                    <button type="button" className="commons-snapBtn is-assign" onClick={() => attrib.openAssign(n.id)}>
-                      <span className="commons-snapBtn__lbl">{t.assign}</span><span className="commons-snapBtn__e" aria-hidden="true">{t.assignE}</span>
-                    </button>
-                  )}
                   {canManage && (
                     <button type="button" className="commons-snapBtn is-defer" onClick={() => tree.deferOccurrence(n.id, nextOpDayStr())}>
                       <span className="commons-snapBtn__lbl">{t.deferTomorrow}</span><span className="commons-snapBtn__e" aria-hidden="true">{t.deferTomorrowE}</span>
@@ -137,7 +152,7 @@ export function DayPage() {
                   )}
                 </div>
               </motion.li>
-            ))}
+            );})}
           </motion.ul>
         </section>
       )}
@@ -148,8 +163,10 @@ export function DayPage() {
           <ul className="commons-recent__list">
             {day.done.map((e) => (
               <li key={e.id} className="commons-recent__item">
-                <span className="commons-recent__text">{e.title} <span className="commons-recent__flavour">{pickLine(e.late ? t.creditLate : t.creditOnTime, e.id)}</span></span>
-                <span className="commons-recent__time">{e.at ? relTime(e.at, locale) : ''}{e.doer ? ` · ${t.by} ${e.doer}` : ''}</span>
+                <button type="button" className="commons-recent__btn" onClick={() => open(e.id)}>
+                  <span className="commons-recent__text">{e.title} <span className="commons-recent__flavour">{pickLine(e.late ? t.creditLate : t.creditOnTime, e.id)}</span></span>
+                  <span className="commons-recent__time">{e.at ? relTime(e.at, locale) : ''}{e.doer ? ` · ${t.by} ${e.doer}` : ''}</span>
+                </button>
               </li>
             ))}
           </ul>
@@ -158,8 +175,18 @@ export function DayPage() {
 
       {day.progress.totalLeaves === 0 && <p className="commons-snapshot__empty">{t.empty}</p>}
 
-      <AttributionSheet open={!!attrib.sheet} mode={attrib.sheet?.mode} members={roster}
-                        t={t} onConfirm={attrib.confirm} onCancel={attrib.close} />
+      {attrib.sheet && (
+        <AttributionSheet members={roster} t={t} onConfirm={attrib.confirm} onCancel={attrib.close} />
+      )}
+
+      {invite && (
+        <InviteSheet
+          members={inviteMembers} t={t}
+          onMine={() => { tree.claim(invite.id); setInvite(null); }}
+          onPropose={(memberId) => { tree.propose(invite.id, memberId); setInvite(null); }}
+          onCancel={() => setInvite(null)}
+        />
+      )}
     </section>
   );
 }

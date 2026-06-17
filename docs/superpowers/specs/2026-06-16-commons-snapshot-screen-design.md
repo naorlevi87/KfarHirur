@@ -102,8 +102,14 @@ Number/text carries meaning (colour only reinforces); emoji `aria-hidden` with m
 3. ✅ **Day screen** — the done-list is the day's **log** (credit line + who + when).
 4. ✅ **Relevance window** — `show_from` column + `run_recurrences` copy (migration `20260617000000`, applied) + pulse filter + **"+N מופיעים מאוחר יותר"** line + **"מופיע מ-"** input in `TaskFormPage` (orders + one-offs).
 
-**Pending — step 5 (deferred to its own window):**
-5. ⏳ **Flat "מציע ל-X" invite**, replacing the manager-only `עליו`. Needs **backend RPCs** (members can't write `owner_id`/`proposed_to` directly): `propose_node`, `respond_proposal` (accept→claim self, pass→clear), a `proposed_to` column, the unified **"מי לוקח? → אני / מציע ל-X"** menu, and a "הוצע ל-X" marker. In-app only at launch; phone push waits for the notifications feature. **Full brief: `docs/superpowers/handoffs/D-snapshot-invite.md`.**
+**Built — step 5 (on `feat/commons-snapshot`):**
+5. ✅ **Flat "מציע ל-X" invite**, replacing the manager-only `עליו`. Member-allowed SECURITY DEFINER RPCs
+   `propose_node` + `respond_proposal` (accept→claim self, pass→clear) + `proposed_to/by/at` columns
+   (`claim_node` clears any pending invite); migration `20260618000000`, applied. The **עליי** button opens
+   an **אני / מישהו אחר** sheet (`InviteSheet`); a pending invite shows a **"הוצע ל-X"** marker and the
+   proposed member gets accept/pass (pulse + day). A pending invite leaves the task open (anyone can still
+   take/re-suggest); parents can be proposed (accept sets the parent owner, `effectiveOwner` cascades).
+   Manager `assign`/`עליו` removed everywhere. In-app only at launch; phone push waits for notifications.
 
 ## 12. Decisions (resolved from review)
 

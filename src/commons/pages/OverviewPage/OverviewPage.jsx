@@ -23,6 +23,7 @@ import { RecentStrip } from './RecentStrip.jsx';
 import { WeekStrip } from './WeekStrip.jsx';
 import { SnapshotList } from './SnapshotList.jsx';
 import { AttributionSheet } from './AttributionSheet.jsx';
+import { InviteSheet } from './InviteSheet.jsx';
 import { useAttribution } from './useAttribution.js';
 import { ConfirmDialog } from '../../ConfirmDialog.jsx';
 
@@ -38,7 +39,8 @@ function ChevDown() {
 
 export function OverviewPage() {
   const { locale } = useAppContext();
-  const { workspace, permissionLevel } = useWorkspace();
+  const { workspace, permissionLevel, membership } = useWorkspace();
+  const myMemberId = membership?.id ?? null;
   const { workspaceSlug } = useParams();
   const navigate = useNavigate();
   const shell = resolveCommonsShellContent(locale);
@@ -59,6 +61,8 @@ export function OverviewPage() {
   const freeRef = useRef(null);
   const attrib = useAttribution(tree);
   const [cascade, setCascade] = useState(null); // { id, title } — confirm taking a whole parent
+  const [invite, setInvite] = useState(null);   // { id, title, isParent } — the "מי לוקח?" sheet
+  const inviteMembers = useMemo(() => roster.filter((m) => m.id !== myMemberId), [roster, myMemberId]);
 
   const areas = useMemo(
     () => (tree.byParent.get('root') ?? []).filter((n) => n.kind === 'container'),
@@ -96,12 +100,14 @@ export function OverviewPage() {
         <SnapshotList items={s.list} t={t} locale={locale} onOpen={open} />
 
         <SnapshotSections
-          pulse={s.pulse} t={t} locale={locale} canManage={canManage} onOpen={open} anchorRef={freeRef}
-          onClaim={(id) => tree.claim(id)}
+          pulse={s.pulse} t={t} locale={locale} canManage={canManage} myMemberId={myMemberId}
+          onOpen={open} anchorRef={freeRef}
+          onTake={(id, title, isParent) => setInvite({ id, title, isParent })}
           onResolve={attrib.openResolve}
           onDefer={(id) => tree.deferOccurrence(id, nextOpDayStr())}
           onSkip={(id) => tree.deferOccurrence(id, null)}
-          onTakeParent={(id, title) => setCascade({ id, title })}
+          onAccept={(id) => tree.respondProposal(id, true)}
+          onPass={(id) => tree.respondProposal(id, false)}
         />
 
         {s.pulse.notYet > 0 && (
@@ -111,7 +117,7 @@ export function OverviewPage() {
           </button>
         )}
 
-        <RecentStrip recent={s.recent} closed={s.closedToday} t={t} locale={locale} />
+        <RecentStrip recent={s.recent} closed={s.closedToday} t={t} locale={locale} onOpen={open} />
         <WeekStrip week={s.week} label={t.week} locale={locale}
                    onPick={(date) => navigate(`/commons/${workspaceSlug}/day/${date}`)} />
       </motion.div>
@@ -120,8 +126,22 @@ export function OverviewPage() {
 
       {canTask && <Fab onClick={() => navigate(`/commons/${workspaceSlug}/task/new`)} label={shell.fab.newTaskAria} />}
 
-      <AttributionSheet open={!!attrib.sheet} mode={attrib.sheet?.mode} members={roster}
-                        t={t} onConfirm={attrib.confirm} onCancel={attrib.close} />
+      {attrib.sheet && (
+        <AttributionSheet members={roster} t={t} onConfirm={attrib.confirm} onCancel={attrib.close} />
+      )}
+
+      {invite && (
+        <InviteSheet
+          members={inviteMembers} t={t}
+          onMine={() => {
+            if (invite.isParent) setCascade({ id: invite.id, title: invite.title });
+            else tree.claim(invite.id);
+            setInvite(null);
+          }}
+          onPropose={(memberId) => { tree.propose(invite.id, memberId); setInvite(null); }}
+          onCancel={() => setInvite(null)}
+        />
+      )}
 
       {cascade && (
         <ConfirmDialog
@@ -129,6 +149,7 @@ export function OverviewPage() {
           body={t.takeAllBody.replace('{title}', cascade.title)}
           confirmLabel={t.claim}
           cancelLabel={t.cancel}
+          destructive={false}
           onConfirm={() => { tree.claim(cascade.id); setCascade(null); }}
           onCancel={() => setCascade(null)}
         />

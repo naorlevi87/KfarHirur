@@ -5,7 +5,7 @@
 import { commonsDb } from './commonsClient.js';
 
 const FIELDS =
-  'id, workspace_id, parent_id, kind, title, description, status, owner_id, role_ids, due_date, start_date, recurrence, next_run, template_id, occurrence_date, day_mask, due_time, show_from, completed_by, completed_at, completed_late, position, created_at, updated_at, confirm_on_complete';
+  'id, workspace_id, parent_id, kind, title, description, status, owner_id, role_ids, due_date, start_date, recurrence, next_run, template_id, occurrence_date, day_mask, due_time, show_from, completed_by, completed_at, completed_late, proposed_to, proposed_by, proposed_at, position, created_at, updated_at, confirm_on_complete';
 
 // All nodes in a workspace, ordered for stable tree rendering.
 export async function fetchTree(workspaceId) {
@@ -95,10 +95,19 @@ export async function resolveMissed(id, didBy, doneAt) {
   return data;
 }
 
-// Assign a task's owner to a specific member ("עליו"). Direct table write — RLS gates this to
-// managers/admins. memberId is a workspace_members.id (or null to clear).
-export async function assignNode(id, memberId) {
-  return updateNode(id, { owner_id: memberId });
+// "מציע ל-X": suggest a free task to a teammate (flat invite, any active member). memberId is a
+// workspace_members.id. The task stays open and gains a "proposed_to" marker until the teammate responds.
+export async function proposeNode(id, memberId) {
+  const { data, error } = await commonsDb.rpc('propose_node', { node_id: id, to_member: memberId });
+  if (error) throw error;
+  return data;
+}
+
+// Respond to a proposal (only the proposed member): accept → it becomes theirs; pass → back to open.
+export async function respondProposal(id, accept) {
+  const { data, error } = await commonsDb.rpc('respond_proposal', { node_id: id, accept });
+  if (error) throw error;
+  return data;
 }
 
 // Defer/skip a single occurrence (manager+). toDate null → skip ('cancelled'); else mark this one

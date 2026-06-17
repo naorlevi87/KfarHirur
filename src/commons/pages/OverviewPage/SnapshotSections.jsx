@@ -2,7 +2,8 @@
 // The pulse's three live states, in order: עבר הזמן (overdue, emphasised, first) · מה פנוי? · מה בדרך?.
 // Each is a list of groups: a task with sub-items is a collapsible parent (▸ title · X/Y · time) that
 // expands to only that state's children; a task without sub-items is a single row. A parent can appear
-// in several sections. Actions reuse existing occurrence ops; taking a whole parent cascades (confirm).
+// in several sections. Taking uses the flat "מי לוקח?" invite (אני / מציע ל-X) — the עליי affordance opens
+// a sheet (onTake); a pending invite shows a "הוצע ל-X" marker, and the proposed member gets accept/pass.
 
 import { useState } from 'react';
 import { motion } from 'motion/react';
@@ -58,10 +59,43 @@ function Btn({ kind, label, emoji, onClick }) {
   );
 }
 
+// Inline "עליי" trigger (opens the invite sheet). Used on free rows and the parent take.
+function TakeBtn({ t, onClick }) {
+  return (
+    <button type="button" className="commons-snapBtn is-claim commons-snapBtn--inline" onClick={onClick}>
+      {t.claim} <span aria-hidden="true">{t.claimE}</span>
+    </button>
+  );
+}
+
+// What a free/overdue item offers around taking it, given any pending invite:
+//   proposed to me  → accept / pass.
+//   proposed to someone else → a "הוצע ל-X" marker, and (stays open) the עליי trigger too.
+//   no proposal     → just the עליי trigger.
+function takeState(node, myMemberId) {
+  if (node.proposedToId && node.proposedToId === myMemberId) return 'mine';
+  if (node.proposedTo) return 'else';
+  return 'open';
+}
+
+function InlineRespond({ t, onAccept, onPass }) {
+  return (
+    <span className="commons-respond">
+      <button type="button" className="commons-snapBtn is-accept commons-snapBtn--inline" onClick={onAccept}>
+        {t.accept} <span aria-hidden="true">{t.acceptE}</span>
+      </button>
+      <button type="button" className="commons-snapBtn is-pass commons-snapBtn--inline" onClick={onPass}>
+        {t.pass} <span aria-hidden="true">{t.passE}</span>
+      </button>
+    </span>
+  );
+}
+
 // One compact line per item. Overdue: title + its "waiting" note sit together (meta hugs the title);
-// free: title + "עד" chip + inline claim (emoji beside the word); in-progress: title + who's on it.
+// free: title + "עד" chip + the take/invite affordance; in-progress: title + who's on it.
 // `nested` = a child inside an expanded parent → indented with a sub-task elbow marker.
-function ItemRow({ item, section, t, locale, canManage, h, nested }) {
+function ItemRow({ item, section, t, locale, canManage, myMemberId, h, nested }) {
+  const state = takeState(item, myMemberId);
   return (
     <motion.li className={`commons-snapRow is-${section}${nested ? ' is-sub' : ''}`} variants={rowV}>
       <div className="commons-snapRow__line">
@@ -77,17 +111,29 @@ function ItemRow({ item, section, t, locale, canManage, h, nested }) {
             <button type="button" className="commons-snapRow__title" onClick={() => h.onOpen(item.id)}>{item.title}</button>
             {section === 'inProgress' && item.owner && <span className="commons-snapRow__meta">{t.onPerson} {item.owner}</span>}
             {section === 'free' && item.due && <span className={`commons-untilChip ${tier(item.minsLeft)}`}>{t.until} {whenLabel(item, t, locale)}</span>}
-            {section === 'free' && (
-              <button type="button" className="commons-snapBtn is-claim commons-snapBtn--inline" onClick={() => h.onClaim(item.id)}>
-                {t.claim} <span aria-hidden="true">{t.claimE}</span>
-              </button>
+            {section === 'free' && state === 'mine' && (
+              <span className="commons-proposedMark">{t.proposedToYou}</span>
             )}
+            {section === 'free' && state === 'else' && (
+              <span className="commons-proposedMark">{t.proposedTo.replace('{name}', item.proposedTo)}</span>
+            )}
+            {section === 'free' && state === 'mine'
+              ? <InlineRespond t={t} onAccept={() => h.onAccept(item.id)} onPass={() => h.onPass(item.id)} />
+              : section === 'free' && <TakeBtn t={t} onClick={() => h.onTake(item.id, item.title, false)} />}
           </>
         )}
       </div>
       {section === 'overdue' && (
         <div className="commons-snapRow__actions">
-          <Btn kind="is-claim" label={t.claim} emoji={t.claimE} onClick={() => h.onClaim(item.id)} />
+          {state === 'mine' ? (
+            <>
+              <Btn kind="is-accept" label={t.accept} emoji={t.acceptE} onClick={() => h.onAccept(item.id)} />
+              <Btn kind="is-pass" label={t.pass} emoji={t.passE} onClick={() => h.onPass(item.id)} />
+            </>
+          ) : (
+            <Btn kind="is-claim" label={t.claim} emoji={t.claimE} onClick={() => h.onTake(item.id, item.title, false)} />
+          )}
+          {state === 'else' && <span className="commons-proposedMark">{t.proposedTo.replace('{name}', item.proposedTo)}</span>}
           <Btn kind="is-did" label={t.didHappen} emoji={t.didHappenE} onClick={() => h.onResolve(item.id)} />
           {canManage && <Btn kind="is-defer" label={t.deferTomorrow} emoji={t.deferTomorrowE} onClick={() => h.onDefer(item.id)} />}
           {canManage && <Btn kind="is-skip" label={t.skip} emoji={t.skipE} onClick={() => h.onSkip(item.id)} />}
@@ -97,12 +143,13 @@ function ItemRow({ item, section, t, locale, canManage, h, nested }) {
   );
 }
 
-function GroupRow({ group, section, t, locale, canManage, h, expanded, onToggle }) {
+function GroupRow({ group, section, t, locale, canManage, myMemberId, h, expanded, onToggle }) {
   if (!group.isParent) {
-    return <ItemRow item={group.items[0]} section={section} t={t} locale={locale} canManage={canManage} h={h} />;
+    return <ItemRow item={group.items[0]} section={section} t={t} locale={locale} canManage={canManage} myMemberId={myMemberId} h={h} />;
   }
   const key = `${section}:${group.id}`; // section-scoped, so a parent expands independently per section
   const open = expanded.has(key);
+  const state = takeState(group, myMemberId);
   return (
     <motion.li className="commons-snapGroup" variants={rowV}>
       <div className="commons-snapGroup__head">
@@ -112,41 +159,44 @@ function GroupRow({ group, section, t, locale, canManage, h, expanded, onToggle 
           <span className="commons-chip commons-chip--count">{countLabel(section, group.items.length, t)}</span>
         </button>
         {section === 'free' && (
-          <button type="button" className="commons-snapBtn is-claim commons-snapBtn--inline commons-snapGroup__take" onClick={() => h.onTakeParent(group.id, group.title)}>
-            {t.claim} <span aria-hidden="true">{t.claimE}</span>
-          </button>
+          <span className="commons-snapGroup__take">
+            {state === 'else' && <span className="commons-proposedMark">{t.proposedTo.replace('{name}', group.proposedTo)}</span>}
+            {state === 'mine'
+              ? <InlineRespond t={t} onAccept={() => h.onAccept(group.id)} onPass={() => h.onPass(group.id)} />
+              : <TakeBtn t={t} onClick={() => h.onTake(group.id, group.title, true)} />}
+          </span>
         )}
       </div>
       {open && (
         <ul className="commons-snapGroup__items">
-          {group.items.map((it) => <ItemRow key={it.id} item={it} section={section} t={t} locale={locale} canManage={canManage} h={h} nested />)}
+          {group.items.map((it) => <ItemRow key={it.id} item={it} section={section} t={t} locale={locale} canManage={canManage} myMemberId={myMemberId} h={h} nested />)}
         </ul>
       )}
     </motion.li>
   );
 }
 
-function Section({ label, groups, section, emphasised, t, locale, canManage, h, expanded, onToggle, anchorRef }) {
+function Section({ label, groups, section, emphasised, t, locale, canManage, myMemberId, h, expanded, onToggle, anchorRef }) {
   if (!groups.length) return null;
   return (
     <section ref={anchorRef} className={`commons-snapSection${emphasised ? ' is-urgent' : ''}${section === 'free' ? ' is-free' : ''}`}>
       <h2 className="commons-snapH">{label}</h2>
       <motion.ul className="commons-snapSection__list" variants={listV} initial="hidden" animate="show">
-        {groups.map((g) => <GroupRow key={g.id} group={g} section={section} t={t} locale={locale} canManage={canManage} h={h} expanded={expanded} onToggle={onToggle} />)}
+        {groups.map((g) => <GroupRow key={g.id} group={g} section={section} t={t} locale={locale} canManage={canManage} myMemberId={myMemberId} h={h} expanded={expanded} onToggle={onToggle} />)}
       </motion.ul>
     </section>
   );
 }
 
-export function SnapshotSections({ pulse, t, locale, canManage, onOpen, onClaim, onResolve, onDefer, onSkip, onTakeParent, anchorRef }) {
+export function SnapshotSections({ pulse, t, locale, canManage, myMemberId, onOpen, onTake, onResolve, onDefer, onSkip, onAccept, onPass, anchorRef }) {
   const [expanded, setExpanded] = useState(() => new Set());
   const onToggle = (id) => setExpanded((prev) => {
     const next = new Set(prev);
     next.has(id) ? next.delete(id) : next.add(id);
     return next;
   });
-  const h = { onOpen, onClaim, onResolve, onDefer, onSkip, onTakeParent };
-  const common = { t, locale, canManage, h, expanded, onToggle };
+  const h = { onOpen, onTake, onResolve, onDefer, onSkip, onAccept, onPass };
+  const common = { t, locale, canManage, myMemberId, h, expanded, onToggle };
   return (
     <>
       <Section label={t.overdueTitle} groups={pulse.overdue} section="overdue" emphasised {...common} />

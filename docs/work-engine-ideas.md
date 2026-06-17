@@ -66,3 +66,39 @@ against random noise.
 - Does this reuse the existing `pending_approval` status, or is a proposal a distinct object before it becomes a task at all?
 - Where do proposals surface — a queue on the Overview tab? A pending chip on the task?
 - Can a proposal be declined/withdrawn, and is that logged in `activity`?
+
+---
+
+## Private / personal tasks (visible only to owner + admin/manager)
+
+**The idea:** a task that isn't part of the shared communal board — only **I** see and
+manage it. Two creation paths:
+1. **I create it for myself**, or
+2. an **admin/manager creates and assigns it to me**, marked **private**.
+
+Either way it stays off the communal surfaces (snapshot, day-view, "מי לוקח?", the
+"together" celebration) — it's a personal lane, not shared work.
+
+**Why this is a real task and not a one-liner:**
+- **RLS surgery.** Today `commons.nodes` is flat — every active member sees every node
+  (`select using (commons.is_active_member(workspace_id))`). Private needs: a `private`
+  column, a rewritten SELECT/WRITE policy ("owner OR admin/manager only"), a
+  `my_member_id(wid)` helper, and **every node query updated** (`TaskViewPage`, snapshot,
+  day-view, `eventQueries`) — they all assume "everything is visible." An RLS bug here
+  leaks data, so it cannot be rushed.
+- **Vision tension.** A manager assigning a private task to one person, top-down, is
+  exactly the anti-pattern the CORE vision warns against ("No one drops tasks on you from
+  above"). Reconciling private tasks with `[[project_commons_vision]]` is a design
+  decision, not a detail — resolve it before building.
+
+**Open questions to resolve before this becomes a spec:**
+- Is "private" a property on a node (`private boolean` + the existing `owner_id`), or a
+  distinct kind/lane?
+- Do admins/managers really see members' private tasks, or only ones *they* assigned?
+  (Privacy-law angle — see CLAUDE.md.) "Personal & private" and "manager-assigned but
+  hidden from peers" may be two different features.
+- How does it surface for the owner — a separate "שלי" lane, or inline with a private badge?
+- Does a manager-assigned private task notify the owner, and can the owner decline it
+  (staying true to the non-hierarchical ethos)?
+- Are private tasks excluded from all communal counts/celebrations, or do completions
+  still feed the personal sense of progress?

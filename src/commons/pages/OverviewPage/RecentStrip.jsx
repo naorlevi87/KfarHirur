@@ -23,7 +23,7 @@ function relTime(iso, locale) {
   } catch { return ''; }
 }
 
-export function RecentStrip({ recent, closed, t, locale, onFullLog }) {
+export function RecentStrip({ recent, closed, t, locale, onOpen, onFullLog }) {
   if (!recent.length && !closed) return null;
   return (
     <>
@@ -43,10 +43,12 @@ export function RecentStrip({ recent, closed, t, locale, onFullLog }) {
           <ul className="commons-recent__list">
             {recent.map((e) => (
               <li key={e.id} className="commons-recent__item">
-                <span className="commons-recent__text">
-                  {e.title} <span className="commons-recent__flavour">{pickLine(e.late ? t.creditLate : t.creditOnTime, e.id)}</span>
-                </span>
-                <span className="commons-recent__time">{relTime(e.at, locale)}{e.doer ? ` · ${t.by} ${e.doer}` : ''}</span>
+                <button type="button" className="commons-recent__btn" onClick={() => onOpen?.(e.id)}>
+                  <span className="commons-recent__text">
+                    {e.title} <span className="commons-recent__flavour">{pickLine(e.late ? t.creditLate : t.creditOnTime, e.id)}</span>
+                  </span>
+                  <span className="commons-recent__time">{relTime(e.at, locale)}{e.doer ? ` · ${t.by} ${e.doer}` : ''}</span>
+                </button>
               </li>
             ))}
           </ul>

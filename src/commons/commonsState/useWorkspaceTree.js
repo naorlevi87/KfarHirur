@@ -14,7 +14,8 @@ import {
   claimNode as claimNodeQuery,
   unclaimNode as unclaimNodeQuery,
   resolveMissed as resolveMissedQuery,
-  assignNode as assignNodeQuery,
+  proposeNode as proposeNodeQuery,
+  respondProposal as respondProposalQuery,
   deferOccurrence as deferOccurrenceQuery,
   deferRun as deferRunQuery,
   cloneNode as cloneNodeQuery,
@@ -112,9 +113,17 @@ export function useWorkspaceTree(workspaceId) {
     return updated;
   }, []);
 
-  // "עליו" — manager/admin assigns a task to a specific member (or null to clear ownership).
-  const assign = useCallback(async (id, memberId) => {
-    const updated = await assignNodeQuery(id, memberId);
+  // "מציע ל-X" — suggest a free task to a teammate (flat invite, any active member). The row gains a
+  // proposed_to marker; the teammate then accepts or passes.
+  const propose = useCallback(async (id, memberId) => {
+    const updated = await proposeNodeQuery(id, memberId);
+    setNodes(prev => prev.map(n => (n.id === id ? updated : n)));
+    return updated;
+  }, []);
+
+  // Respond to a proposal addressed to me: accept → it becomes mine; pass → back to open.
+  const respondProposal = useCallback(async (id, accept) => {
+    const updated = await respondProposalQuery(id, accept);
     setNodes(prev => prev.map(n => (n.id === id ? updated : n)));
     return updated;
   }, []);
@@ -191,5 +200,5 @@ export function useWorkspaceTree(workspaceId) {
     await reload();
   }, [reload]);
 
-  return { nodes, byParent, loading, addNode, toggleDone, saveTask, removeNode, reload, completeSubtree, claim, unclaim, assign, resolveMissed, deferOccurrence, deferRun, cloneNode, cancelRun, progress, hasChildren, effectiveOwner };
+  return { nodes, byParent, loading, addNode, toggleDone, saveTask, removeNode, reload, completeSubtree, claim, unclaim, propose, respondProposal, resolveMissed, deferOccurrence, deferRun, cloneNode, cancelRun, progress, hasChildren, effectiveOwner };
 }

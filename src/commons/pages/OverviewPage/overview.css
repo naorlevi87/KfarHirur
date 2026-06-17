@@ -127,8 +127,11 @@
 .commons-closed__title { font-size: 15px; margin-top: 4px; }
 .commons-closed__body { font-size: 12px; color: var(--commons-text-dim); margin-top: 2px; }
 .commons-recent__list { list-style: none; }
-.commons-recent__item { display: flex; align-items: center; gap: 9px; padding: 7px 0; border-top: 1px solid var(--commons-border); }
+.commons-recent__item { border-top: 1px solid var(--commons-border); }
 .commons-recent__item:first-child { border-top: 0; }
+.commons-recent__btn { display: flex; align-items: center; gap: 9px; width: 100%; text-align: start; font: inherit; color: var(--commons-text); background: none; border: 0; cursor: pointer; padding: 7px 4px; border-radius: 8px; }
+.commons-recent__btn:hover { background: var(--commons-surface-2); }
+.commons-recent__btn:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
 .commons-recent__avatar { width: 24px; height: 24px; border-radius: 50%; background: var(--commons-surface-2); color: var(--commons-text); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex: none; }
 .commons-recent__text { flex: 1; min-width: 0; font-size: 13px; }
 .commons-recent__flavour { color: var(--commons-text-dim); font-size: 11px; }
@@ -159,8 +162,12 @@
 .commons-snapList__title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .commons-snapList__meta { flex: none; font-size: 11px; color: var(--commons-text-dim); }
 
-/* attribution sheet — resolve (who + when) / assign (who) */
-.commons-sheetBackdrop { position: fixed; inset: 0; z-index: 60; background: rgba(0, 0, 0, .5); display: flex; align-items: flex-end; justify-content: center; }
+/* attribution sheet — resolve "זה כן קרה" (who + when); also the invite sheet (אני / מציע ל-X).
+   Private to this screen: it is a flex container that directly holds the panel, a different overlay
+   structure from the shell's .commons-sheetRoot/.commons-sheetBackdrop. Reusing that shared class name
+   here redefined it globally (position:fixed; z-index:60), which lifted every shell backdrop above its
+   own dialog card and ate the clicks — so it carries its own name. */
+.commons-attribBackdrop { position: fixed; inset: 0; z-index: 60; background: rgba(0, 0, 0, .5); display: flex; align-items: flex-end; justify-content: center; }
 .commons-attrib { width: 100%; max-width: 480px; background: var(--commons-surface); border: 1px solid var(--commons-border); border-radius: 18px 18px 0 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); }
 .commons-attrib__title { font-size: 16px; font-weight: 800; color: var(--commons-text); margin-bottom: 14px; }
 .commons-attrib__members { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
@@ -176,7 +183,13 @@
 .commons-attrib__btn.is-primary { background: var(--commons-accent); border-color: var(--commons-accent); color: var(--commons-on-accent); }
 .commons-attrib__btn:disabled { opacity: .5; cursor: not-allowed; }
 .commons-attrib__btn:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
-.commons-snapBtn.is-assign { color: var(--commons-role-4); }
+.commons-snapBtn.is-accept { color: var(--commons-spectrum-4); }
+.commons-snapBtn.is-pass { color: var(--commons-text-dim); }
+.commons-invite__choices { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+
+/* pending "הוצע ל-X" invite marker + the inline accept/pass pair (the proposed member's response). */
+.commons-proposedMark { flex: none; font-size: 11px; font-weight: 700; color: var(--commons-accent); white-space: nowrap; padding-inline-start: 6px; }
+.commons-respond { display: inline-flex; gap: 6px; flex: none; }
 
 .commons-laterLine { display: block; width: 100%; text-align: start; background: none; border: 0; cursor: pointer; color: var(--commons-text-dim); font: inherit; font-size: 12px; padding: 12px 4px 4px; }
 .commons-laterLine:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
