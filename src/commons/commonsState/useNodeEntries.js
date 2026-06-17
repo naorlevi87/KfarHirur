@@ -36,10 +36,18 @@ export function useNodeEntries(nodeId, workspaceId) {
     await reload();
   }, [nodeId, workspaceId, reload]);
 
+  // Optimistic: drop the entry from the list immediately so it just disappears (no page reload).
+  // If the server delete fails, restore the snapshot and re-throw so the caller can surface it.
   const remove = useCallback(async (entry) => {
-    await deleteEntry(entry);
-    await reload();
-  }, [reload]);
+    let snapshot;
+    setEntries(es => { snapshot = es; return es.filter(e => e.id !== entry.id); });
+    try {
+      await deleteEntry(entry);
+    } catch (e) {
+      if (snapshot) setEntries(snapshot);
+      throw e;
+    }
+  }, []);
 
   return { entries, loading, reload, addNote, addFile, remove };
 }

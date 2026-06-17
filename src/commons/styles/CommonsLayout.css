@@ -150,7 +150,7 @@
 .commons-topbar__chev { font-size: 12px; color: var(--commons-text-dim); }
 
 .commons-sheetRoot { position: fixed; inset: 0; z-index: 50; }
-.commons-sheetBackdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, .5); }
+.commons-sheetBackdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, .66); }
 .commons-sheet {
   position: absolute; left: 0; right: 0; bottom: 0;
   background: var(--commons-surface); border-top: 1px solid var(--commons-border);
@@ -224,11 +224,67 @@
 @keyframes commons-bounce { 0%, 100% { transform: translateY(0); opacity: .4; } 50% { transform: translateY(-6px); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .commons-loading__dots span { animation: none; } }
 
+/* ── ConfirmDialog (src/commons/ConfirmDialog.jsx) — branded modal, portaled to document.body ──
+   Private namespace so no screen-level stylesheet can redefine these and break stacking (the cause of
+   the old delete-confirm click-eating bug). The root IS the backdrop (a flex centering layer); the
+   panel is its child and naturally paints above it — no z-index race between sibling layers. */
+.commons-cdlg {
+  position: fixed; inset: 0; z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, .72);
+  animation: commons-cdlg-fade 140ms ease;
+}
+.commons-cdlg__panel {
+  position: relative;            /* own stacking context, above the backdrop */
+  width: min(420px, 100%);
+  background: var(--commons-surface-2);
+  border: 1px solid var(--commons-border);
+  border-radius: 16px;
+  padding: 22px;
+  color: var(--commons-text);
+  /* Elevation so the card reads as lifted above the dimmed page, not flat against it. */
+  box-shadow: 0 24px 60px -12px rgba(0, 0, 0, .75), 0 8px 22px rgba(0, 0, 0, .55);
+  animation: commons-cdlg-pop 180ms cubic-bezier(.2, .8, .2, 1);
+}
+.commons-cdlg__title { font-size: 17px; font-weight: 800; margin: 0 0 8px; color: var(--commons-text); }
+.commons-cdlg__body {
+  margin: 0 0 18px; line-height: 1.5; color: var(--commons-text-dim);
+  word-break: break-word; overflow-wrap: anywhere;
+}
+.commons-cdlg__actions { display: flex; gap: 10px; }
+.commons-cdlg__actions .commons-cdlg__btn { flex: 1; }
+.commons-cdlg__actions--stack { flex-direction: column; }
+.commons-cdlg__actions--stack .commons-cdlg__btn { width: 100%; flex: none; }
+
+.commons-cdlg__btn {
+  border: 0; border-radius: 10px; padding: 12px 16px;
+  font: inherit; font-weight: 700; cursor: pointer;
+  transition: filter 120ms ease, background 120ms ease;
+}
+.commons-cdlg__btn:disabled { opacity: .5; cursor: not-allowed; }
+.commons-cdlg__btn:focus-visible { outline: 2px solid var(--commons-accent); outline-offset: 2px; }
+.commons-cdlg__btn--primary { background: var(--commons-accent); color: var(--commons-on-accent); }
+.commons-cdlg__btn--danger  { background: var(--commons-danger); color: #2a0b0b; }
+.commons-cdlg__btn--ghost   { background: var(--commons-surface); color: var(--commons-text); border: 1px solid var(--commons-border); }
+.commons-cdlg__btn--discard { background: transparent; color: var(--commons-danger); border: 1px solid transparent; }
+.commons-cdlg__btn--primary:hover:not(:disabled),
+.commons-cdlg__btn--danger:hover:not(:disabled) { filter: brightness(1.06); }
+.commons-cdlg__btn--ghost:hover:not(:disabled) { background: var(--commons-border); }
+
+@keyframes commons-cdlg-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes commons-cdlg-pop { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .commons-cdlg, .commons-cdlg__panel { animation: none; }
+}
+
 /* ── Confirm dialog (centered) ── */
 .commons-confirm {
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
   width: min(420px, calc(100vw - 32px));
-  background: var(--commons-surface); border: 1px solid var(--commons-border); border-radius: 16px; padding: 20px;
+  background: var(--commons-surface-2); border: 1px solid var(--commons-border); border-radius: 16px; padding: 20px;
+  /* Elevation so the dialog reads as a card above the dimmed page, not flat against it. */
+  box-shadow: 0 24px 60px -12px rgba(0, 0, 0, .7), 0 6px 18px rgba(0, 0, 0, .5);
 }
 .commons-confirm__title { font-size: 17px; font-weight: 800; margin-bottom: 8px; }
 .commons-confirm__body { color: var(--commons-text-dim); line-height: 1.5; margin-bottom: 16px; }

@@ -36,6 +36,15 @@ export const commonsShellContent = {
     openDayAria: 'Open the day view',
     // actions (reuse occurrence ops) — label + separate decorative emoji (renders on its own line)
     claim: 'On me', claimE: '🙌',
+    // flat "suggest to X" invite: the "on me" button opens a sheet — take it myself, or suggest to a teammate.
+    whoTakes: 'Who takes it?',
+    meSelf: 'Me',
+    someoneElse: 'Someone else',
+    proposeWho: 'Suggest to whom?',
+    proposedTo: 'Suggested to {name}',
+    proposedToYou: 'Suggested to you',
+    accept: 'Accept', acceptE: '🤝',
+    pass: 'Pass it on', passE: '↪️',
     didHappen: 'It did happen', didHappenE: '🫢',
     deferTomorrow: 'To tomorrow', deferTomorrowE: '🙆',
     deferDate: 'Another day', deferDateE: '📅',
@@ -98,10 +107,8 @@ export const commonsShellContent = {
     lineAllDone: 'All closed. Well done 🌈',
     timeLeftMin: '{n} min left',
     noOwner: 'No owner',
-    // attribution picker (resolve "it did happen" → who + when; manager assign → who)
-    assign: 'On them', assignE: '🫵',
+    // attribution picker (resolve "it did happen" → who + when)
     whoTitle: 'Who did it?',
-    whoAssign: 'Put it on whom?',
     whenNow: 'Now',
     whenEarlier: 'Earlier',
     nobody: 'Not sure',
@@ -392,6 +399,7 @@ export const commonsShellContent = {
     docDeleteBody: 'This cannot be undone.',
     docDeleteCancel: 'Cancel',
     docTooBig: 'File too large (max 5MB).',
+    docDeleteFailed: 'Delete failed. Try again.',
     // activity log — derived, read-only; below the manual doc box
     activityTitle: 'Activity log',
     activityShowMore: 'Show all',

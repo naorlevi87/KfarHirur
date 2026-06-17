@@ -52,41 +52,34 @@ export function NavGuardProvider({ children }) {
     else blocker.reset?.();                                    // couldn't save (e.g. empty title) → stay to fix
   };
 
-  // Escape dismisses the prompt (keyboard reachability — the custom dialog lacks ConfirmDialog's
-  // built-in handler). Ignored mid-save.
-  useEffect(() => {
-    if (!blocked) return;
-    const onKey = (e) => { if (e.key === 'Escape' && !saving) blocker.reset?.(); };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [blocked, saving, blocker]);
-
   const value = useMemo(() => ({ registerGuard, guardedNavigate }), [registerGuard, guardedNavigate]);
   const g = resolveCommonsShellContent(locale).guard;
+  const dir = locale === 'he' ? 'rtl' : 'ltr';
 
   return (
     <NavGuardContext.Provider value={value}>
       {children}
       {blocked && (canSave ? (
-        <div className="commons-sheetRoot" dir={locale === 'he' ? 'rtl' : 'ltr'}>
-          <div className="commons-sheetBackdrop" role="presentation" aria-hidden="true"
-            onClick={() => { if (!saving) stay(); }} />
-          <div className="commons-confirm" role="dialog" aria-modal="true" aria-label={g.unsavedTitle}>
-            <h2 className="commons-confirm__title">{g.unsavedTitle}</h2>
-            <p className="commons-confirm__body">{g.unsavedBody}</p>
-            <div className="commons-confirm__actions commons-confirm__actions--stack">
-              <button type="button" className="commons-btn commons-btn--primary" disabled={saving} onClick={saveAndProceed} autoFocus>{g.save}</button>
-              <button type="button" className="commons-btn commons-btn--ghost commons-confirm__discard" disabled={saving} onClick={proceed}>{g.discard}</button>
-              <button type="button" className="commons-btn commons-btn--ghost" disabled={saving} onClick={stay}>{g.stay}</button>
-            </div>
-          </div>
-        </div>
+        <ConfirmDialog
+          title={g.unsavedTitle}
+          body={g.unsavedBody}
+          dir={dir}
+          dismissable={!saving}
+          onCancel={stay}
+          actions={[
+            { label: g.save, variant: 'primary', disabled: saving, onClick: saveAndProceed },
+            { label: g.discard, variant: 'discard', disabled: saving, onClick: proceed },
+            { label: g.stay, variant: 'ghost', disabled: saving, onClick: stay },
+          ]}
+        />
       ) : (
         <ConfirmDialog
           title={g.unsavedTitle}
           body={g.unsavedBody}
+          dir={dir}
           confirmLabel={g.leave}
           cancelLabel={g.stay}
+          destructive={false}
           onConfirm={proceed}
           onCancel={stay}
         />

@@ -158,6 +158,10 @@ principle. Restated here as an interaction standard.)
   (`src/content/commons/{he,en}/`).
 - **Icons are shared.** Use the icon set in `src/commons/icons.jsx`; do not inline one-off SVGs in a
   screen.
+- **Link entries carry a short name.** A link attached to a task is entered through an in-app form
+  (URL + a **required** short name) — never `window.prompt`. It renders as `🔗 <name>`: the short name
+  is the link text, the `🔗` glyph + chip styling mark it as a link. A raw URL is never the visible
+  label. (Shared composer: `TaskComposer`; shared rendering: `EntryBody`.)
 - **Mobile-first.** Every interaction here is validated on mobile first; desktop is a separate pass.
 
 ---
@@ -174,11 +178,62 @@ Togetherness is **conveyed**, never stated. Do not use the word "ביחד" in UI
 - "unassigned" → **"פנוי — מי לוקח?"**; "missed/failed" → **"נתקע — מי תופס?"**.
 - Completion credit may use emoji (decorative, `aria-hidden`): 🙌 עליי · 🫢 זה כן קרה · 🙆 דחה למחר · 🤷 לא צריך · 😇/😎 done · 🌈🎉 closed.
 
+### Taking work — the flat invite (no direct assign)
+- **Taking a task is never hierarchical.** There is **no manager "direct assign"** ("עליו"). The single
+  take affordance is the familiar **עליי 🙌** button; tapping it opens a small sheet: **אני 🙌** (claim onto
+  me — a parent cascades behind the take-all confirm) or **מישהו אחר** (pick a teammate → the task is marked
+  **"הוצע ל-{name}"**).
+- **A proposal is an invitation, not an order.** The proposed member sees **מקבל/ת 🤝** (it becomes theirs)
+  or **מעביר/ה הלאה ↪️** (back to open). Only they get accept/pass.
+- **A pending invite keeps the task fully open.** Anyone may still take it or re-suggest it; the marker is
+  informational. A fresh claim or proposal supersedes the prior one, and a claimed/completed task never
+  carries a dangling invite. defer/skip remain manager+; taking/suggesting is flat (any active member).
+
 ---
 
 ## Decision Log
 
 > Append a dated entry whenever a standard is added, changed, or an exception is granted. Newest first.
+
+### 2026-06-18 — Flat "מציע ל-X" invite replaces manager direct-assign (§6)
+- Snapshot step 5. The manager-only **"עליו"** (direct assign) is **removed** everywhere (pulse + day).
+  Taking work is now flat: the **עליי** button opens an **אני / מישהו אחר** sheet; "מישהו אחר" sends a
+  **"הוצע ל-X"** invite the teammate accepts (becomes owner) or passes (back to open). Anyone may take or
+  suggest — no hierarchy. A pending invite leaves the task open (anyone can still take/re-suggest); a claim
+  or completion clears it. Parents can be proposed too — accept sets the parent's `owner_id` and
+  `effectiveOwner` cascades. **In-app marker only at launch**; a phone/notification nudge waits for the
+  notifications feature. Backed by member-allowed SECURITY DEFINER RPCs `commons.propose_node` /
+  `commons.respond_proposal` (+ `proposed_to/by/at` columns; `claim_node` now clears the invite), since
+  members can't write `owner_id`/`proposed_to` under RLS. Decided with Naor (button keeps the familiar
+  "עליי" label rather than becoming "מי לוקח?"). Spec:
+  `docs/superpowers/specs/2026-06-16-commons-snapshot-screen-design.md` §6 ·
+  brief: `docs/superpowers/handoffs/D-snapshot-invite.md`.
+
+### 2026-06-18 — ConfirmDialog rebuilt: private namespace + portal to body (§4)
+- The branded `ConfirmDialog` (`src/commons/ConfirmDialog.jsx`) was rebuilt because its delete-confirm
+  silently failed: clicking "מחק" closed the dialog without deleting. **Root cause** — it reused the
+  shell class `.commons-sheetBackdrop`, which `OverviewPage/overview.css` redefined **globally** to
+  `position:fixed; z-index:60`. That lifted the backdrop above the dialog card (z 50), so every click
+  (confirm included) landed on the backdrop's `onCancel`. **Standard locked:** the branded dialog now
+  (1) portals to `document.body`, (2) uses a **private `.commons-cdlg*` namespace** no screen redefines,
+  and (3) makes the panel a **child** of the backdrop, dismissing only when `e.target === e.currentTarget`.
+  The OverviewPage attribution sheet's overlay was renamed to its own `.commons-attribBackdrop` (it was
+  never the shell backdrop — it had simply collided on the name). The nav-guard's Save/Discard/Stay prompt
+  now uses `ConfirmDialog`'s new stacked `actions` shape instead of its own copy of the buggy markup.
+  (The four ad-hoc `.commons-confirm` dialogs still in `TaskViewPage.jsx` no longer break now that the
+  global collision is gone, but remain candidates to migrate onto `ConfirmDialog`.)
+
+### 2026-06-16 — Task entries: link short name + image source; completion takes ownership
+- **Links** now use an in-app form (URL + **required** short name), replacing the banned
+  `window.prompt`, and render as `🔗 <name>` (never a raw URL) → §5.
+- **Images** offer an explicit `צלם` / `מהגלריה` choice from one `📷` button (in-app menu).
+- The add-entry composer and entry-body rendering are de-duplicated into shared `TaskComposer` +
+  `EntryBody`, used by both the per-occurrence doc log and the recurring standing reference.
+- **Completion claims the task.** A `done` task can never still show "פנוי — מי לוקח?" — completing
+  auto-sets `owner_id` to the completer when empty (DB: `set_node_status`, `complete_subtree`, rollup
+  + backfill), and the detail screen never renders the claim button on a non-active task. Exception:
+  "זה כן קרה / לא יודע" (`resolve_missed`, unknown doer) stays ownerless on purpose.
+  Spec: `docs/superpowers/specs/2026-06-16-commons-task-entries-link-image-and-completion-ownership-design.md`.
 
 ### 2026-06-16 — Recurring task: base vs occurrence
 - **Base declares, occurrence does.** A recurring task's *base* (routine root + order definitions,

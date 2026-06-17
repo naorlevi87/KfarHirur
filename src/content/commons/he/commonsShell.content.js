@@ -37,6 +37,15 @@ export const commonsShellContent = {
     openDayAria: 'פתיחת תמונת היום',
     // actions (reuse occurrence ops) — label + separate decorative emoji (renders on its own line)
     claim: 'עליי', claimE: '🙌',
+    // flat "מציע ל-X" invite: the עליי button opens a sheet — take it myself, or suggest to a teammate.
+    whoTakes: 'מי לוקח?',
+    meSelf: 'אני',
+    someoneElse: 'מישהו אחר',
+    proposeWho: 'מציעים למי?',
+    proposedTo: 'הוצע ל-{name}',
+    proposedToYou: 'הוצע לך',
+    accept: 'מקבל/ת', acceptE: '🤝',
+    pass: 'מעביר/ה הלאה', passE: '↪️',
     didHappen: 'זה כן קרה', didHappenE: '🫢',
     deferTomorrow: 'דחה למחר', deferTomorrowE: '🙆',
     deferDate: 'תאריך אחר', deferDateE: '📅',
@@ -99,10 +108,8 @@ export const commonsShellContent = {
     lineAllDone: 'הכל סגור. כל הכבוד 🌈',
     timeLeftMin: 'עוד {n} דק׳',
     noOwner: 'אין אחראי',
-    // attribution picker (resolve "זה כן קרה" → who + when; manager assign → who)
-    assign: 'עליו', assignE: '🫵',
+    // attribution picker (resolve "זה כן קרה" → who + when)
     whoTitle: 'מי עשה את זה?',
-    whoAssign: 'על מי לשים?',
     whenNow: 'עכשיו',
     whenEarlier: 'מוקדם יותר',
     nobody: 'לא בטוח',
@@ -395,6 +402,7 @@ export const commonsShellContent = {
     docDeleteBody: 'אי אפשר לבטל את הפעולה.',
     docDeleteCancel: 'ביטול',
     docTooBig: 'הקובץ גדול מדי (עד 5MB).',
+    docDeleteFailed: 'המחיקה נכשלה. נסו שוב.',
     // activity log ("יומן פעילות") — derived, read-only; below the manual doc box
     activityTitle: 'יומן פעילות',
     activityShowMore: 'הצג הכול',

@@ -324,7 +324,8 @@ export function TaskViewPage() {
                 <span>{ownerName ?? v.ownerOpen}</span>
               </>
             )}
-            {!owner && node.kind === 'task' && canClaim && !isBase && (
+            {!owner && node.kind === 'task' && canClaim && !isBase
+              && (node.status === 'open' || node.status === 'in_progress') && (
               <button type="button" className="commons-claim commons-claim--lg" aria-label={shell.tasks.claimAria}
                 onClick={() => tree.claim(node.id)}>
                 <img src={raiseHand} alt="" className="commons-claim__icon" /> {shell.tasks.claim}
@@ -412,6 +413,7 @@ export function TaskViewPage() {
           body={openSubsOf(completeTarget).map(k => k.title).join(', ')}
           confirmLabel={v.completeAll}
           cancelLabel={shell.form.back}
+          destructive={false}
           onConfirm={() => { const id = completeTarget.id; setCompleteTarget(null); tree.completeSubtree(id); }}
           onCancel={() => setCompleteTarget(null)}
         />
