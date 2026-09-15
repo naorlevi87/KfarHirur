@@ -26,6 +26,7 @@ import { AdminUsersPage } from '../pages/admin/AdminUsersPage.jsx';
 import { AdminContentListPage } from '../pages/admin/AdminContentListPage.jsx';
 import { AdminContentEditorPage } from '../pages/admin/AdminContentEditorPage.jsx';
 import { CommonsModule } from '../commons/CommonsModule.jsx';
+import { TipCalcPage } from '../pages/tipCalc/TipCalcPage.jsx';
 
 // The full route tree (unchanged), rendered as the data router's single catch-all element.
 function AppRoutes() {
@@ -46,6 +47,9 @@ function AppRoutes() {
         <Route path="login" element={<LoginPage />} />
         <Route path="privacy" element={<PrivacyPage />} />
         <Route path="terms" element={<TermsPage />} />
+
+        {/* Standalone staff tool — no chrome, no auth, no branding */}
+        <Route path="tipCalc" element={<TipCalcPage />} />
 
         {/* Protected — any authenticated user */}
         <Route element={<ProtectedRoute allowedRoles={[]} />}>
