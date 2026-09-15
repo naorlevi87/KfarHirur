@@ -1,0 +1,114 @@
+/* src/pages/tipCalc/TipCalcPage.css */
+/* Standalone, unbranded layout for the waiter tip-split tool — no site chrome, no consciousness-mode tokens. */
+
+.tip-calc-page {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: #f7f7f5;
+  color: #1a1a1a;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  direction: rtl;
+}
+
+.tip-calc-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  text-align: center;
+}
+
+.tip-calc-form {
+  width: 100%;
+  max-width: 22rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.tip-calc-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.tip-calc-field label {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.tip-calc-field input {
+  font-size: 1.75rem;
+  padding: 0.75rem 1rem;
+  border: 2px solid #ccc;
+  border-radius: 0.75rem;
+  text-align: center;
+  background: #fff;
+  color: #1a1a1a;
+}
+
+.tip-calc-field input:focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 2px;
+  border-color: #2563eb;
+}
+
+.tip-calc-error {
+  color: #b91c1c;
+  font-size: 0.95rem;
+  text-align: center;
+  min-height: 1.25rem;
+}
+
+.tip-calc-result {
+  width: 100%;
+  max-width: 22rem;
+  display: flex;
+  gap: 1rem;
+}
+
+.tip-calc-result-box {
+  flex: 1;
+  background: #fff;
+  border: 2px solid #e5e5e0;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  text-align: center;
+}
+
+.tip-calc-result-label {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.tip-calc-result-value {
+  font-size: 2rem;
+  font-weight: 800;
+  margin-top: 0.25rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .tip-calc-page {
+    background: #14141a;
+    color: #f0f0f0;
+  }
+
+  .tip-calc-field input {
+    background: #1f1f27;
+    color: #f0f0f0;
+    border-color: #3a3a45;
+  }
+
+  .tip-calc-result-box {
+    background: #1f1f27;
+    border-color: #3a3a45;
+  }
+
+  .tip-calc-result-label {
+    color: #b0b0b8;
+  }
+}
