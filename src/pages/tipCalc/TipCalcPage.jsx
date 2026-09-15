@@ -2,7 +2,7 @@
 // Standalone waiter tool: splits a stated total into bill + tip at a given percentage.
 // Public route, no site chrome, no auth — see docs/superpowers/specs/2026-09-15-tip-calculator-design.md
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { splitBillAndTip } from './tipMath.js';
 import logoCircle from '../../assets/images/kfar-hirur-logo-circleOnly.png';
 import './TipCalcPage.css';
@@ -16,6 +16,21 @@ function parseWholeNonNegative(raw) {
 export function TipCalcPage() {
   const [totalRaw, setTotalRaw] = useState('');
   const [percentRaw, setPercentRaw] = useState('15');
+  const percentInputRef = useRef(null);
+
+  function handleTotalKeyDown(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      percentInputRef.current?.focus();
+    }
+  }
+
+  function handlePercentKeyDown(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      e.target.blur();
+    }
+  }
 
   const total = parseWholeNonNegative(totalRaw);
   const percent = parseWholeNonNegative(percentRaw);
@@ -39,28 +54,35 @@ export function TipCalcPage() {
       <h1 className="tip-calc-title">מחשבון טיפ בדיעבד</h1>
 
       <div className="tip-calc-form">
-        <div className="tip-calc-field">
-          <label htmlFor="tip-calc-total">סכום כולל (₪)</label>
-          <input
-            id="tip-calc-total"
-            inputMode="numeric"
-            pattern="\d*"
-            value={totalRaw}
-            onChange={(e) => setTotalRaw(e.target.value)}
-            placeholder="לדוגמה: 100"
-          />
-        </div>
+        <div className="tip-calc-fields-row">
+          <div className="tip-calc-field tip-calc-field-total">
+            <label htmlFor="tip-calc-total">סכום כולל (₪)</label>
+            <input
+              id="tip-calc-total"
+              inputMode="numeric"
+              pattern="\d*"
+              enterKeyHint="next"
+              value={totalRaw}
+              onChange={(e) => setTotalRaw(e.target.value)}
+              onKeyDown={handleTotalKeyDown}
+              placeholder="לדוגמה: 100"
+            />
+          </div>
 
-        <div className="tip-calc-field">
-          <label htmlFor="tip-calc-percent">אחוז טיפ</label>
-          <input
-            id="tip-calc-percent"
-            inputMode="numeric"
-            pattern="\d*"
-            value={percentRaw}
-            onChange={(e) => setPercentRaw(e.target.value)}
-            placeholder="לדוגמה: 15"
-          />
+          <div className="tip-calc-field tip-calc-field-percent">
+            <label htmlFor="tip-calc-percent">אחוז טיפ</label>
+            <input
+              id="tip-calc-percent"
+              ref={percentInputRef}
+              inputMode="numeric"
+              pattern="\d*"
+              enterKeyHint="done"
+              value={percentRaw}
+              onChange={(e) => setPercentRaw(e.target.value)}
+              onKeyDown={handlePercentKeyDown}
+              placeholder="לדוגמה: 15"
+            />
+          </div>
         </div>
 
         <p className="tip-calc-error">
