@@ -4,6 +4,7 @@
 
 import { useState } from 'react';
 import { splitBillAndTip } from './tipMath.js';
+import logoCircle from '../../assets/images/kfar-hirur-logo-circleOnly.png';
 import './TipCalcPage.css';
 
 function parseWholeNonNegative(raw) {
@@ -30,7 +31,12 @@ export function TipCalcPage() {
 
   return (
     <div className="tip-calc-page">
-      <h1 className="tip-calc-title">מחשבון טיפ</h1>
+      <div className="tip-calc-brand">
+        <img src={logoCircle} alt="" className="tip-calc-logo" />
+        <span className="tip-calc-brand-name">ג'וז ולוז</span>
+      </div>
+
+      <h1 className="tip-calc-title">מחשבון טיפ בדיעבד</h1>
 
       <div className="tip-calc-form">
         <div className="tip-calc-field">

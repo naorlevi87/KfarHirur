@@ -1,5 +1,23 @@
 /* src/pages/tipCalc/TipCalcPage.css */
-/* Standalone, unbranded layout for the waiter tip-split tool — no site chrome, no consciousness-mode tokens. */
+/* Standalone layout for the waiter tip-split tool — no site chrome, no consciousness-mode tokens; small logo mark only. */
+
+.tip-calc-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tip-calc-logo {
+  width: 2rem;
+  height: 2rem;
+  object-fit: contain;
+}
+
+.tip-calc-brand-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #555;
+}
 
 .tip-calc-page {
   min-height: 100dvh;
@@ -95,6 +113,10 @@
   .tip-calc-page {
     background: #14141a;
     color: #f0f0f0;
+  }
+
+  .tip-calc-brand-name {
+    color: #b0b0b8;
   }
 
   .tip-calc-field input {
