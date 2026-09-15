@@ -15,7 +15,7 @@ function parseWholeNonNegative(raw) {
 
 export function TipCalcPage() {
   const [totalRaw, setTotalRaw] = useState('');
-  const [percentRaw, setPercentRaw] = useState('');
+  const [percentRaw, setPercentRaw] = useState('15');
 
   const total = parseWholeNonNegative(totalRaw);
   const percent = parseWholeNonNegative(percentRaw);
